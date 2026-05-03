@@ -45,7 +45,7 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
           ready: !player.isReady
       });
 
-      addFeedEvent(`YOU >> REQUESTING_SYNC`);
+      addFeedEvent(`${player.userId}  >> ${player.isReady? 'STANDBY_MODE' : 'READY_CONFIRMED'}`);
   };
 
   return (
@@ -113,55 +113,75 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
 
           {/* PLAYER CARDS */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {players.map((player,index) => (
-                <motion.div
-                    key={player.userId || `empty-${index}`} // use fall back index number for empty slots
-                    whileHover={{ y: -6 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    className="relative"
-                >
-                  <div className={`relative z-10 aspect-[3/4.5] rounded-[2rem] border-2 transition-all duration-700 flex flex-col p-7
+            {players.map((player,index) => {
+                // Check if this card belongs to the local user
+                const isMe = player.userId === currentUserId;
+                return (
+                    <motion.div
+                        key={player.userId || `empty-${index}`} // use fall back index number for empty slots
+                        whileHover={{y: -6}}
+                        transition={{type: "spring", stiffness: 300}}
+                        className="relative"
+                    >
+                        <div className={`relative z-10 aspect-[3/4.5] rounded-[2rem] border-2 transition-all duration-700 flex flex-col p-7
+                  ${isMe ? 'ring-4 ring-blue-600/20' : ''}
                 ${player.isReady ? 'border-zinc-900 bg-white shadow-2xl shadow-zinc-200' : 'border-zinc-200 bg-white shadow-sm'}
               `}>
-                    <div className="flex justify-between items-center mb-10">
-                      <span className="font-mono text-[10px] text-zinc-400 font-black tracking-widest uppercase">Node_0{index + 1}</span>
-                      <div className={`w-3 h-3 rounded-full transition-all duration-700 ${player.isReady ? 'bg-blue-600' : 'bg-zinc-200'}`} />
-                    </div>
+                            <div className="flex justify-between items-center mb-10">
+                                <span
+                                    className="font-mono text-[10px] text-zinc-400 font-black tracking-widest uppercase">Node_0{index + 1}</span>
+                                {isMe && (
+                                    <span
+                                        className="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-full font-black tracking-tighter">
+                            YOU
+                            </span>
+                                )}
+                                {!isMe && (
+                                    <div
+                                        className={`w-3 h-3 rounded-full transition-all duration-700 ${player.isReady ? 'bg-blue-600' : 'bg-zinc-200'}`}/>
+                                )}
+                            </div>
 
-                    <div className={`flex-grow flex flex-col items-center justify-center gap-4 rounded-[1.5rem] transition-all duration-700 ${player.isReady ? 'bg-blue-50/50': 'bg-zinc-50'}`}>
-                  <span className={`text-2xl font-black uppercase tracking-tight transition-colors duration-500 ${player.isReady ? player.color : 'text-zinc-300'}`}>
+                            <div
+                                className={`flex-grow flex flex-col items-center justify-center gap-4 rounded-[1.5rem] transition-all duration-700 ${player.isReady ? 'bg-blue-50/50' : 'bg-zinc-50'}`}>
+                  <span
+                      className={`text-2xl font-black uppercase tracking-tight transition-colors duration-500 ${player.isReady ? player.color : 'text-zinc-300'}`}>
                     {player.username}
                   </span>
 
-                      {player.isReady && (
-                          <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="px-3 py-1 bg-zinc-900 rounded-full"
-                          >
-                            <span className="text-[8px] font-mono text-white font-bold uppercase tracking-widest">Active</span>
-                          </motion.div>
-                      )}
-                    </div>
+                                {player.isReady && (
+                                    <motion.div
+                                        initial={{scale: 0}}
+                                        animate={{scale: 1}}
+                                        className="px-3 py-1 bg-zinc-900 rounded-full"
+                                    >
+                            <span className="text-[8px] font-mono text-white font-bold uppercase tracking-widest">
+                                {isMe ? 'Me Active' : 'Active'}
+                            </span>
+                                    </motion.div>
+                                )}
+                            </div>
 
-                    <button
-                        onClick={() => {
-                          console.log("Button clicked!");
-                          // disabled={!player.userId}
-                          togglePlayerReady(player);
-                        }}
-                        className={`mt-10 w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95
+                            <button
+                                onClick={() => {
+                                    console.log("Button clicked!");
+                                    togglePlayerReady(player);
+                                }}
+                                className={`mt-10 w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95
                           ${!player.userId ? 'opacity-50 cursor-not-allowed bg-zinc-100 text-zinc-300' :
-                            player.isReady
-                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700'
-                              : 'bg-zinc-100 text-zinc-400 hover:bg-zinc-200'}
+                                    player.isReady
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700'
+                                        : isMe
+                                            ? 'bg-zinc-900 text-white hover:bg-black'
+                                            : 'bg-zinc-100 text-zinc-400 hover:bg-zinc-200'}
                           `}
-                    >
-                      {!player.userId ? 'Empty Slot' : player.isReady ? 'Confirmed' : 'Standby'}
-                    </button>
-                  </div>
-                </motion.div>
-            ))}
+                            >
+                                {!player.userId ? 'Empty Slot' : player.isReady ? 'Confirmed' : isMe ? 'Initialize' : 'Standby'}
+                            </button>
+                        </div>
+                    </motion.div>
+                );
+            })}
           </div>
 
           {/* System Status */}

@@ -276,4 +276,33 @@ export class Lobby {
       }
     }
   }
+
+  /**
+   * @brief Called by the LobbyManager when a user's websocket connection is lost
+   * @param userId ID of the player who disconnected
+   */
+  public handleDisconnect(userId: string) {
+    // Currently handle disconnection logic if we are currently in the lobby state but could also be used for game disconnects later on
+    if (this.state === LobbyStateEnum.OpenLobby) {
+      const playerIndex = this.players.findIndex(p => p.userId === userId);
+
+      if (playerIndex !== -1) {
+        // Remove the player from the lobby list
+        this.players.splice(playerIndex, 1);
+
+        // Re-index remaining players to make sure slots are correct
+        this.players.forEach((p, i) => p.indexInLobby = i);
+
+        const response = this.createBasePacket<SC_LobbyData>(
+            SC_Type.SC_LobbyData,
+            {
+              userId: userId,
+              lobbyData: this.players,
+            },
+        );
+
+        this.msgToClient(JSON.stringify(response));
+      }
+    }
+  }
 }
