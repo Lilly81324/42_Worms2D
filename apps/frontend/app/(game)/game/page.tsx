@@ -78,41 +78,40 @@ export default function LobbyPageController() {
         switch (p.type) {
           case SC_Type.SC_ReadyChange:
             setSlots(prev => prev.map(s =>
-                s.userId === p.userId ? { ...s, isReady: p.ready } : s
+                s.userId === p.userId ? {...s, isReady: p.ready} : s
             ));
             break;
 
-          case SC_Type.SC_LobbyData:
+          case SC_Type.SC_LobbyData: {
             // If the server provides a lobbyId, sync it here
             if (p.lobbyId !== undefined) setLobbyId(p.lobbyId);
 
-            setSlots(prev => {
-              // made sure we always use the newest server data to handle disconnect properly
-              const newSlots: PlayerSlot[] = [0, 1, 2, 3].map(i => ({
-                userId: null,
-                username: "Empty Slot",
-                isReady: false,
-                color: COLORS[i]
-              }));
+            // made sure we always use the newest server data to handle disconnect properly
+            const newSlots: PlayerSlot[] = [0, 1, 2, 3].map(i => ({
+              userId: null,
+              username: "Empty Slot",
+              isReady: false,
+              color: COLORS[i]
+            }));
 
-              // fill slots with data from server
-              if (Array.isArray(p.lobbyData)) {
-                p.lobbyData.forEach((playerData: any, i: number) => {
-                  if (newSlots[i]) {
-                    newSlots[i] = {
-                      ...newSlots[i],
-                      userId: playerData.userId,
-                      username: playerData.username || playerData.userId || "Unknown",
-                      isReady: !!playerData.ready,
-                    };
-                  }
-                });
-              }
-              return newSlots;
-            });
+            // fill slots with data from server
+            if (Array.isArray(p.lobbyData)) {
+              p.lobbyData.forEach((playerData: any, i: number) => {
+                if (newSlots[i]) {
+                  newSlots[i] = {
+                    ...newSlots[i],
+                    userId: playerData.userId,
+                    username: playerData.username || playerData.userId || "Unknown",
+                    isReady: !!playerData.ready,
+                  };
+                }
+              });
+            }
+            setSlots(newSlots);
             break;
+          }
         }
-      };
+      }
       // Handle State Transitions
       switch (packet.type) {
         case SC_Type.SC_StartLobby:       setState("LOBBY"); break;
