@@ -32,6 +32,10 @@ export class UserRepository {
     return this.db(db).user.findUnique({ where: { email } });
   }
 
+  findByUsername(username: string, db?: DbClient): Promise<User | null> {
+    return this.db(db).user.findUnique({ where: { username } });
+  }
+
   findByEmailWithRoles(
     email: string,
     db?: DbClient,
@@ -91,6 +95,7 @@ export class UserRepository {
   createLocalUser(
     data: {
       email: string;
+      username?: string | null;
       passwordHash: string;
       status?: UserStatus;
     },
@@ -99,6 +104,7 @@ export class UserRepository {
     return this.db(db).user.create({
       data: {
         email: data.email,
+        username: data.username,
         passwordHash: data.passwordHash,
         status: data.status,
       },
@@ -108,6 +114,7 @@ export class UserRepository {
   createOAuthUser(
     data: {
       email: string;
+      username?: string | null;
       status?: UserStatus;
     },
     db?: DbClient,
@@ -115,6 +122,7 @@ export class UserRepository {
     return this.db(db).user.create({
       data: {
         email: data.email,
+        username: data.username,
         passwordHash: null,
         status: data.status,
       },

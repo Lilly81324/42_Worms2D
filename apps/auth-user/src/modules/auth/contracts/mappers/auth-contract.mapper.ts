@@ -19,6 +19,7 @@ import { VerifyClaimsViewModel } from '../view-models/verify-claims.view-model';
 type UserWithRelations = {
   id: string;
   email: string;
+  username?: string | null;
   status: string;
   createdAt?: Date | null;
   roles: Array<{ role: { name: string } }>;
@@ -128,7 +129,7 @@ export class AuthContractMapper {
       id: user.id,
       email: user.email,
       displayName: null,
-      username: null,
+      username: user.username ?? null,
       status: this.toUserStatusDto(user.status),
       roles: user.roles.map((entry) => this.toUserRoleDto(entry.role.name)),
       createdAt: user.createdAt?.toISOString() ?? null,
