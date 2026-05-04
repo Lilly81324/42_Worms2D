@@ -112,7 +112,6 @@ export default function AuthModal({
                 <button onClick={onClose}
                         className="absolute top-4 right-4 text-zinc-500 hover:text-foreground transition-colors">✕
                 </button>
-
                 <div className="text-center mb-8">
                     <h2 className="text-3xl font-black tracking-tight">{type}</h2>
                     {errorMessage && (
@@ -176,7 +175,7 @@ export default function AuthModal({
                 </form>
 
                 <button
-                    onClick={handleGoogleLogin}
+                    onClick={() => handleGoogleLogin()}
                     type="button"
                     disabled={googleLoading}
                     className="w-full mt-4 flex items-center justify-center gap-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-3 rounded-xl font-bold hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"

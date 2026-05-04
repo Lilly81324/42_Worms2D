@@ -122,7 +122,7 @@ export class AuthService {
     });
 
     return {
-      success: !!response.success,
+      success: true,
     } satisfies SetPasswordResponseDto;
   }
 

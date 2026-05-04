@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { vi, describe, it, expect } from "vitest";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 import AuthModal from "./AuthModal";
 import { authClient } from "@/src/core/api/auth/auth.client";
 
@@ -38,6 +38,11 @@ vi.mock('@/src/core/context/AuthContext', () => ({
 describe("AuthModal Component", () => {
     const mockOnClose = vi.fn();
     const mockSetType = vi.fn();
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        sessionStorage.clear();
+    });
 
     it("renders the login form by default", () => {
         render(<AuthModal isOpen={true} type="Login" onClose={mockOnClose} setType={mockSetType} />);
@@ -132,6 +137,7 @@ describe("AuthModal Component", () => {
         fireEvent.click(recoveryButton);
 
         expect(authClient.startGoogleOAuth).toHaveBeenCalled();
+        expect(sessionStorage.getItem("auth.oauth.password.recovery")).toBe("random-pass");
     });
 
     it("displays connection error if the API call fails entirely", async () => {
