@@ -152,7 +152,7 @@ export class Lobby {
    * @param data any Client->Server packet, holds the payload as object
    */
   msgToServer(data: CS_GenericPacket) {
-    // Most of theese should be removed later,
+    // Most of these should be removed later,
     // only exists to move through game and lobby states as developer
 
     // Client wants to connect, so send them the current state to display
@@ -232,7 +232,7 @@ export class Lobby {
           //Add new player to our server-side array
           this.players.push({
             userId: data.userId,
-            userName: `Player ${this.players.length + 1}`,
+            userName: data.userName || `Player ${this.players.length + 1}`,
             indexInLobby: this.players.length,
             ready: false,
             seq: [0]

@@ -30,8 +30,7 @@ export default function LobbyPageController() {
   /** Since we only have 1 lobby so far, and no way to specify, which to join, this is useless so far */
   const [lobbyId, setLobbyId] = useState(0);
 
-  const { user, isAuthenticated } = useAuth();
-  const myUserId = user?.id || "guest";
+  const { user} = useAuth();
 
   // initialize 4 empty player slots for static purpose in the first render
   const [slots, setSlots] = useState<PlayerSlot[]>(
@@ -77,7 +76,7 @@ export default function LobbyPageController() {
               newSlots[emptyIndex] = {
                 ...newSlots[emptyIndex],
                 userId: p.userId,
-                // username: p.username || "New Recruit", will be used later
+                username: p.userName || "New Recruit",
                 isReady: false
               };
             }
@@ -108,13 +107,14 @@ export default function LobbyPageController() {
 
           // fill slots with data from server
           p.lobbyData.forEach((playerData:PlayerInLobby) => {
+            console.log("Processing Player at Index:", playerData.indexInLobby, "Data:", playerData);
             const i = playerData.indexInLobby;
 
             if (refreshedSlots[i]) {
               refreshedSlots[i] = {
                 ...refreshedSlots[i],
                 userId: playerData.userId,
-                username: playerData.userId,
+                username: playerData.userName || "Unknown Operative",
                 isReady: playerData.ready,
               };
             }
@@ -136,6 +136,7 @@ export default function LobbyPageController() {
       console.log("RAW PACKET ARRIVED:", packet);
       if (DEBUG) console.log("NEXT: Client received packet: ", packet);
 
+      console.log(`[Packet Arrival] Type: ${packet.type} | Current UI State: ${state}`);
       if (lobbyId !== packet.lobbyId) return;
 
 
@@ -150,7 +151,11 @@ export default function LobbyPageController() {
 
       // Lobby Guard: Only update player slots if we are in the Lobby to prevent not necessary rerender
       if (state === "LOBBY") {
+        console.log(`✅ Guard Passed: Handling ${packet.type}`);
         handleLobbyUpdates(packet);
+      } else
+      {
+        console.warn(`❌ Guard Blocked: Packet ${packet.type} arrived while state was ${state}`);
       }
     };
     // Bind functions to events
@@ -171,14 +176,17 @@ export default function LobbyPageController() {
 
 
   useEffect(() => {
-    if (isConnected && isAuthenticated) {
-      console.log("Sending JoinLobby request for user:", myUserId);
-      msgToServer(CS_Type.CS_JoinLobby, { userId: myUserId });
+    if (isConnected && user){
+      console.log("Sending JoinLobby request for user:", user);
+      msgToServer(CS_Type.CS_JoinLobby, {
+        userId: user.id,
+        userName: user?.username || "Unknown"
+      });
     }
-  }, [isConnected, isAuthenticated, msgToServer, myUserId]);
+  }, [isConnected, msgToServer, user]);
 
   // for now do it like this later we use protected route here
-  if (!isAuthenticated) {
+  if (!user){
     return <div>Please log in to join the lobby.</div>;
   }
 
@@ -192,7 +200,7 @@ export default function LobbyPageController() {
             isConnected={isConnected}
             DEBUG={DEBUG}
             slots={slots}
-            currentUserId={myUserId}
+            currentUserId={user?.id || ""}
         />
       </main>
   );

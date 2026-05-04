@@ -105,10 +105,12 @@ export interface SC_ClientDisconnect extends SC_Base {
  * Sent to all clients when a new player joins the lobby,
  * to inform Client to render new player
  * @param userId Id to identify the joining player
+ * @param userName The name of the player joining
  */
 export interface SC_ClientJoin extends SC_Base {
 	type: SC_Type.SC_ClientJoin,
 	userId: string,
+	userName: string,
 }
 
 /**

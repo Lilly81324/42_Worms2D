@@ -48,6 +48,7 @@ export interface CS_ConnectAttempt extends CS_Base {
 export interface CS_JoinLobby extends CS_Base {
 	type: CS_Type.CS_JoinLobby;
 	userId: string;
+	userName: string;
 }
 
 // LOBBY ======================================================================
