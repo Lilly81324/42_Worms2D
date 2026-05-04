@@ -142,3 +142,33 @@ export type InternalVerifyResponse = {
   session: SessionInfoDto;
   claims: VerifyClaimsDto;
 };
+
+export type DisableUserRequestDto = {
+  reason: string;
+  revokeSessions?: boolean;
+};
+
+export type SetUserRolesRequestDto = {
+  roles: string[];
+};
+
+export type RevokeSessionsRequestDto = {
+  reason?: string;
+};
+
+export type UserDisabledResponseDto = {
+  userId: string;
+  status: string;
+  revokedSessions: number;
+};
+
+export type UserRolesResponseDto = {
+  userId: string;
+  roles: string[];
+  updatedAt: string;
+};
+
+export type RevokeSessionsResponseDto = {
+  userId: string;
+  revokedSessions: number;
+};

@@ -23,6 +23,12 @@ import {
   type SetPasswordRequestDto,
   type SetPasswordResponseDto,
   type VerifyResponseDto,
+  type DisableUserRequestDto,
+  type SetUserRolesRequestDto,
+  type RevokeSessionsRequestDto,
+  type UserDisabledResponseDto,
+  type UserRolesResponseDto,
+  type RevokeSessionsResponseDto,
 } from './contracts/dto/auth-contracts.dto';
 import { AuthContractMapper } from './contracts/mappers/auth-contract.mapper';
 import { BffConfigService } from '../config/bff-config.service';
@@ -148,6 +154,57 @@ export class AuthService {
     });
 
     return AuthContractMapper.toMeResponse(response);
+  }
+
+  async disableUser(
+    userId: string,
+    input: DisableUserRequestDto,
+    context: RequestContext,
+  ): Promise<UserDisabledResponseDto> {
+    this.ensureAuthorization(context.authorization);
+
+    const response = await this.callAuthService<UserDisabledResponseDto>({
+      method: 'POST',
+      path: `/internal/auth/users/${userId}/disable`,
+      data: input,
+      context,
+    });
+
+    return response;
+  }
+
+  async setUserRoles(
+    userId: string,
+    input: SetUserRolesRequestDto,
+    context: RequestContext,
+  ): Promise<UserRolesResponseDto> {
+    this.ensureAuthorization(context.authorization);
+
+    const response = await this.callAuthService<UserRolesResponseDto>({
+      method: 'POST',
+      path: `/internal/auth/users/${userId}/role`,
+      data: input,
+      context,
+    });
+
+    return response;
+  }
+
+  async revokeUserSessions(
+    userId: string,
+    input: RevokeSessionsRequestDto,
+    context: RequestContext,
+  ): Promise<RevokeSessionsResponseDto> {
+    this.ensureAuthorization(context.authorization);
+
+    const response = await this.callAuthService<RevokeSessionsResponseDto>({
+      method: 'POST',
+      path: `/internal/auth/users/${userId}/sessions/revoke`,
+      data: input,
+      context,
+    });
+
+    return response;
   }
 
   private ensureAuthorization(authorization?: string): void {
