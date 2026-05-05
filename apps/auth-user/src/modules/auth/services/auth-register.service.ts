@@ -1,4 +1,5 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import axios from 'axios';
 import { UserRepository } from '../../persistence/repositories/user.repository';
 import { RoleRepository } from '../../persistence/repositories/role.repository';
 import { SessionRepository } from '../../persistence/repositories/session.repository';
@@ -38,6 +39,7 @@ type CreatedRegisterData = {
 
 @Injectable()
 export class AuthRegisterService {
+  private readonly logger = new Logger(AuthRegisterService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly users: UserRepository,
@@ -76,6 +78,42 @@ export class AuthRegisterService {
       );
 
       await this.cacheRegisteredSession(created, context);
+
+      // Initialize player stats in the stats service (fire-and-forget).
+      // Keep this best-effort so registration doesn't fail if stats service is unavailable.
+      (async () => {
+        const payload = {
+          userId: created.user.id,
+          displayName: (input.displayName as string) ?? created.user.username ?? null,
+          username: created.user.username ?? null,
+          email: created.user.email,
+          xp: 50,
+          level: 1,
+          wins: 0,
+          losses: 0,
+          kills: 0,
+          deaths: 0,
+        } as const;
+
+        try {
+          const url = process.env.STATS_SERVICE_URL
+            ? `${process.env.STATS_SERVICE_URL.replace(/\/+$/, '')}/internal/stats/user`
+            : 'http://stats_service:3000/internal/stats/user';
+
+          await axios.post(url, payload, {
+            headers: {
+              'x-service-name': 'auth_service',
+            },
+            timeout: 2000,
+          });
+        } catch (err) {
+          this.logger.warn(
+            `Failed to init stats for user=${created.user.id}: ${
+              (err as Error)?.message ?? String(err)
+            }`,
+          );
+        }
+      })();
 
       const accessToken = await this.tokenIssue.issueAccessToken({
         userId: created.user.id,
