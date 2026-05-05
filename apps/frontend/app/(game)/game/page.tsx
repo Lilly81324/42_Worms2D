@@ -123,7 +123,7 @@ export default function LobbyPageController() {
           break;
         }
       }
-    }
+    };
 
     const msgToClient = (data: string) => {
       const packet: SC_GenericPacket = JSON.parse(data);
@@ -149,13 +149,21 @@ export default function LobbyPageController() {
         case SC_Type.SC_DEV_StartConnecting: setState("CONNECTING"); break;
       }
 
-      // Lobby Guard: Only update player slots if we are in the Lobby to prevent not necessary rerender
-      if (state === "LOBBY") {
-        console.log(`✅ Guard Passed: Handling ${packet.type}`);
+      // Determine if this packet carries Lobby Data
+      const isLobbyDataPacket = [
+        SC_Type.SC_LobbyData,
+        SC_Type.SC_ReadyChange,
+        SC_Type.SC_ClientJoin,
+        SC_Type.SC_ClientDisconnect
+      ].includes(packet.type);
+
+      // We process if we are ALREADY in the lobby,
+      // Or if we just received a packet that tells us we are NOW in the lobby
+
+      if (state === "LOBBY" || packet.type === SC_Type.SC_StartLobby || isLobbyDataPacket) {
         handleLobbyUpdates(packet);
-      } else
-      {
-        console.warn(`❌ Guard Blocked: Packet ${packet.type} arrived while state was ${state}`);
+      } else {
+        if (DEBUG) console.warn(`[Guard Blocked] Ignored ${packet.type} in state ${state}`);
       }
     };
     // Bind functions to events
