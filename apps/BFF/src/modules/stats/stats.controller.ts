@@ -1,6 +1,7 @@
 import { Controller, Get, Headers, Param, Query, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { StatsService } from './stats.service';
+import { PlayerStatsSchema, type PlayerStats } from './contracts/player-stats.schema';
 
 function computeDerived(stats: Record<string, unknown>) {
   const kills = Number((stats as any).kills ?? 0);
@@ -34,7 +35,8 @@ export class StatsController {
 
   @Get('user/:userId')
   async getUserById(@Param('userId') userId: string, @Headers() headers: Record<string, string>) {
-    const base = await this.service.fetchUserById(userId, { authorization: headers.authorization });
+    const raw = await this.service.fetchUserById(userId, { authorization: headers.authorization });
+    const base = PlayerStatsSchema.parse(raw) as PlayerStats;
     const derived = computeDerived(base as Record<string, unknown>);
     return { ...base, derived };
   }
