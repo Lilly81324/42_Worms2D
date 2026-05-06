@@ -234,9 +234,9 @@ export default function LobbyPageController() {
   }, [isConnected, msgToServer, user]);
 
   // for now do it like this later we use protected route here
-  if (!user){
-    return <div>Please log in to join the lobby.</div>;
-  }
+  // if (!user){
+  //   return <div>Please log in to join the lobby.</div>;
+  // }
 
   return (
       <main className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center">
