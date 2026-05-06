@@ -84,8 +84,8 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
                 <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
                     <div className="space-y-2">
                         <motion.h2
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
+                            initial={{opacity: 0, x: -20}}
+                            animate={{opacity: 1, x: 0}}
                             className="text-5xl font-black tracking-tighter uppercase text-zinc-900"
                         >
                             Tactical <span className="text-blue-600">Lobby</span>
@@ -96,10 +96,12 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
                     </div>
 
                     {/* LIVE ACTIVITY FEED */}
-                    <div className="w-full md:w-96 min-h-[110px] overflow-hidden relative bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm">
+                    <div
+                        className="w-full md:w-96 min-h-[110px] overflow-hidden relative bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm">
                         <div className="absolute top-2 right-4 flex gap-1.5 items-center">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span
+                  className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
             </span>
                             <span className="text-[9px] font-mono text-blue-600 font-black uppercase tracking-tighter">
@@ -111,8 +113,8 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
                             <AnimatePresence mode="popLayout">
                                 {feed.length === 0 && (
                                     <motion.span
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
+                                        initial={{opacity: 0}}
+                                        animate={{opacity: 1}}
                                         className="text-[11px] font-mono text-zinc-300 italic"
                                     >
                                         Waiting for squad input...
@@ -121,14 +123,19 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
                                 {feed.map((event) => (
                                     <motion.div
                                         key={event.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                                        initial={{opacity: 0, y: 10}}
+                                        animate={{opacity: 1, y: 0}}
+                                        exit={{opacity: 0, y: -10}}
+                                        transition={{type: "spring", damping: 20, stiffness: 300}}
                                         className="text-[11px] font-mono text-zinc-500 flex items-center gap-3 whitespace-nowrap"
                                     >
                   <span className="text-zinc-300 font-bold">
-                    [{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]
+                    [{new Date().toLocaleTimeString([], {
+                      hour12: false,
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit'
+                  })}]
                   </span>
                                         <span className="text-zinc-800 font-bold tracking-tight">
                     {event.msg}
@@ -150,8 +157,8 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
                         return (
                             <motion.div
                                 key={player.userId || `empty-${index}`} // use fall back index number for empty slots
-                                whileHover={!isEmpty ? { y: -6 } : {}}
-                                transition={{ type: "spring", stiffness: 150 }}
+                                whileHover={!isEmpty ? {y: -6} : {}}
+                                transition={{type: "spring", stiffness: 150}}
                                 className="relative"
                             >
                                 <div className={`relative z-10 aspect-[3/4.5] rounded-[2rem] border-2 transition-all duration-700 flex flex-col p-7
@@ -161,15 +168,18 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
               `}>
 
                                     <div className="flex justify-between items-center mb-10">
-                  <span className={`font-mono text-[10px] font-black tracking-widest uppercase ${isEmpty ? 'text-zinc-300' : 'text-zinc-400'}`}>
+                  <span
+                      className={`font-mono text-[10px] font-black tracking-widest uppercase ${isEmpty ? 'text-zinc-300' : 'text-zinc-400'}`}>
                     Node_0{index + 1}
                   </span>
                                         {!isEmpty && (
                                             <>
                                                 {isMe ? (
-                                                    <span className="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-full font-black tracking-tighter">YOU</span>
+                                                    <span
+                                                        className="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-full font-black tracking-tighter">YOU</span>
                                                 ) : (
-                                                    <div className={`w-3 h-3 rounded-full transition-all duration-700 ${player.isReady ? 'bg-blue-600' : 'bg-zinc-200'}`} />
+                                                    <div
+                                                        className={`w-3 h-3 rounded-full transition-all duration-700 ${player.isReady ? 'bg-blue-600' : 'bg-zinc-200'}`}/>
                                                 )}
                                             </>
                                         )}
@@ -180,14 +190,15 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
                 `}>
                   <span
                       title={isEmpty ? '' : player.username} // Mouse over for truncated names
-                        className={`text-2xl font-black uppercase tracking-tight transition-colors duration-500 truncate w-full text-center
+                      className={`text-2xl font-black uppercase tracking-tight transition-colors duration-500 truncate w-full text-center
         ${isEmpty ? 'text-zinc-200' : player.isReady ? player.color : 'text-zinc-400'}
     `}>
                     {isEmpty ? '---' : player.username}
                   </span>
 
                                         {!isEmpty && player.isReady && (
-                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="px-3 py-1 bg-zinc-900 rounded-full">
+                                            <motion.div initial={{scale: 0}} animate={{scale: 1}}
+                                                        className="px-3 py-1 bg-zinc-900 rounded-full">
                       <span className="text-[8px] font-mono text-white font-bold uppercase tracking-widest">
                         {isMe ? 'You are Ready' : 'Active'}
                       </span>
@@ -219,7 +230,8 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
 
                 {/* System Status */}
                 <div className="mt-20 flex flex-col items-center">
-                    <div className="w-full max-w-md bg-white border border-zinc-200 rounded-full p-1.5 mb-6 flex gap-1 shadow-inner">
+                    <div
+                        className="w-full max-w-md bg-white border border-zinc-200 rounded-full p-1.5 mb-6 flex gap-1 shadow-inner">
                         {players.map((p, index) => (
                             <div
                                 key={p.userId || `bar-${index}`}
@@ -232,26 +244,27 @@ export default function LobbyPage({ msgToServer, players, currentUserId }: Param
                         {allReady ? (
                             <motion.div
                                 key="launch"
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
+                                initial={{opacity: 0, scale: 0.9}}
+                                animate={{opacity: 1, scale: 1}}
                                 className="flex flex-col items-center gap-3"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping" />
+                                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping"/>
                                     <h3 className="text-3xl font-black tracking-tighter text-zinc-900 uppercase italic">
                                         Initializing Launch Sequence
                                     </h3>
-                                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping" />
+                                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping"/>
                                 </div>
-                                <span className="font-mono text-[10px] text-zinc-400 uppercase tracking-[0.5em] font-bold">
+                                <span
+                                    className="font-mono text-[10px] text-zinc-400 uppercase tracking-[0.5em] font-bold">
                 All systems are running normal
               </span>
                             </motion.div>
                         ) : (
                             <motion.div
                                 key="wait-status"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
+                                initial={{opacity: 0}}
+                                animate={{opacity: 1}}
                                 className="flex flex-col items-center gap-1"
                             >
               <span className="text-zinc-400 font-mono text-[10px] uppercase tracking-[0.3em] font-bold">
