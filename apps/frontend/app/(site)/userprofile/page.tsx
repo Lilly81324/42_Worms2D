@@ -46,13 +46,13 @@ export default function ProfilePage() {
 	// [TEST CONSOLE LOG: ]
 	console.log("BASE URL: ", process.env.NEXT_PUBLIC_API_URL+ "/stats/users");
 	const statsData = [
-	{ label: "Matches", value: stats?.matches?.toString() ?? "—", color: "text-blue-500" },
-	{ label: "Win Rate", value: stats?.winRate ?? "—", color: "text-green-500" },
-	{ label: "K/D Ratio", value: stats?.kdRatio?.toString() ?? "—", color: "text-red-500" },
+	{ label: "Matches", value: stats?.derived?.totalMatches?.toString() ?? "—", color: "text-blue-500" },
+	{ label: "Win Rate", value: stats?.derived?.winRate ?? "—", color: "text-green-500" },
+	{ label: "K/D Ratio", value: stats?.derived?.kd?.toString() ?? "—", color: "text-red-500" },
 	{ label: "Kills", value: stats?.kills?.toString() ?? "—", color: "text-green-500" },
 	{ label: "Deaths", value: stats?.deaths?.toString() ?? "—", color: "text-red-500" },
 	];
-	
+	console.log("USER STATS: ", stats);
     return (
         <ProtectedRoute>
         <div className="max-w-4xl mx-auto py-12 px-6">
