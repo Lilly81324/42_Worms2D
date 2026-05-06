@@ -1,6 +1,7 @@
 import { BadGatewayException, Injectable } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
 import { BffConfigService } from '../config/bff-config.service';
+import { PlayerStatsDto } from '../auth/contracts/dto/auth-contracts.dto';
 
 type RequestContext = { authorization?: string; params?: Record<string, unknown> };
 
@@ -8,16 +9,16 @@ type RequestContext = { authorization?: string; params?: Record<string, unknown>
 export class StatsService {
   constructor(private readonly config: BffConfigService) {}
 
-  async fetchUsers(context: RequestContext) {
+  async fetchUsers(context: RequestContext): Promise<PlayerStatsDto[]> {
     // stats service exposes list at `/internal/stats/user` per A_REQ.http
-    return this.callStatsService({ method: 'GET', path: '/internal/stats/user', context });
+    return this.callStatsService<PlayerStatsDto[]>({ method: 'GET', path: '/internal/stats/user', context });
   }
 
-  async fetchUserById(userId: string, context: RequestContext) {
-    return this.callStatsService({ method: 'GET', path: `/internal/stats/user/${encodeURIComponent(userId)}`, context });
+  async fetchUserById(userId: string, context: RequestContext): Promise<PlayerStatsDto> {
+    return this.callStatsService<PlayerStatsDto>({ method: 'GET', path: `/internal/stats/user/${encodeURIComponent(userId)}`, context });
   }
 
-  private async callStatsService<T>(input: { method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; path: string; context: RequestContext; data?: unknown; params?: Record<string, unknown>; }): Promise<T> {
+  private async callStatsService<T = PlayerStatsDto>(input: { method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; path: string; context: RequestContext; data?: unknown; params?: Record<string, unknown>; }): Promise<T> {
     const headers: Record<string, string> = { 'x-service-name': 'bff' };
     if (input.context.authorization) headers.authorization = input.context.authorization;
 

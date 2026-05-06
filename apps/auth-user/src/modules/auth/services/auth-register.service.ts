@@ -292,9 +292,7 @@ export class AuthRegisterService {
       losses: 0,
       kills: 0,
       deaths: 0,
-      email: user.email,
-      username: user.username ?? input.username ?? null,
-      displayName: (input as { displayName?: string })?.displayName ?? null,
+      // stats service DTO rejects profile fields; send only stats fields
     };
 
     const url = 'http://stats_service:3000/internal/stats/user';
