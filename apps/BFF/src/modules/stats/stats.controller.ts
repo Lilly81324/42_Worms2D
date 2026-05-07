@@ -26,9 +26,9 @@ export class StatsController {
     @Req() req: Request,
   ) {
     // short path
-    console.log('stats.getUsers path:', req.originalUrl);
+    //console.log('stats.getUsers path:', req.originalUrl);
     // full URL (protocol + host + path)
-    console.log('stats.getUsers full URL:', `${req.protocol}://${req.get('host')}${req.originalUrl}`);
+    //console.log('stats.getUsers full URL:', `${req.protocol}://${req.get('host')}${req.originalUrl}`);
 
     return this.service.fetchUsers({ authorization: headers.authorization, params: query });
   }
