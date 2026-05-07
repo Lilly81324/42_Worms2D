@@ -25,7 +25,7 @@ export const statsClient = {
 
     const url = `${BASE_URL}/stats/users`;
     // eslint-disable-next-line no-console
-    console.log('statsClient.getStatsUsers ->', url, { accessToken: !!accessToken });
+    //console.log('statsClient.getStatsUsers ->', url, { accessToken: !!accessToken });
     const res = await fetch(url, {
       method: 'GET',
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
@@ -37,7 +37,7 @@ export const statsClient = {
   async getStatsUserById(userId: string, accessToken?: string) {
     const url = `${BASE_URL}/stats/user/${encodeURIComponent(userId)}`;
     // eslint-disable-next-line no-console
-    console.log('statsClient.getStatsUserById ->', url, { userId, accessToken: !!accessToken });
+    //console.log('statsClient.getStatsUserById ->', url, { userId, accessToken: !!accessToken });
     const res = await fetch(url, {
       method: 'GET',
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
