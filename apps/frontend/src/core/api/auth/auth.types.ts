@@ -126,36 +126,86 @@ export interface InternalRequestInit extends RequestInit {
  * These types correspond to the /admin endpoints in the BFF
  */
 
-export interface PageInfoDto {
+export interface PageInfo {
     nextCursor?: string | null;
     hasNextPage: boolean;
 }
 
-export interface UserSearchQueryDto {
+export interface UserSearchRequest {
     query?: string;
     cursor?: string;
     limit?: number;
 }
 
-export interface UserSearchResponseDto {
+export interface UserSearchResponse {
     items: UserAuthView[];
-    pageInfo: PageInfoDto;
+    pageInfo: PageInfo;
 }
 
-export interface DisableUserRequestDto {
+export interface UserDisabledRequest {
     reason: string;
     revokeSessions?: boolean;
 }
 
-export interface EnableUserRequestDto {
+export interface UserDisabledResponse {
+    userId: string;
+    status: string;
+    revokedSessions: number;
+}
+
+export interface UserEnabledRequest {
     reason?: string;
 }
 
-export interface UpdatePlayerStatsDto {
-    wins?: number;
-    losses?: number;
+export interface UserEnabledResponse {
+    userId: string;
+    status: string;
+}
+
+export interface SetUserRolesRequest {
+    roles: string[];
+}
+
+export interface UserRolesResponse {
+    userId: string;
+    roles: string[];
+    updatedAt: string;
+}
+
+export interface UpdatePlayerStatsRequest {
+    matchesWon?: string[];
+    matchesLost?: string[];
+    achievements?: string[];
+    weapons?: string[];
+    matchParticipants?: string[];
     xp?: number;
     level?: number;
+    wins?: number;
+    losses?: number;
+    kills?: number;
+    deaths?: number;
+    damageDealt?: number;
+    damageTaken?: number;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface UpdatePlayerStatsResponse {
+    matchesWon?: string[];
+    matchesLost?: string[];
+    achievements?: string[];
+    weapons?: string[];
+    matchParticipants?: string[];
+    xp?: number;
+    level?: number;
+    wins?: number;
+    losses?: number;
+    kills?: number;
+    deaths?: number;
+    damageDealt?: number;
+    damageTaken?: number;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 /** * --- Errors ---
