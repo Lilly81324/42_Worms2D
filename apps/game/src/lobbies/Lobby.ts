@@ -10,6 +10,9 @@ import {
   SC_GameFinished,
   SC_DEV_ButtonPress,
   SC_DEV_Periodic,
+  SC_ReadyChange,
+  PlayerInLobby,
+  SC_LobbyData,
 } from '@/packets/ServerClientPackets';
 import { SeqHandler } from './SeqHandler';
 
@@ -58,6 +61,7 @@ export class Lobby {
   private lastTimestamp: number;
   private msgToClient: (msg: string) => void;
   private seqHandler: SeqHandler;
+  private players: PlayerInLobby[] = [];
 
   /**
    * On Lobby Creation, call the constructor,
@@ -104,10 +108,10 @@ export class Lobby {
    * Currently has periodic output every 5 seconds
    */
   private gameServerLoop() {
-    this.sendPeridoicPacket();
+    this.sendPeriodicPacket();
   }
 
-  private sendPeridoicPacket() {
+  private sendPeriodicPacket() {
     if (this.state == LobbyStateEnum.Game && Date.now() > this.lastTimestamp) {
       const response = this.createBasePacket<SC_DEV_Periodic>(
         SC_Type.SC_DEV_Periodic,
@@ -148,7 +152,7 @@ export class Lobby {
    * @param data any Client->Server packet, holds the payload as object
    */
   msgToServer(data: CS_GenericPacket) {
-    // Most of theese should be removed later,
+    // Most of these should be removed later,
     // only exists to move through game and lobby states as developer
 
     // Client wants to connect, so send them the current state to display
@@ -220,10 +224,84 @@ export class Lobby {
         break;
       }
 
+      case CS_Type.CS_JoinLobby: {
+        //
+        const playerExists = this.players.find(p => p.userId === data.userId);
+
+        if (!playerExists && this.players.length < 4) {
+          //Add new player to our server-side array
+          this.players.push({
+            userId: data.userId,
+            userName: data.userName || `Player ${this.players.length + 1}`,
+            indexInLobby: this.players.length,
+            ready: false,
+            seq: [0]
+          });
+        }
+
+        // Create SC_LobbyData packet to sync the frontend
+        const response = this.createBasePacket<SC_LobbyData>(
+            SC_Type.SC_LobbyData,
+            {
+              userId: data.userId,
+              lobbyData: this.players // Contains the full player list
+            }
+        );
+
+        this.msgToClient(JSON.stringify(response));
+        break;
+      }
+
+      case CS_Type.CS_ReadyChange: {
+       // Update the state of server's player array
+        const player = this.players.find(p => p.userId === data.userId);
+        if (player) {
+          player.ready = data.ready;
+        }
+        const response = this.createBasePacket<SC_ReadyChange>(
+            SC_Type.SC_ReadyChange,
+            {
+              userId: data.userId,
+              ready: data.ready,
+            }
+        );
+        this.msgToClient(JSON.stringify(response));
+        break;
+      }
+
       default: {
         console.log(
           `Error: Server received packet with unhandled type: ${JSON.stringify(data)}`,
         );
+      }
+    }
+  }
+
+  /**
+   * @brief Called by the LobbyManager when a user's websocket connection is lost
+   * @param userId ID of the player who disconnected
+   */
+  public handleDisconnect(userId: string) {
+    // Currently handle disconnection logic if we are currently in the lobby state but could also be used for game disconnects later on
+    if (this.state === LobbyStateEnum.OpenLobby) {
+      const playerIndex = this.players.findIndex(p => p.userId === userId);
+
+      if (playerIndex !== -1) {
+        // Remove the player from the lobby list
+        this.players.splice(playerIndex, 1);
+
+        // Re-index remaining players to make sure slots are correct
+        this.players.forEach((p, i) => p.indexInLobby = i);
+
+        const response = this.createBasePacket<SC_LobbyData>(
+            SC_Type.SC_LobbyData,
+            {
+              userId: userId,
+              lobbyData: this.players,
+            },
+        );
+
+        this.msgToClient(JSON.stringify(response));
       }
     }
   }
