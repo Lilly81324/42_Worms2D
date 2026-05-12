@@ -19,7 +19,7 @@ export const UserSearchForm: React.FC<UserSearchFormProps> = ({ onSearch }) => {
         }, 500);
 
         return () => clearTimeout(delayDebounceTimeout);
-    }, [searchTerm]);
+    }, [searchTerm, onSearch]);
 
     return (
         <div className="mb-6">

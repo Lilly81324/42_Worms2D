@@ -78,7 +78,7 @@ export default function AdminUserManagement() {
             <AdminActionModal
                 isOpen={modalConfig.isOpen}
                 title={modalConfig.targetUser?.status === 'active' ? 'Disable User' : 'Enable User'}
-                description={`Are you sure you want to ${modalConfig.targetUser?.status === 'active' ? 'disable' : 'enable'} ${modalConfig.targetUser?.username}?`}
+                description={`Are you sure you want to ${modalConfig.targetUser?.status === 'active' ? 'disable' : 'enable'} user ${modalConfig.targetUser?.username}?`}
                 requireReason={modalConfig.targetUser?.status === 'active'}
                 onConfirm={confirmToggleStatus}
                 onClose={() => setModalConfig({ isOpen: false, targetUser: null })}
