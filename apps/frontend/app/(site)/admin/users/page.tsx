@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { authClient } from '@/src/core/api/auth/auth.client';
-import { UserAuthView, UserSearchResponse } from '@/src/core/api/auth/auth.types';
+import { UserAuthView, UserSearchResponse, UpdatePlayerStatsRequest, ConfirmAction } from '@/src/core/api/auth/auth.types';
 import { UserTable } from '@/src/components/admin/UserTable';
 import { UserSearchForm } from '@/src/components/admin/UserSearchForm';
 import { AdminActionModal } from '@/src/components/admin/AdminActionModal';
@@ -15,7 +15,7 @@ export default function AdminUserManagement() {
 
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
-        mode: 'default' | 'roles';
+        mode: ConfirmAction['mode'];
         targetUser: UserAuthView | null;
     }>({
         isOpen: false,
@@ -46,6 +46,17 @@ export default function AdminUserManagement() {
         void fetchUsers(query);
     }, [fetchUsers]);
 
+    const handleEditStatsClick = (userId: string) => {
+        const user = data?.items.find(u => u.id === userId);
+        if (user) {
+            setModalConfig({
+                isOpen: true,
+                mode: 'stats',
+                targetUser: user
+            });
+        }
+    };
+
     const handleToggleStatusClick = (user: UserAuthView) => {
         setModalConfig({ isOpen: true, mode: "default", targetUser: user });
     };
@@ -54,18 +65,23 @@ export default function AdminUserManagement() {
         setModalConfig({ isOpen: true, mode: "roles", targetUser: user });
     };
 
-    const handleConfirmAction = async (payload: string | string[]) => {
+    const handleConfirmAction = async (action: ConfirmAction) => {
         const user = modalConfig.targetUser;
         if (!user) return;
 
-        if (modalConfig.mode === 'roles') {
+        if (action.mode === 'stats') {
+            // Handle Stats update
+            const result = await authClient.updatePlayerStats(user.id, action.payload);
+            if (!result.ok) console.error("Stats update failed:", result.error.message);
+        }
+        else if (action.mode === 'roles') {
             // Handle Role Update
-            const result = await authClient.setUserRoles(user.id, { roles: payload as string[] });
+            const result = await authClient.setUserRoles(user.id, { roles: action.payload });
             if (!result.ok) console.error("Role update failed:", result.error.message);
         } else {
             // Handle Status Toggle (Ban/Unban)
             const isBanning = user.status === 'active';
-            const reason = typeof payload === 'string' ? payload : 'Admin action';
+            const reason = action.payload;
 
             const result = isBanning
                 ? await authClient.disableUser(user.id, { reason })
@@ -89,7 +105,7 @@ export default function AdminUserManagement() {
             <UserTable
                 users={data?.items || []}
                 isLoading={loading && !hasLoadedOnce}
-                onEditStats={(id) => console.log("Stats for", id)}
+                onEditStats={handleEditStatsClick}
                 onToggleStatus={handleToggleStatusClick}
                 onEditRoles={handleEditRolesClick}
             />
@@ -97,10 +113,16 @@ export default function AdminUserManagement() {
             <AdminActionModal
                 isOpen={modalConfig.isOpen}
                 mode={modalConfig.mode}
-                title={modalConfig.mode === 'roles' ? 'Manage Roles' : (modalConfig.targetUser?.status === 'active' ? 'Disable User' : 'Enable User')}
-                description={modalConfig.mode === 'roles'
-                    ? `Assign roles for ${modalConfig.targetUser?.username}`
-                    : `Are you sure you want to change the status for ${modalConfig.targetUser?.username}?`}
+                title={
+                    modalConfig.mode === 'roles' ? 'Manage Roles' :
+                        modalConfig.mode === 'stats' ? 'Edit Player Stats' :
+                            (modalConfig.targetUser?.status === 'active' ? 'Disable User' : 'Enable User')
+                }
+                description={
+                    modalConfig.mode === 'roles' ? `Assign roles for ${modalConfig.targetUser?.username}` :
+                        modalConfig.mode === 'stats' ? `Updating gameplay metrics for ${modalConfig.targetUser?.username}` :
+                            `Are you sure you want to change the status for ${modalConfig.targetUser?.username}?`
+                }
                 currentRoles={modalConfig.targetUser?.roles || []}
                 requireReason={modalConfig.mode === 'default' && modalConfig.targetUser?.status === 'active'}
                 onConfirm={handleConfirmAction}

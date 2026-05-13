@@ -1,13 +1,14 @@
 import React, {JSX, useEffect, useState} from 'react';
+import {UpdatePlayerStatsRequest, ConfirmAction} from '@/src/core/api/auth/auth.types';
 
 interface AdminModalProps {
     isOpen: boolean;
     title: string;
     description: string;
     requireReason?: boolean;
-    mode?: 'default' | 'roles';
+    mode: ConfirmAction['mode'];
     currentRoles?: string[];
-    onConfirm: (payload: any) => void;
+    onConfirm: (action: ConfirmAction) => void;
     onClose: () => void;
 }
 
@@ -19,9 +20,15 @@ export function AdminActionModal(
     const availableRoles = ['admin', 'user'];
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
+    const [stats, setStats] = useState<UpdatePlayerStatsRequest>({
+        level: 0, xp: 0, wins: 0, losses: 0, kills: 0, deaths: 0
+    });
+
     useEffect(() => {
-        if (isOpen && mode === 'roles') {
-            setSelectedRoles(currentRoles);
+        if (isOpen) {
+            if (mode === 'roles') setSelectedRoles(currentRoles);
+            if (mode === 'stats') setStats({ level: 0, xp: 0, wins: 0, losses: 0, kills: 0, deaths: 0 });
+            setReason('');
         }
     }, [isOpen, mode, currentRoles]);
 
@@ -37,19 +44,21 @@ export function AdminActionModal(
 
     const handleConfirm = () => {
         if (mode === 'roles') {
-            onConfirm(selectedRoles);
-        } else {
-            onConfirm(reason);
-        }
+            onConfirm({ mode: 'roles', payload: selectedRoles });
+        } else if (mode === 'stats')
+            onConfirm({ mode: 'stats', payload: stats });
+        else
+            onConfirm({ mode: 'default', payload: reason });
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-all">
-            <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl border border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-all p-4">
+            <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 overflow-y-auto max-h-[95vh]">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
                 <p className="text-sm text-gray-500 mb-6">{description}</p>
 
-                {mode === 'roles' ? (
+                {/* --- ROLE MANAGEMENT UI --- */}
+                {mode === 'roles' && (
                     <div className="mb-6 space-y-2">
                         <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">
                             Select Permissions
@@ -73,9 +82,38 @@ export function AdminActionModal(
                             </p>
                         )}
                     </div>
-                ) : requireReason && (
+                )}
+
+                {/* --- PLAYER STATS UI --- */}
+                {mode === 'stats' && (
+                    <div className="mb-6 space-y-4">
+                        <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">
+                            Gameplay Metrics
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                            {(['level', 'xp', 'wins', 'losses', 'kills', 'deaths'] as const).map((key) => (
+                                <div key={key}>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
+                                        {key}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        value={stats[key] ?? 0}
+                                        onChange={(e) => setStats({ ...stats, [key]: Number(e.target.value) })}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* --- DEFAULT / BAN REASON UI --- */}
+                {mode === 'default' && requireReason && (
                     <div className="mb-6">
-                        <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Required Reason</label>
+                        <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">
+                            Required Reason
+                        </label>
                         <textarea
                             className="w-full p-3 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500"
                             rows={3}
@@ -86,7 +124,8 @@ export function AdminActionModal(
                     </div>
                 )}
 
-                <div className="flex justify-end gap-3">
+                {/* --- FOOTER ACTIONS --- */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -95,8 +134,11 @@ export function AdminActionModal(
                     </button>
                     <button
                         onClick={handleConfirm}
-                        className="px-6 py-2 text-sm font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
-                        disabled={(requireReason && !reason.trim()) || (mode === 'roles' && selectedRoles.length === 0)}
+                        className="px-6 py-2 text-sm font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-md shadow-indigo-100"
+                        disabled={
+                            (mode === 'default' && requireReason && !reason.trim()) ||
+                            (mode === 'roles' && selectedRoles.length === 0)
+                        }
                     >
                         Confirm Changes
                     </button>

@@ -225,7 +225,7 @@ export type AuditListResponseDto = {
   pageInfo: PageInfoDto;
 };
 
-export type UpdatePlayerStatsDto = {
+export class UpdatePlayerStatsDto {
   matchesWon?: string[];
   matchesLost?: string[];
   achievements?: string[];
@@ -241,6 +241,6 @@ export type UpdatePlayerStatsDto = {
   damageTaken?: number;
   createdAt?: string;
   updatedAt?: string;
-};
+}
 
 export type PlayerStatsDto = Record<string, unknown>;

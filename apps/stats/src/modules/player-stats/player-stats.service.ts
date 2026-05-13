@@ -30,9 +30,13 @@ export class PlayerStatsService {
 
   // update the stats of player
   async update(id: string, dto: UpdatePlayerDto) {
-    const updatd = await this.repo.updateStats(id, dto);
-    if (!updatd) throw new NotFoundException(`user with ${id} does not exit`);
-    return updatd;
+    const existing = await this.repo.getStatsById(id as any);
+    if (!existing) {
+      throw new NotFoundException(`User with ID ${id} does not exist`);
+    }
+    const updated = await this.repo.updateStats(id, dto);
+
+    return updated;
   }
 
   /* get match history of a user */

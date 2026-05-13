@@ -208,6 +208,14 @@ export interface UpdatePlayerStatsResponse {
     updatedAt?: string;
 }
 
+/**
+ * --- Admin UI Helper Types ---
+ */
+export type ConfirmAction =
+    | { mode: 'stats'; payload: UpdatePlayerStatsRequest }
+    | { mode: 'roles'; payload: string[] }
+    | { mode: 'default'; payload: string };
+
 /** * --- Errors ---
  */
 export interface ApiError {

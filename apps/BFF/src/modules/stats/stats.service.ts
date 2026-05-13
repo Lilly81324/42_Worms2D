@@ -3,7 +3,10 @@ import axios, { AxiosError } from 'axios';
 import { BffConfigService } from '../config/bff-config.service';
 import { PlayerStatsDto } from '../auth/contracts/dto/auth-contracts.dto';
 
-type RequestContext = { authorization?: string; params?: Record<string, unknown> };
+type RequestContext = {
+  authorization?: string;
+  params?: Record<string, unknown>;
+};
 
 @Injectable()
 export class StatsService {
@@ -12,29 +15,33 @@ export class StatsService {
   async fetchUsers(context: RequestContext): Promise<PlayerStatsDto[]> {
     // stats service exposes list at `/internal/stats/user` per A_REQ.http
     return this.callStatsService<PlayerStatsDto[]>({
-		method: 'GET',
-		path: '/internal/stats/user',
-		context
-	 });
+      method: 'GET',
+      path: '/internal/stats/user',
+      context,
+    });
   }
 
-  async fetchUserById(userId: string, context: RequestContext): Promise<PlayerStatsDto> {
+  async fetchUserById(
+    userId: string,
+    context: RequestContext,
+  ): Promise<PlayerStatsDto> {
     return this.callStatsService<PlayerStatsDto>({
-		method: 'GET',
-		path: `/internal/stats/user/${encodeURIComponent(userId)}`,
-		context
-	});
+      method: 'GET',
+      path: `/internal/stats/user/${encodeURIComponent(userId)}`,
+      context,
+    });
   }
 
-  private async callStatsService<T = PlayerStatsDto>(
-	input: { method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-	path: string;
-	context: RequestContext;
-	data?: unknown;
-	params?: Record<string, unknown>; 
-	}): Promise<T> {
+  private async callStatsService<T = PlayerStatsDto>(input: {
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    path: string;
+    context: RequestContext;
+    data?: unknown;
+    params?: Record<string, unknown>;
+  }): Promise<T> {
     const headers: Record<string, string> = { 'x-service-name': 'bff' };
-    if (input.context.authorization) headers.authorization = input.context.authorization;
+    if (input.context.authorization)
+      headers.authorization = input.context.authorization;
 
     try {
       const response = await axios.request<T>({
@@ -48,9 +55,29 @@ export class StatsService {
     } catch (error) {
       if (error instanceof AxiosError) {
         const status = error.response?.status ?? 502;
-        throw new BadGatewayException({ code: `stats_service_${status}`, message: error.message, details: error.response?.data });
+        throw new BadGatewayException({
+          code: `stats_service_${status}`,
+          message: error.message,
+          details: error.response?.data,
+        });
       }
-      throw new BadGatewayException({ code: 'stats_service_unreachable', message: 'Unable to reach stats service', details: error });
+      throw new BadGatewayException({
+        code: 'stats_service_unreachable',
+        message: 'Unable to reach stats service',
+        details: error,
+      });
     }
+  }
+  async update(
+    userId: string,
+    data: any,
+    context: RequestContext,
+  ): Promise<PlayerStatsDto> {
+    return this.callStatsService<PlayerStatsDto>({
+      method: 'PATCH',
+      path: `/internal/stats/user/${encodeURIComponent(userId)}`,
+      context,
+      data,
+    });
   }
 }
