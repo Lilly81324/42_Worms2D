@@ -15,6 +15,8 @@ ENV PORT=3000
 COPY package*.json ./
 RUN npm ci
 
+# Ensure the image cache directory exists for google profile pictures
+RUN mkdir -p /app/.next/cache/images
 EXPOSE 3000
 
 CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0", "-p", "3000"]
@@ -49,6 +51,9 @@ RUN npm ci --omit=dev
 
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
+
+# Ensure the image cache directory exists for google profile pictures
+RUN mkdir -p /app/.next/cache/images
 
 EXPOSE 3000
 
