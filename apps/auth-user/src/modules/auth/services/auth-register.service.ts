@@ -1,4 +1,5 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import axios from 'axios';
 import { UserRepository } from '../../persistence/repositories/user.repository';
 import { RoleRepository } from '../../persistence/repositories/role.repository';
 import { SessionRepository } from '../../persistence/repositories/session.repository';
@@ -38,6 +39,7 @@ type CreatedRegisterData = {
 
 @Injectable()
 export class AuthRegisterService {
+  private readonly logger = new Logger(AuthRegisterService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly users: UserRepository,
@@ -76,6 +78,15 @@ export class AuthRegisterService {
       );
 
       await this.cacheRegisteredSession(created, context);
+
+      // Initialize player stats in stats service (best-effort)
+      try {
+        await this.initPlayerStats(created.user, input);
+      } catch (err) {
+        this.logger.warn(
+          `Failed to initialize stats for user=${created.user.id}: ${err?.message ?? err}`,
+        );
+      }
 
       const accessToken = await this.tokenIssue.issueAccessToken({
         userId: created.user.id,
@@ -267,5 +278,28 @@ export class AuthRegisterService {
     }
 
     return null;
+  }
+
+  private async initPlayerStats(
+    user: CreatedRegisterData['user'],
+    input: RegisterRequestDto,
+  ): Promise<void> {
+    const payload: Record<string, unknown> = {
+      userId: user.id,
+      xp: 50,
+      level: 1,
+      wins: 0,
+      losses: 0,
+      kills: 0,
+      deaths: 0,
+      // stats service DTO rejects profile fields; send only stats fields
+    };
+
+    const url = 'http://stats_service:3000/internal/stats/user';
+
+    await axios.post(url, payload, {
+      headers: { 'x-service-name': 'auth_service' },
+      timeout: 2000,
+    });
   }
 }

@@ -1,12 +1,40 @@
 "use client";
 
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { statsClient } from "@/src/core/api/stats/stats.client";
+import { useAuth } from "@/components/Providers";
+import type { StatsUser } from "@/src/core/api/stats/stats.types";
 
 type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations';
 
 export default function ProfilePage() {
     const [activeTab, setActiveTab] = useState<TabType>('Info');
+    const [stats, setStats] = useState<StatsUser | null>(null)
+
+    // get user and loading state from provider
+    const { user, isLoading } = useAuth();
+    const userId = user?.id;
+
+    // fetch data with helper function getUserStats when user becomes available
+    useEffect(() => {
+        let mounted = true;
+
+        if (isLoading) return;
+
+        if (!userId) {
+            setStats(null);
+            return;
+        }
+
+        const accessToken = typeof window !== 'undefined' ? sessionStorage.getItem('auth.accessToken') ?? undefined : undefined;
+		//console.log("userID: ", userId);
+        statsClient.getStatsUserById(userId, accessToken)
+            .then(res => { if (!mounted) return; if (res.ok) setStats(res.data); else setStats(null); })
+            .catch(() => { if (mounted) setStats(null); });
+
+        return () => { mounted = false; };
+    }, [userId, isLoading]);
 
     const tabs: { name: TabType; icon: string }[] = [
         {name: 'Info', icon: '👤'},
@@ -15,17 +43,21 @@ export default function ProfilePage() {
         {name: 'Invitations', icon: '✉️'},
     ];
 
+	// [TEST CONSOLE LOG: ]
+	//console.log("BASE URL: ", process.env.NEXT_PUBLIC_API_URL+ "/stats/users");
+	const statsData = [
+	{ label: "Matches", value: stats?.derived?.totalMatches?.toString() ?? "—", color: "text-blue-500" },
+	{ label: "Win Rate", value: stats?.derived?.winRate ?? "—", color: "text-green-500" },
+	{ label: "K/D Ratio", value: stats?.derived?.kd?.toString() ?? "—", color: "text-red-500" },
+	{ label: "Kills", value: stats?.kills?.toString() ?? "—", color: "text-green-500" },
+	{ label: "Deaths", value: stats?.deaths?.toString() ?? "—", color: "text-red-500" },
+	];
+	//console.log("USER STATS: ", stats);
     return (
         <ProtectedRoute>
         <div className="max-w-4xl mx-auto py-12 px-6">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                {[
-                    {label: "Matches", value: "142", color: "text-blue-500"},
-                    {label: "Win Rate", value: "64%", color: "text-green-500"},
-                    {label: "K/D Ratio", value: "2.1", color: "text-red-500"},
-                    {label: "Kills", value: "500", color: "text-green-500"},
-                    {label: "Deaths", value: "42", color: "text-red-500"},
-                ].map((stat) => (
+                {statsData.map((stat) => (
                     <div key={stat.label}
                          className="bg-zinc-100 dark:bg-zinc-900/50 p-4 rounded-2xl border border-foreground/5">
                         <p className="text-[10px] uppercase font-bold text-zinc-500">{stat.label}</p>

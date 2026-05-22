@@ -1,74 +1,43 @@
-import { Controller, Get, Headers, Param } from '@nestjs/common';
-import { StatsService } from './stats.service.js';
+import { Controller, Get, Headers, Param, Query, Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { StatsService } from './stats.service';
+import { PlayerStatsSchema, type PlayerStats } from './contracts/player-stats.schema';
 
-type RequestContext = {
-  requestId?: string;
-  authorization?: string;
-};
+function computeDerived(stats: Record<string, unknown>) {
+  const kills = Number((stats as any).kills ?? 0);
+  const deaths = Number((stats as any).deaths ?? 0);
+  const wins = Number((stats as any).wins ?? 0);
+  const losses = Number((stats as any).losses ?? 0);
+  const totalMatches = wins + losses;
+  const winRate = totalMatches > 0 ? (wins / totalMatches) * 100 : 0;
+  const kd = deaths > 0 ? kills / deaths : kills;
+  return { totalMatches, winRate, kd };
+}
 
 @Controller('stats')
 export class StatsController {
-  constructor(private readonly statsService: StatsService) {}
+  constructor(private readonly service: StatsService) {}
 
-  @Get('users/:userId')
-  getPlayerStats(
-    @Param('userId') userId: string,
-    @Headers('x-request-id') requestId?: string,
-    @Headers('authorization') authorization?: string,
+  
+  @Get('users')
+  async getUsers(
+    @Headers() headers: Record<string, string>,
+    @Query() query: Record<string, unknown>,
+    @Req() req: Request,
   ) {
-    return this.statsService.getPlayerStats(
-      userId,
-      this.context(requestId, authorization),
-    );
+    // short path
+    //console.log('stats.getUsers path:', req.originalUrl);
+    // full URL (protocol + host + path)
+    //console.log('stats.getUsers full URL:', `${req.protocol}://${req.get('host')}${req.originalUrl}`);
+
+    return this.service.fetchUsers({ authorization: headers.authorization, params: query });
   }
 
-  @Get('users/:userId/matches')
-  getPlayerMatchHistory(
-    @Param('userId') userId: string,
-    @Headers('x-request-id') requestId?: string,
-    @Headers('authorization') authorization?: string,
-  ) {
-    return this.statsService.getPlayerMatchHistory(
-      userId,
-      this.context(requestId, authorization),
-    );
-  }
-
-  @Get('matches')
-  listMatches(
-    @Headers('x-request-id') requestId?: string,
-    @Headers('authorization') authorization?: string,
-  ) {
-    return this.statsService.listMatches(
-      this.context(requestId, authorization),
-    );
-  }
-
-  @Get('matches/:matchId')
-  getMatchById(
-    @Param('matchId') matchId: string,
-    @Headers('x-request-id') requestId?: string,
-    @Headers('authorization') authorization?: string,
-  ) {
-    return this.statsService.getMatchById(
-      matchId,
-      this.context(requestId, authorization),
-    );
-  }
-
-  @Get('matches/:matchId/members')
-  getMatchMembers(
-    @Param('matchId') matchId: string,
-    @Headers('x-request-id') requestId?: string,
-    @Headers('authorization') authorization?: string,
-  ) {
-    return this.statsService.getMatchMembers(
-      matchId,
-      this.context(requestId, authorization),
-    );
-  }
-
-  private context(requestId?: string, authorization?: string): RequestContext {
-    return { requestId, authorization };
+  @Get('user/:userId')
+  async getUserById(@Param('userId') userId: string, @Headers() headers: Record<string, string>) {
+    const raw = await this.service.fetchUserById(userId, { authorization: headers.authorization });
+    const base = PlayerStatsSchema.parse(raw) as PlayerStats;
+    const derived = computeDerived(base as Record<string, unknown>);
+    return { ...base, derived };
   }
 }
