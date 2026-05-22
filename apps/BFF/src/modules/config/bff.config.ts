@@ -19,6 +19,9 @@ type BffConfigShape = {
   stats: {
     serviceUrl: string;
   };
+  social: {
+    serviceUrl: string;
+  };
 };
 
 export const bffConfig = registerAs<BffConfigShape>(
@@ -43,6 +46,9 @@ export const bffConfig = registerAs<BffConfigShape>(
       },
       stats: {
         serviceUrl: env.STATS_SERVICE_URL,
+      },
+      social: {
+        serviceUrl: env.SOCIAL_SERVICE_URL,
       },
     };
   },

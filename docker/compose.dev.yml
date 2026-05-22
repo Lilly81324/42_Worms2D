@@ -10,6 +10,7 @@ services:
       FRONTEND_INTERNAL_PORT: ${FRONTEND_INTERNAL_PORT:-3000}
       BFF_INTERNAL_PORT: ${BFF_INTERNAL_PORT:-3000}
       GAME_INTERNAL_PORT: ${GAME_INTERNAL_PORT:-3001}
+      SOCIAL_INTERNAL_PORT: ${SOCIAL_INTERNAL_PORT:-3000}
     volumes:
       - ../infra/nginx/nginx.dev.conf.template:/etc/nginx/templates/default.conf.template:ro
       - nginx_maps:/usr/share/nginx/html/maps
@@ -171,18 +172,33 @@ services:
       DB_USER: ${SOCIAL_DB_USER}
       DB_PASSWORD: ${SOCIAL_DB_PASSWORD}
       DB_NAME: ${SOCIAL_DB_NAME}
+      DATABASE_URL: postgresql://${SOCIAL_DB_USER}:${SOCIAL_DB_PASSWORD}@postgres_social:5432/${SOCIAL_DB_NAME}?schema=public
       REDIS_HOST: redis
       REDIS_PORT: ${REDIS_INTERNAL_PORT:-6379}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: ${RABBITMQ_INTERNAL_PORT:-5672}
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
+      SERVICE_NAME: social-service
+      SERVICE_VERSION: ${SERVICE_VERSION}
+      UPLOAD_ROOT: /app/uploads
+      PUBLIC_UPLOAD_BASE_PATH: /api/uploads
+      PRISMA_GENERATE_ON_START: "true"
+      PRISMA_RUN_MIGRATIONS: "true"
     volumes:
       - ../apps/social:/app
       - social_service_node_modules:/app/node_modules
       - social_service_dist:/app/dist
+      - social_uploads:/app/uploads
     ports:
       - "${SOCIAL_HOST_PORT:-3002}:${SOCIAL_INTERNAL_PORT:-3000}"
       - "${SOCIAL_DEBUG_HOST_PORT:-9232}:9229"
-    command: ["sh", "-lc", "npm ci && npm run start:debug"]
+    entrypoint: ["sh", "/app/scripts/prismarun.sh"]
+    command: ["npm", "run", "start:debug"]
     depends_on:
       postgres_social:
         condition: service_healthy
@@ -294,5 +310,6 @@ volumes:
   nginx_maps:
   social_service_node_modules:
   social_service_dist:
+  social_uploads:
   stats_service_node_modules:
   stats_service_dist:

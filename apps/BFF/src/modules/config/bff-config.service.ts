@@ -20,4 +20,8 @@ export class BffConfigService {
   get stats() {
     return this.config.stats;
   }
+
+  get social() {
+    return this.config.social;
+  }
 }
