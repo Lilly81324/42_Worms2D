@@ -226,6 +226,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      AUTH_SERVICE_URL: http://auth_service:3000
       DB_HOST: postgres_social
       DB_PORT: 5432
       DB_USER: ${SOCIAL_DB_USER}
@@ -246,6 +247,7 @@ services:
       SERVICE_VERSION: ${SERVICE_VERSION}
       UPLOAD_ROOT: /app/uploads
       PUBLIC_UPLOAD_BASE_PATH: /api/uploads
+      WEBSOCKET_SESSION_CHECK_INTERVAL_SECONDS: ${WEBSOCKET_SESSION_CHECK_INTERVAL_SECONDS:-60}
       PRISMA_GENERATE_ON_START: "true"
       PRISMA_RUN_MIGRATIONS: "true"
     expose:

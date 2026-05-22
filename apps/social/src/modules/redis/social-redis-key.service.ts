@@ -15,4 +15,8 @@ export class SocialRedisKeyService {
   connection(userId: string, socketId: string): string {
     return this.build('connection', `${userId}:${socketId}`);
   }
+
+  connections(userId: string): string {
+    return this.build('connections', userId);
+  }
 }

@@ -200,6 +200,10 @@ export class SocialService {
 
   async markSocketDisconnected(userId: string, socketId: string) {
     await this.redis.removeConnection(userId, socketId);
+    if (await this.redis.hasActiveConnections(userId)) {
+      return false;
+    }
+
     await this.prisma.userPresence.update({
       where: { userId },
       data: {
@@ -208,6 +212,7 @@ export class SocialService {
       },
     });
     this.events.publish('presence.offline', { userId });
+    return true;
   }
 
   async uploadAvatar(

@@ -71,9 +71,13 @@ export class SocialRedisService implements OnModuleInit, OnModuleDestroy {
 
   async markConnection(userId: string, socketId: string): Promise<void> {
     const ttl = this.config.redis.presenceTtlSeconds;
-    await this.safeExecute(() =>
-      this.client.set(this.keys.connection(userId, socketId), '1', { EX: ttl }),
-    );
+    await this.safeExecute(async () => {
+      await this.client.set(this.keys.connection(userId, socketId), '1', {
+        EX: ttl,
+      });
+      await this.client.sAdd(this.keys.connections(userId), socketId);
+      await this.client.expire(this.keys.connections(userId), ttl);
+    });
     await this.touchPresence(userId);
   }
 
@@ -86,9 +90,47 @@ export class SocialRedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async removeConnection(userId: string, socketId: string): Promise<void> {
-    await this.safeExecute(() =>
-      this.client.del(this.keys.connection(userId, socketId)),
+    await this.safeExecute(async () => {
+      await this.client.del(this.keys.connection(userId, socketId));
+      await this.client.sRem(this.keys.connections(userId), socketId);
+    });
+  }
+
+  async hasActiveConnections(userId: string): Promise<boolean> {
+    const socketIds = await this.safeExecute(
+      () => this.client.sMembers(this.keys.connections(userId)),
+      [] as string[],
     );
+    if (socketIds.length === 0) {
+      return false;
+    }
+
+    let activeConnections = 0;
+    for (const socketId of socketIds) {
+      const exists = await this.safeExecute(
+        () => this.client.exists(this.keys.connection(userId, socketId)),
+        0,
+      );
+      if (exists > 0) {
+        activeConnections += 1;
+        continue;
+      }
+
+      await this.safeExecute(() =>
+        this.client.sRem(this.keys.connections(userId), socketId),
+      );
+    }
+
+    if (activeConnections > 0) {
+      await this.safeExecute(() =>
+        this.client.expire(
+          this.keys.connections(userId),
+          this.config.redis.presenceTtlSeconds,
+        ),
+      );
+    }
+
+    return activeConnections > 0;
   }
 
   async isOnline(userId: string): Promise<boolean> {

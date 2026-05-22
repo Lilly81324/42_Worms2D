@@ -33,6 +33,14 @@ export class SocialConfigService {
     return this.config.jwt;
   }
 
+  get auth() {
+    return this.config.auth;
+  }
+
+  get websocket() {
+    return this.config.websocket;
+  }
+
   get uploads() {
     return this.config.uploads;
   }

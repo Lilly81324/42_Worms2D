@@ -27,6 +27,7 @@ const schema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_ISSUER: z.string().min(1).default('auth-service'),
   JWT_AUDIENCE: z.string().min(1).default('transcendence-internal'),
+  AUTH_SERVICE_URL: z.string().url().default('http://auth_service:3000'),
 
   SERVICE_NAME: z.string().min(1).default('social-service'),
   SERVICE_VERSION: z.string().min(1).default('1.0.0'),
@@ -34,6 +35,11 @@ const schema = z.object({
   PUBLIC_UPLOAD_BASE_PATH: z.string().min(1).default('/api/uploads'),
   AVATAR_MAX_BYTES: z.coerce.number().int().positive().default(2_000_000),
   PRESENCE_TTL_SECONDS: z.coerce.number().int().positive().default(75),
+  WEBSOCKET_SESSION_CHECK_INTERVAL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(60),
   JWT_ACCESS_TTL: z.string().regex(ttlRegex).default('15m'),
 });
 

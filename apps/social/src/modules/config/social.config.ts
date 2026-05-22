@@ -25,6 +25,12 @@ type SocialConfigShape = {
     issuer: string;
     audience: string;
   };
+  auth: {
+    serviceUrl: string;
+  };
+  websocket: {
+    sessionCheckIntervalSeconds: number;
+  };
   uploads: {
     root: string;
     publicBasePath: string;
@@ -72,6 +78,13 @@ export const socialConfig = registerAs<SocialConfigShape>(
         accessSecret: env.JWT_ACCESS_SECRET,
         issuer: env.JWT_ISSUER,
         audience: env.JWT_AUDIENCE,
+      },
+      auth: {
+        serviceUrl: env.AUTH_SERVICE_URL.replace(/\/+$/, ''),
+      },
+      websocket: {
+        sessionCheckIntervalSeconds:
+          env.WEBSOCKET_SESSION_CHECK_INTERVAL_SECONDS,
       },
       uploads: {
         root: env.UPLOAD_ROOT,

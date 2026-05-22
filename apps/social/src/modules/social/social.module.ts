@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { ActiveSessionService } from '../auth/active-session.service';
 import { AccessTokenService } from '../auth/tokens/access-token.service';
 import { BearerAuthGuard } from '../auth/bearer-auth.guard';
 import { AppConfigModule } from '../config/config.module';
@@ -10,7 +11,13 @@ import { ChatGateway } from './chat.gateway';
 @Module({
   imports: [AppConfigModule, JwtModule],
   controllers: [SocialController, UploadsController],
-  providers: [AccessTokenService, BearerAuthGuard, SocialService, ChatGateway],
+  providers: [
+    AccessTokenService,
+    ActiveSessionService,
+    BearerAuthGuard,
+    SocialService,
+    ChatGateway,
+  ],
   exports: [SocialService],
 })
 export class SocialModule {}
