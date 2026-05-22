@@ -1,168 +1,239 @@
 openapi: 3.0.3
 info:
-  title: Stats Service
-  version: 0.1.0
-  description: Internal stats service contract used by the BFF.
+  title: Stats Service (Internal)
+  version: 0.2.0
 servers:
-  - url: http://stats-service:3004
-    description: Docker internal network address used by BFF
-tags:
-  - name: Health
-    description: Service health endpoints
-  - name: Stats
-    description: Read-only player and match statistics
+  - url: http://stats_service:3000
 paths:
+  /internal/stats/helloWorld:
+    get:
+      summary: Stats root hello endpoint
+      responses:
+        "200": { description: OK }
+
   /internal/stats/health:
     get:
-      tags: [Health]
       summary: Stats service health
-      operationId: getInternalStatsHealth
-      security: []
       responses:
-        "200":
-          description: Service is healthy
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
+        "200": { description: OK }
+
   /internal/stats/health/db:
     get:
-      tags: [Health]
       summary: Stats database health
-      operationId: getInternalStatsDatabaseHealth
-      security: []
       responses:
-        "200":
-          description: Database health status
-          content:
-            application/json:
-              schema:
-                type: object
+        "200": { description: OK }
+
   /internal/stats/user:
+    post:
+      summary: Create player stats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201": { description: Created }
     get:
-      tags: [Stats]
       summary: List player stats
-      operationId: listInternalPlayerStats
-      security: []
       responses:
-        "200":
-          description: Player stats list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-  /internal/stats/user/{userId}:
+        "200": { description: OK }
+
+  /internal/stats/user/{id}:
+    put:
+      summary: Update player stats
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { description: OK }
     get:
-      tags: [Stats]
       summary: Get player stats by user id
-      operationId: getInternalPlayerStatsByUserId
-      security: []
       parameters:
-        - name: userId
-          in: path
+        - in: path
+          name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        "200":
-          description: Player stats payload
-          content:
-            application/json:
-              schema:
-                type: object
-  /internal/stats/user/{userId}/matches:
+        "200": { description: OK }
+
+  /internal/stats/user/{id}/matches:
     get:
-      tags: [Stats]
-      summary: Get player match history by user id
-      operationId: getInternalPlayerMatchesByUserId
-      security: []
+      summary: Get player match history
       parameters:
-        - name: userId
-          in: path
+        - in: path
+          name: id
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        "200":
-          description: Match history list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
+        "200": { description: OK }
+
   /internal/stats/match:
-    get:
-      tags: [Stats]
-      summary: List matches
-      operationId: listInternalMatches
-      security: []
+    post:
+      summary: Create match
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
       responses:
-        "200":
-          description: Matches list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
+        "201": { description: Created }
+    get:
+      summary: List matches
+      responses:
+        "200": { description: OK }
+    delete:
+      summary: Delete all matches
+      responses:
+        "200": { description: OK }
+
   /internal/stats/match/{matchId}:
     get:
-      tags: [Stats]
       summary: Get match by id
-      operationId: getInternalMatchById
-      security: []
       parameters:
-        - name: matchId
-          in: path
+        - in: path
+          name: matchId
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        "200":
-          description: Match payload
-          content:
-            application/json:
-              schema:
-                type: object
+        "200": { description: OK }
+    patch:
+      summary: Update match
+      parameters:
+        - in: path
+          name: matchId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { description: OK }
+    delete:
+      summary: Delete match by id
+      parameters:
+        - in: path
+          name: matchId
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
   /internal/stats/match/{matchId}/members:
     get:
-      tags: [Stats]
       summary: Get match members
-      operationId: getInternalMatchMembers
-      security: []
       parameters:
-        - name: matchId
-          in: path
+        - in: path
+          name: matchId
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        "200":
-          description: Match members list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-components:
-  schemas:
-    Error:
-      type: object
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        details:
-          type: object
-      required:
-        - code
-        - message
+        "200": { description: OK }
+
+  /internal/stats/match/{matchId}/participants/{userId}:
+    post:
+      summary: Add match participant
+      parameters:
+        - in: path
+          name: matchId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: userId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { description: OK }
+    patch:
+      summary: Update match participant
+      parameters:
+        - in: path
+          name: matchId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: userId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { description: OK }
+    delete:
+      summary: Remove match participant
+      parameters:
+        - in: path
+          name: matchId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: userId
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  /internal/stats/weapons:
+    post:
+      summary: Create weapon stats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "201": { description: Created }
+    get:
+      summary: List weapons
+      responses:
+        "200": { description: OK }
+
+  /internal/stats/weapons/{id}:
+    get:
+      summary: Get weapon by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+    patch:
+      summary: Update weapon
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { description: OK }
+    delete:
+      summary: Delete weapon
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
