@@ -31,6 +31,18 @@ export class AimingState implements IState {
 		// Actions
 		const actions: Array<IAction> = [];
 
+		// Force a chosen worm and weapon
+		if (!this.machine.turn)
+			this.machine.turn = new Turn(this.machine.players[0]);
+		const turn = this.machine.turn;
+		if (!turn.chosenWorm)
+			turn.chosenWorm = this.machine.players[0].worms[0];
+		if (!turn.chosenWeapon)
+			turn.chooseWeapon(this.machine.weapons[0]);
+		else {
+			turn.chooseWeapon(turn.chosenWeapon);
+		}
+
 		// For inactive players, dont allow picking worms
 		if (!this.machine.isActiveUser())
 			return (actions)
@@ -42,18 +54,6 @@ export class AimingState implements IState {
 		}, () => {
 			this.next = true;
 		}));
-
-		// Force a chosen worm and weapon
-		if (!this.machine.turn)
-			this.machine.turn = new Turn(this.machine.players[0]);
-		const turn = this.machine.turn;
-		if (!turn.chosenWorm)
-			turn.chosenWorm = this.machine.players[0].worms[0];
-		if (!turn.chosenWeapon)
-			turn.chosenWeapon = this.machine.weapons[0];
-		turn.chosenWeapon.show(true);
-		turn.chosenWeapon.mesh.position.x = turn.chosenWorm.mesh.position.x;
-		turn.chosenWeapon.mesh.position.y = turn.chosenWorm.mesh.position.y;
 
 		const aimingActions = this.machine.turn?.chosenWeapon?.aimTypes[0].activate(this.machine.turn);
 		aimingActions?.forEach((a: IAction) => {actions.push(a)});

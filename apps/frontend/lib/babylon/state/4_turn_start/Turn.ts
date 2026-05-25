@@ -18,6 +18,18 @@ export class Turn {
 		this.chosenWorm = player.worms[0];
 	}
 
+	chooseWeapon(newWeapon: IWeapon | undefined) {
+		this.chosenWeapon = newWeapon;
+		console.log("Picking New Weapon: ", this.chosenWeapon);
+		if (this.chooseWeapon == undefined)
+			return ;
+		console.log("Visinily before: ", this.chosenWeapon?.childMeshes[0]?.visibility);
+		this.chosenWeapon.show(true);
+		console.log("Visinily after: ", this.chosenWeapon?.childMeshes[0]?.visibility);
+		this.chosenWeapon.mesh.position.x = this.chosenWorm.mesh.position.x;
+		this.chosenWeapon.mesh.position.y = this.chosenWorm.mesh.position.y;
+	}
+
 	/**
 	 * Turns Weapon to new rotation
 	 * @param angle new Rotation for Weapon in degrees
@@ -31,6 +43,10 @@ export class Turn {
 
 	dispose() {
 		this.chosenWeapon?.dispose();
+	}
+
+	end() {
+		this.chosenWeapon?.show(false);
 	}
 
 }

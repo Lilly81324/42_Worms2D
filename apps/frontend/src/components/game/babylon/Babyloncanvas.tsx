@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { Engine, Scene } from "@babylonjs/core" ;
-import { Socket } from 'socket.io-client';
-import { Client } from '@/shared/packets/Client';
 
 
 import { createScene } from "@/lib/babylon/createScene";
