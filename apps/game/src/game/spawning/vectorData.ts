@@ -74,11 +74,7 @@ export function generateSpawnAreas(): Vector2[][] {
       new Vector2(35, -0.1),
       new Vector2(37, -1.3),
     ],
-    [
-      new Vector2(32.3, -14.3),
-      new Vector2(32.3, -14.3),
-      new Vector2(34.3, -14.6),
-    ],
+    [new Vector2(32.3, -14.3), new Vector2(34.3, -14.6)],
     [new Vector2(28.5, -24.1), new Vector2(30.5, -24.6)],
   ];
 }

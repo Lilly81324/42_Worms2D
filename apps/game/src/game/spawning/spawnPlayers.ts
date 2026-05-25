@@ -8,12 +8,14 @@ class WormSpawner {
   private points: Array<Array<Vector2>>;
   private idCounter: number;
   constructor(points: Array<Array<Vector2>>) {
+    console.log('New Worm Spawner created');
     this.points = points;
     this.idCounter = 0;
   }
 
   // Choose random spawning area
   generate(): wormData | undefined {
+    console.log('Generating new worm position:');
     let result: wormData | undefined = undefined;
     while (this.points.length > 0) {
       const num = Math.floor(Scalar.RandomRange(0, this.points.length));
@@ -31,9 +33,12 @@ class WormSpawner {
       this.idCounter++;
       // Remove position from subarea, and subarea f rom areas if neccesary
       this.points[num].splice(pos, 1);
-      if (this.points[num].length <= 0) this.points.splice(num, 1);
+      if (this.points[num].length <= 0) {
+        console.log('Removing: ', this.points.splice(num, 1));
+      }
       break;
     }
+    console.log('Chosen: ', result);
     return result;
   }
 }
