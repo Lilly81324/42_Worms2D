@@ -1,0 +1,27 @@
+services:
+  frontend:
+    profiles: ["dev-core"]
+
+  game_service:
+    profiles: ["dev-core"]
+
+  auth_service:
+    profiles: ["dev-core"]
+
+  bff:
+    profiles: ["dev-core"]
+
+  nginx:
+    profiles: ["dev-core"]
+
+  postgres_social:
+    profiles: ["disabled"]
+
+  postgres_stats:
+    profiles: ["disabled"]
+
+  rabbitmq:
+    profiles: ["disabled"]
+
+  redis:
+    profiles: ["disabled"]

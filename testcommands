@@ -1,0 +1,2 @@
+make dev-run-specific SVC="frontend game_service nginx auth_service"
+make dev-watcher-for SVC="frontend game_service"

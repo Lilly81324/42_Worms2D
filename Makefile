@@ -3,12 +3,16 @@ ENV_FILE ?= .env
 COMPOSE_BASE = docker/compose.infra.yml
 COMPOSE_DEV  = docker/compose.dev.yml
 COMPOSE_PROD = docker/compose.prod.yml
+COMPOSE_DEV_STATIC = docker/compose.dev-static.yml
+# COMPOSE_DEV_CORE = docker/compose.dev-core.yml
 
 # ---------- Compose commands ----------
 DC_BASE = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE)
 DC_DEV  = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE)  -f $(COMPOSE_DEV) --profile dev
 DC_PROD = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE) -f $(COMPOSE_PROD) --profile prod 
 DC_OBS  = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE) --profile dev --profile obs
+DC_DEV_STATIC = docker compose --env-file $(ENV_FILE)-f $(COMPOSE_BASE) -f $(COMPOSE_DEV) -f $(COMPOSE_DEV_STATIC) --profile dev
+# DC_DEV_CORE = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE) -f $(COMPOSE_DEV) -f $(COMPOSE_DEV_CORE) --profile dev-core
 
 # Optional service selector:
 SVC ?=
@@ -16,6 +20,9 @@ CMD ?= sh
 
 .PHONY: help check-env up down down-base down-dev down-prod down-all \
 	ps logs health reset dev prod debug obs rebuild pull restart exec sh e2e-auth
+
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
 
 help:
 	@echo "Targets:"
@@ -48,14 +55,35 @@ up: dev
 dev: check-env
 	$(DC_DEV) up -d --build
 
-# Start the full stack but stack the override configuration file to disable watchers
-dev-no-watch: check-env
-	docker compose --env-file $(ENV_FILE) \
+# not as useful because still to many not necessary container
+dev-run-specific: check-env
+ifndef SVC
+	$(error Please provide SVC="frontend game_service")
+endif
+	@echo "🔥 Running ONLY selected services: $(SVC)"
+	docker compose \
+		--env-file $(ENV_FILE) \
 		-f $(COMPOSE_BASE) \
 		-f $(COMPOSE_DEV) \
-		-f docker/compose.no-watch.yml \
 		--profile dev \
-		up -d --build
+		up -d --build $(SVC) \
+
+dev-watcher-for: check-env
+ifndef SVC
+	$(error Please provide SVC="frontend game_service")
+endif
+
+	@echo "🔥 Watch mode services: $(SVC)"
+	@echo "📦 Non-watch services: dev-static mode"
+
+	@WATCH_SERVICES="$(SVC) nginx"; \
+	STATIC_SERVICES="bff auth_service social_service stats_service"; \
+	docker compose \
+		--env-file $(ENV_FILE) \
+		-f $(COMPOSE_BASE) \
+		-f $(COMPOSE_DEV) \
+		--profile dev \
+		up -d --build $$WATCH_SERVICES $$STATIC_SERVICES
 
 prod: check-env
 	$(DC_PROD) up -d --build
