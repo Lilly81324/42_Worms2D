@@ -1,5 +1,7 @@
 // import * from 'ClientServerPackets.ts';
 
+import { pointData } from "./util";
+
 
 /**
  * ADDING A NEW PACKET
@@ -18,19 +20,27 @@ export enum CS_Type {
 	CS_DEV_StartGame =			"CS_DEV_StartGame",
 	CS_DEV_StartEndscreen =		"CS_DEV_StartEndscreen",
 	CS_DEV_ButtonPress =		"CS_DEV_ButtonPress",
-	CS_ConnectAttempt =			"CS_ConnectionAttempt",
+	CS_ConnectAttempt =			"CS_ConnectAttempt",
 	CS_ReadyChange =			"CS_ReadyChange",
+	CS_LoadingProgress =		"CS_LoadingProgress",
 	CS_FinishedLoading =		"CS_FinishedLoading",
 	CS_FailedLoading =			"CS_FailedLoading",
-    CS_JoinLobby= 			    "CS_JoinLobby",
+	CS_GetGameState =			"CS_GetGameState",
+	CS_DEV_SetGameState =		"CS_DEV_SetGameState",
+	CS_JoinLobby =				"CS_JoinLobby",
+	CS_RequestChangeGameState =	"CS_RequestChangeGameState",
+	CS_WormChosen =				"CS_WormChosen",
+	CS_AimingDone =				"CS_AimingDone",
 }
 
 /**
  * Fields used in ALL packets:
  * @param lobbyId identifying number for which lobby this packet is meant
+ * @param userId identifies the client who sends this packet
  */
 export interface CS_Base {
 	lobbyId: number,
+	userId: string,
 }
 // CONNECTING =================================================================
 
@@ -39,6 +49,8 @@ export interface CS_Base {
  */
 export interface CS_ConnectAttempt extends CS_Base {
 	type: CS_Type.CS_ConnectAttempt,
+	socketId: string,
+	name: string,
 }
 
 /**
@@ -55,12 +67,10 @@ export interface CS_JoinLobby extends CS_Base {
 
 /**
  * Sent when a user changes their readiness state
- * @param userId Id of the relevant user
  * @param ready New state the user arrived at
  */
 export interface CS_ReadyChange extends CS_Base {
 	type: CS_Type.CS_ReadyChange,
-	userId: string,
 	ready: boolean,
 }
 
@@ -74,22 +84,29 @@ export interface CS_DEV_StartLobby extends CS_Base {
 // LOADING ====================================================================
 
 /**
+ * Sent when a user gets past a certain loading threshold
+ * @param percentage number from 0-100 how much they finished loading
+ * @param msg optional accompanying message about which part they finished loading
+ */
+export interface CS_LoadingProgress extends CS_Base {
+	type: CS_Type.CS_LoadingProgress,
+	percentage: number,
+	msg: string,
+}
+
+/**
  * Sent when a user finished loading
- * @param userId Id of the relevant user
  */
 export interface CS_FinishedLoading extends CS_Base {
 	type: CS_Type.CS_FinishedLoading,
-	userId: string,
 }
 
 /**
  * Sent when a user failed loading
- * @param userId Id of the relevant user
  * @param msg Reason why loading failed
  */
 export interface CS_FailedLoading extends CS_Base {
 	type: CS_Type.CS_FailedLoading,
-	userId: string,
 	msg: string,
 }
 
@@ -101,6 +118,11 @@ export interface CS_DEV_StartLoading extends CS_Base {
 }
 
 // GAME =======================================================================
+
+export interface CS_RequestChangeGameState extends CS_Base {
+	type: CS_Type.CS_RequestChangeGameState,
+	state: number,
+}
 
 /**
  * DEV MODE, delete later
@@ -121,6 +143,39 @@ export interface CS_DEV_StartGame extends CS_Base {
 	type: CS_Type.CS_DEV_StartGame,
 }
 
+/**
+ * Sends Request to Server about which state the game is in
+ * Sent when a Client initially loads the Babylon Canvas, when ui is being set up
+ * @param state: number representing the curent state
+ */
+export interface CS_GetGameState extends CS_Base {
+	type: CS_Type.CS_GetGameState,
+}
+
+/**
+ * DELETE ME IM ONLY HERE FOR DEBUGGIN
+ */
+export interface CS_DEV_SetGameState extends CS_Base {
+	type: CS_Type.CS_DEV_SetGameState,
+	state: number,
+}
+
+/**
+ * Sent to inform server that a player has chosen a worm
+ * @param wormId identifier for the chosen worm
+ */
+export interface CS_WormChosen extends CS_Base {
+	type: CS_Type.CS_WormChosen,
+	wormId: number,
+}
+
+export interface CS_AimingDone extends CS_Base {
+	type: CS_Type.CS_AimingDone,
+	angle: number,
+	position: pointData,
+	force: number,
+}
+
 // ENDSCREEN ==================================================================
 
 /**
@@ -131,7 +186,10 @@ export interface CS_DEV_StartEndscreen extends CS_Base {
 }
 
 export type CS_GenericPacket = 
-			CS_ConnectAttempt | CS_ReadyChange | CS_JoinLobby | CS_DEV_StartLobby |
+			CS_ConnectAttempt | CS_JoinLobby | CS_ReadyChange |
+			CS_DEV_StartLobby | CS_LoadingProgress |
 			CS_FinishedLoading | CS_FailedLoading | CS_DEV_StartLoading |
-			CS_DEV_ButtonPress | CS_DEV_StartGame | CS_DEV_StartEndscreen 
+			CS_DEV_ButtonPress | CS_DEV_StartGame | CS_DEV_StartEndscreen |
+			CS_GetGameState | CS_DEV_SetGameState | CS_RequestChangeGameState |
+			CS_WormChosen | CS_AimingDone
 			;

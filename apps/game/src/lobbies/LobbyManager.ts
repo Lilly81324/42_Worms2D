@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Lobby } from './Lobby';
 import { EventEmitter } from 'stream';
 import { Logger } from '@nestjs/common';
-import { CS_GenericPacket } from '@/packets/ClientServerPackets';
+import { CS_GenericPacket } from '@/shared/packets/ClientServerPackets';
 
-const DEBUG: boolean = process.env.NODE_ENV == 'development';
+const DEBUG: boolean = true;
+//process.env.NODE_ENV == 'development';
 
 /**
  * Service that administrates multiple lobbies at the same time
@@ -33,7 +34,7 @@ export class LobbyManager extends EventEmitter {
    * @param data_raw Raw string of packet, should be in json format
    */
   msgToServer(data_raw: string) {
-    const data: CS_GenericPacket = JSON.parse(data_raw);
+    const data: CS_GenericPacket = JSON.parse(data_raw) as CS_GenericPacket;
 
     // Check data.type
     if (data.type == undefined) {
@@ -68,7 +69,9 @@ export class LobbyManager extends EventEmitter {
    */
   handleDisconnect(lobbyId: number, userId: string) {
     if (this.lobbies[lobbyId]) {
-      this.logger.log(`Directing cleanup: User ${userId} from Lobby ${lobbyId}`);
+      this.logger.log(
+        `Directing cleanup: User ${userId} from Lobby ${lobbyId}`,
+      );
 
       // Call the cleanup function inside the specific Lobby instance
       this.lobbies[lobbyId].handleDisconnect(userId);

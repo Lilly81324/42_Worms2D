@@ -18,6 +18,9 @@ services:
       - frontend
       - bff
       - game_service
+    build:
+      context: ../apps/nginx
+      dockerfile: Dockerfile
     networks: [backend]
     logging:
       driver: "json-file"
@@ -42,6 +45,7 @@ services:
       - frontend_node_modules:/app/node_modules
       - frontend_next:/app/.next
       - ../shared/game:/app/shared
+      - nginx_game_assets:/app/assets
     ports:
       - "${FRONTEND_HOST_PORT:-3005}:${FRONTEND_INTERNAL_PORT:-3000}"
     command: ["sh", "-lc", "npm ci && npm run dev -- -H 0.0.0.0 -p ${FRONTEND_INTERNAL_PORT:-3000}"]
@@ -315,3 +319,4 @@ volumes:
   social_uploads:
   stats_service_node_modules:
   stats_service_dist:
+  nginx_game_assets:

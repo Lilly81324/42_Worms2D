@@ -1,6 +1,5 @@
 // import * from 'ServerClientPackets.ts';
 
-
 /**
  * ADDING A NEW PACKET
  * 1) Create an enum in the SC_Type table
@@ -9,8 +8,10 @@
  * 	2] Should inherit from SC_Base
  * 	3] It should have a type parameter, which will be the enum from 1)
  * 3) Add the interface name into the union type at the end
- */
+*/
 
+import { gameData, pointData } from './util';
+import { Client } from './Client';
 
 export enum SC_Type {
 	SC_DEV_StartConnecting =	"SC_DEV_StartConnecting",
@@ -27,9 +28,14 @@ export enum SC_Type {
 	SC_FailedLoading =			"SC_FailedLoading",
 	SC_LoadingProgress =		"SC_LoadingProgress",
 	SC_StartGame =				"SC_StartGame",
+	SC_GameData =				"SC_GameData",
 	SC_GameFinished =			"SC_GameFinished",
 	SC_DEV_ButtonPress =		"SC_DEV_ButtonPress",
 	SC_DEV_Periodic =			"SC_DEV_Periodic",
+	SC_DEV_GameState =			"SC_DEV_GameState",
+	SC_ActivePlayerChanged =	"SC_ActivePlayerChanged",
+	SC_WormChosen =				"SC_WormChosen",
+	SC_ExplosionOccurs =		"SC_ExplosionOccurs",
 }
 
 /**
@@ -75,6 +81,7 @@ export interface SC_StartLobby extends SC_Base {
  */
 export interface SC_ConnectFail extends SC_Base {
 	type: SC_Type.SC_ConnectFail,
+	userId: string,
 	msg: string,
 }
 
@@ -89,7 +96,7 @@ export interface SC_ConnectSuccess extends SC_Base {
 }
 
 /**
- * Sent to all clients when a new player disconnects the lobby,
+ * Sent to all clients when a player disconnects the lobby,
  * to inform Client to un-render player
  * @param userId Id to identify the disconnecting player
  */
@@ -109,24 +116,7 @@ export interface SC_ClientDisconnect extends SC_Base {
  */
 export interface SC_ClientJoin extends SC_Base {
 	type: SC_Type.SC_ClientJoin,
-	userId: string,
-	userName: string,
-}
-
-/**
- * NOT A PACKET, just utility
- * Represents 1 filled player slot in the lobby
- * @param userId unique number to identify the user with
- * @param userName Name from the database
- * @param indexInLobby Position that this player occupies in the lobby
- * @param ready whether the player is ready or not
- */
-export interface PlayerInLobby {
-	userId: string,
-	userName: string,
-	indexInLobby: number,
-	ready: boolean,
-	seq: Array<number>,
+	clientData: Client;
 }
 
 /**
@@ -137,8 +127,7 @@ export interface PlayerInLobby {
  */
 export interface SC_LobbyData extends SC_Base {
 	type: SC_Type.SC_LobbyData,
-	userId: string,
-	lobbyData: Array<PlayerInLobby>,
+	lobbyData: Array<Client>,
 }
 
 /**
@@ -231,6 +220,53 @@ export interface SC_DEV_Periodic extends SC_Base {
 	msg: string,
 }
 
+/**
+ * DELETE ME DEBUG ONLY
+ */
+export interface SC_DEV_GameState extends SC_Base {
+	type: SC_Type.SC_DEV_GameState,
+	gameState: number,
+}
+
+/**
+ * Sent to inform frontend of possible change to active player
+ * @param activeId identifier of the now active player
+ */
+export interface SC_ActivePlayerChanged extends SC_Base {
+	type: SC_Type.SC_ActivePlayerChanged,
+	activeId: string,
+}
+
+/**
+ * Sent to inform frontend of client choosing a worm
+ * @param wormId identifier for the chosen worm
+ */
+export interface SC_WormChosen extends SC_Base {
+	type: SC_Type.SC_WormChosen,
+	wormId: number,
+}
+
+/**
+ * Sent when game is started or loaded so Clients can display game
+ * @param data Data that is needed for game to be loaded
+ */
+export interface SC_GameData extends SC_Base {
+	type: SC_Type.SC_GameData,
+	data: gameData,
+}
+
+/**
+ * Sent when game is started or loaded so Clients can display game
+ * @param data Data that is needed for game to be loaded
+ */
+export interface SC_ExplosionOccurs extends SC_Base {
+	type: SC_Type.SC_ExplosionOccurs,
+	point: pointData,
+	radius: number,
+}
+
+
+
 // ENDSCREEN ==================================================================
 
 
@@ -240,7 +276,10 @@ export type SC_GenericPacket =
 			SC_ClientJoin | SC_LobbyData | SC_ReadyChange | 
 			SC_StartLoading | SC_FinishedLoading | SC_FailedLoading | 
 			SC_LoadingProgress | SC_StartGame | SC_GameFinished |
-			SC_DEV_ButtonPress | SC_DEV_Periodic
+			SC_DEV_ButtonPress | SC_DEV_Periodic | SC_DEV_GameState |
+			SC_GameData | SC_ActivePlayerChanged | SC_WormChosen |
+			SC_ExplosionOccurs
 			;
 
-export type SC_GenericStatePacket = SC_StartLobby | SC_StartLoading | SC_StartGame | SC_InvalidState;
+export type SC_GenericStatePacket = SC_StartLobby | SC_StartLoading |
+	SC_StartGame | SC_GameFinished | SC_InvalidState;

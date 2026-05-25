@@ -30,8 +30,12 @@
       "@/*": [
         "./*"
       ],
-      "@shared/game/packets/*": [
-        "../../shared/game/packets/*"
+      "@/lib/*": [
+        "./lib/*",
+      ],
+      "@/shared/*": [
+        "./shared/*",
+        "../../shared/game/*",
       ]
     }
   },
