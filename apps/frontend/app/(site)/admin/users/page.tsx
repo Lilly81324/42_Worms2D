@@ -6,8 +6,11 @@ import { UserAuthView, UserSearchResponse, UpdatePlayerStatsRequest, ConfirmActi
 import { UserTable } from '@/src/components/admin/UserTable';
 import { UserSearchForm } from '@/src/components/admin/UserSearchForm';
 import { AdminActionModal } from '@/src/components/admin/AdminActionModal';
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/components/Providers";
 
 export default function AdminUserManagement() {
+    const { user, isLoading: authLoading } = useAuth();
     const [data, setData] = useState<UserSearchResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -38,8 +41,13 @@ export default function AdminUserManagement() {
 
     // Initial load has no search input
     useEffect(() => {
-        void fetchUsers();
-    }, []);
+        if (authLoading) return;
+        const isAdmin = user?.roles && user.roles.includes('admin');
+
+        if (isAdmin) {
+            void fetchUsers();
+        }
+    }, [authLoading, user, fetchUsers]);
 
     const handleSearch = useCallback((query: string) => {
         setSearchQuery(query);
@@ -95,6 +103,7 @@ export default function AdminUserManagement() {
     };
 
     return (
+        <ProtectedRoute allowedRoles={['admin']}>
         <div className="container mx-auto py-8 px-4 min-h-[80vh]">
             <h1 className="text-2xl font-bold mb-6">User Management</h1>
 
@@ -129,5 +138,6 @@ export default function AdminUserManagement() {
                 onClose={() => setModalConfig({ isOpen: false, mode: 'default', targetUser: null })}
             />
         </div>
+        </ProtectedRoute>
     );
 }
