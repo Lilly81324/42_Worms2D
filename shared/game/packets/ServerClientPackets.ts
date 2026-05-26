@@ -85,7 +85,7 @@ export interface SC_ConnectFail extends SC_Base {
  */
 export interface SC_ConnectSuccess extends SC_Base {
 	type: SC_Type.SC_ConnectSuccess,
-	userId: number,
+	userId: string,
 }
 
 /**
@@ -95,7 +95,7 @@ export interface SC_ConnectSuccess extends SC_Base {
  */
 export interface SC_ClientDisconnect extends SC_Base {
 	type: SC_Type.SC_ClientDisconnect,
-	userId: number,
+	userId: string,
 }
 
 // TODO: Link a player who joins to an existing account from our database,
@@ -105,23 +105,25 @@ export interface SC_ClientDisconnect extends SC_Base {
  * Sent to all clients when a new player joins the lobby,
  * to inform Client to render new player
  * @param userId Id to identify the joining player
+ * @param userName The name of the player joining
  */
 export interface SC_ClientJoin extends SC_Base {
 	type: SC_Type.SC_ClientJoin,
-	userId: number,
+	userId: string,
+	userName: string,
 }
 
 /**
  * NOT A PACKET, just utility
  * Represents 1 filled player slot in the lobby
  * @param userId unique number to identify the user with
- * @param name Name for that player UNUSED
+ * @param userName Name from the database
  * @param indexInLobby Position that this player occupies in the lobby
- * @param ready wether the player is ready or not
+ * @param ready whether the player is ready or not
  */
 export interface PlayerInLobby {
-	userId: number,
-	name: string,
+	userId: string,
+	userName: string,
 	indexInLobby: number,
 	ready: boolean,
 	seq: Array<number>,
@@ -135,7 +137,7 @@ export interface PlayerInLobby {
  */
 export interface SC_LobbyData extends SC_Base {
 	type: SC_Type.SC_LobbyData,
-	userId: number,
+	userId: string,
 	lobbyData: Array<PlayerInLobby>,
 }
 
@@ -146,7 +148,7 @@ export interface SC_LobbyData extends SC_Base {
  */
 export interface SC_ReadyChange extends SC_Base {
 	type: SC_Type.SC_ReadyChange,
-	userId: number,
+	userId: string,
 	ready: boolean,
 }
 
@@ -165,7 +167,7 @@ export interface SC_StartLoading extends SC_Base {
  */
 export interface SC_FinishedLoading extends SC_Base {
 	type: SC_Type.SC_FinishedLoading,
-	userId: number,
+	userId: string,
 }
 
 /**
@@ -175,7 +177,7 @@ export interface SC_FinishedLoading extends SC_Base {
  */
 export interface SC_FailedLoading extends SC_Base {
 	type: SC_Type.SC_FailedLoading,
-	userId: number,
+	userId: string,
 	msg: string,
 }
 

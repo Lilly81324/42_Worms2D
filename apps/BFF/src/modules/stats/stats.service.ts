@@ -15,10 +15,10 @@ export class StatsService {
   async fetchUsers(context: RequestContext): Promise<PlayerStatsDto[]> {
     // stats service exposes list at `/internal/stats/user` per A_REQ.http
     return this.callStatsService<PlayerStatsDto[]>({
-      method: 'GET',
-      path: '/internal/stats/user',
-      context,
-    });
+		method: 'GET',
+		path: '/internal/stats/user',
+		context
+	 });
   }
 
   async fetchUserById(
@@ -32,13 +32,13 @@ export class StatsService {
     });
   }
 
-  private async callStatsService<T = PlayerStatsDto>(input: {
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-    path: string;
-    context: RequestContext;
-    data?: unknown;
-    params?: Record<string, unknown>;
-  }): Promise<T> {
+  private async callStatsService<T = PlayerStatsDto>(
+	input: { method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+	path: string;
+	context: RequestContext;
+	data?: unknown;
+	params?: Record<string, unknown>;
+	}): Promise<T> {
     const headers: Record<string, string> = { 'x-service-name': 'bff' };
     if (input.context.authorization)
       headers.authorization = input.context.authorization;

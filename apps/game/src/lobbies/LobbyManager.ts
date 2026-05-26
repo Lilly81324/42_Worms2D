@@ -61,4 +61,17 @@ export class LobbyManager extends EventEmitter {
     // Let appropriate lobby handle package
     this.lobbies[data.lobbyId].msgToServer(data);
   }
+
+  /**
+   * Called when a socket connection is lost.
+   * Finds the correct lobby and tells it to remove the user.
+   */
+  handleDisconnect(lobbyId: number, userId: string) {
+    if (this.lobbies[lobbyId]) {
+      this.logger.log(`Directing cleanup: User ${userId} from Lobby ${lobbyId}`);
+
+      // Call the cleanup function inside the specific Lobby instance
+      this.lobbies[lobbyId].handleDisconnect(userId);
+    }
+  }
 }

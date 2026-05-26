@@ -30,6 +30,13 @@ export class EventSocket
     // Log Event
     // this.logger.log(`Message received: ${payload}`);
     // Handle Event
+
+    const data = JSON.parse(payload);
+    // we need to be able to associate a user to a specific socket so we can identify him when he disconnects
+    if (data.type === 'CS_JoinLobby') {
+      client.data.userId = data.userId;
+      client.data.lobbyId = data.lobbyId;
+    }
     this.lobbyManager.msgToServer(payload);
   }
 
@@ -42,6 +49,14 @@ export class EventSocket
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
+
+    const userId = client.data?.userId;
+    const lobbyId = client.data?.lobbyId;
+
+    if (userId && lobbyId !== undefined) {
+      this.logger.log(`Cleaning up user ${userId} from lobby ${lobbyId}`);
+      this.lobbyManager.handleDisconnect(lobbyId, userId);
+    }
   }
 
   handleConnection(client: Socket) {
