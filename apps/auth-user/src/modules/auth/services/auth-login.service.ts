@@ -89,7 +89,7 @@ export class AuthLoginService {
 
       if (user.status !== 'ACTIVE' || user.disabledAt) {
         await this.auditLoginFailed(user.id, input.email, context, 'DISABLED');
-        throw new UnauthorizedException('Invalid email or password');
+        throw new UnauthorizedException('Your account has been suspended.');
       }
 
       const loggedIn = await this.prisma.$transaction(

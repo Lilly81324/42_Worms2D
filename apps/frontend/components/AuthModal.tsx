@@ -52,6 +52,8 @@ export default function AuthModal({
     const [showOAuthHint, setShowOAuthHint] = useState(false);
     const [oauthRecoveryPassword, setOauthRecoveryPassword] = useState<string | null>(null);
     const [googleLoading, setGoogleLoading] = useState(false);
+    const [setIsBannedUser] = useState(false);
+
     if (!isOpen || isAuthenticated) return null;
 
     const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
@@ -83,7 +85,12 @@ export default function AuthModal({
                 : authClient.register({ email, password, displayName, username }));
 
             if (!result.ok) {
-                setErrorMessage(result.error.message);
+                const message = result.error?.message || "An error occurred.";
+                setErrorMessage(message);
+
+                if (type === 'Login' && /suspended|banned|disabled/i.test(message)) {
+                    return;
+                }
                 if (
                     type === 'Login' &&
                     /invalid credentials|invalid email or password/i.test(result.error.message)
