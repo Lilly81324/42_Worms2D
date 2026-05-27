@@ -5,7 +5,6 @@ interface AdminModalProps {
     isOpen: boolean;
     title: string;
     description: string;
-    requireReason?: boolean;
     mode: ConfirmAction['mode'];
     currentRoles?: string[];
     onConfirm: (action: ConfirmAction) => void;
@@ -13,10 +12,9 @@ interface AdminModalProps {
 }
 
 export function AdminActionModal(
-    {isOpen, title, description, requireReason, mode = 'default', currentRoles = [], onConfirm, onClose
+    {isOpen, title, description, mode = 'default', currentRoles = [], onConfirm, onClose
     }: AdminModalProps): JSX.Element | null { // expect a React ui or when fail render nothing
 
-    const [reason, setReason] = useState('');
     const availableRoles = ['admin', 'user'];
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
@@ -28,7 +26,6 @@ export function AdminActionModal(
         if (isOpen) {
             if (mode === 'roles') setSelectedRoles(currentRoles);
             if (mode === 'stats') setStats({ level: 0, xp: 0, wins: 0, losses: 0, kills: 0, deaths: 0 });
-            setReason('');
         }
     }, [isOpen, mode, currentRoles]);
 
@@ -48,7 +45,7 @@ export function AdminActionModal(
         } else if (mode === 'stats')
             onConfirm({ mode: 'stats', payload: stats });
         else
-            onConfirm({ mode: 'default', payload: reason });
+            onConfirm({ mode: 'default', payload: '' });
     };
 
     return (
@@ -108,22 +105,6 @@ export function AdminActionModal(
                     </div>
                 )}
 
-                {/* --- DEFAULT / BAN REASON UI --- */}
-                {mode === 'default' && requireReason && (
-                    <div className="mb-6">
-                        <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">
-                            Required Reason
-                        </label>
-                        <textarea
-                            className="w-full p-3 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500"
-                            rows={3}
-                            placeholder="Why is this action being taken?"
-                            value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                        />
-                    </div>
-                )}
-
                 {/* --- FOOTER ACTIONS --- */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
                     <button
@@ -135,10 +116,7 @@ export function AdminActionModal(
                     <button
                         onClick={handleConfirm}
                         className="px-6 py-2 text-sm font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-md shadow-indigo-100"
-                        disabled={
-                            (mode === 'default' && requireReason && !reason.trim()) ||
-                            (mode === 'roles' && selectedRoles.length === 0)
-                        }
+                        disabled={(mode === 'roles' && selectedRoles.length === 0)}
                     >
                         Confirm Changes
                     </button>
