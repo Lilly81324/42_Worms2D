@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/components/Providers";
 import { authClient } from "@/src/core/api/auth/auth.client";
-
+import { Pencil } from "lucide-react";
 type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations';
 
 type PlayerStats = {
@@ -173,12 +173,15 @@ export default function ProfilePage() {
 
                 {/* LEFT: Sidebar Navigation */}
                 <div className="w-full md:w-64 flex flex-col gap-2">
-                    <div className="p-6 mb-4 bg-zinc-100 dark:bg-zinc-900 rounded-3xl text-center">
+                    <div className="relative p-6 mb-4 bg-zinc-100 dark:bg-zinc-900 rounded-3xl text-center">
+						<span className="absolute top-4 right-4 bg-zinc-300 p-2 rounded-l">Edit</span>
                         <div
-                            className="w-20 h-20 bg-blue-500 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl border-4 border-white dark:border-zinc-800 shadow-lg">
+                            className=" w-20 h-20 bg-blue-500 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl border-4 border-white dark:border-zinc-800 shadow-lg">
                             🪱
+						{/*<Pencil size={20} className="absolute bottom-1.5 right-[-5]"/>*/}
                         </div>
-                        <h2 className="font-black text-xl">{displayName}</h2>
+
+                        <h2 className="font-black text-l">{displayName.split('@')[0]}</h2>
                         <p className="text-xs text-zinc-500 font-mono uppercase">Level {level} Recruit</p>
                     </div>
 
