@@ -1,6 +1,6 @@
 "use client";
 
-import {useRouter } from "next/navigation"; //used for placeholder
+import {useRouter, useSearchParams } from "next/navigation"; //used for placeholder
 import {useState} from "react";
 import {authClient} from "@/src/core/api/auth/auth.client";
 import {useAuth} from "@/components/Providers";
@@ -45,6 +45,7 @@ export default function AuthModal({
     setType: (type: 'Login' | 'Register') => void;
 }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const {setUser, isAuthenticated} = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -97,7 +98,12 @@ export default function AuthModal({
             sessionStorage.setItem("auth.refreshToken", result.data.tokens.refreshToken);
             setUser(result.data.user);
             onClose();
-            router.push("/homepage");
+            const callbackUrl = searchParams.get("callbackUrl");
+            if (callbackUrl) {
+                router.push(decodeURIComponent(callbackUrl));
+            } else {
+                router.push("/homepage");
+            }
         } catch {
             setErrorMessage("Connection failed. Please check your internet.");
         } finally {

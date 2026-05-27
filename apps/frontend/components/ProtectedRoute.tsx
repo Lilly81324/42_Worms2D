@@ -20,9 +20,10 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
     useEffect(() => {
         // Rule for guests
-        if (!isAuthenticated) {
+        if (!isLoading && !isAuthenticated) {
             const timer = setTimeout(() => {
-                router.push("/?showLogin=true");
+                const encodedPath = encodeURIComponent(pathname);
+                router.push(`/?showLogin=true&callbackUrl=${encodedPath}`);
             }, 10000);
             return () => clearTimeout(timer);
         }

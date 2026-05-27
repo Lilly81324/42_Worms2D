@@ -21,7 +21,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     // useCallBack prevents rerun every react render
-    const logout = useCallback(async () => {
+    const logout = useCallback(async (shouldRedirect = true) => {
         const accessToken = sessionStorage.getItem("auth.accessToken");
         const refreshToken = sessionStorage.getItem("auth.refreshToken");
 
@@ -38,7 +38,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             sessionStorage.removeItem("auth.tokenType");
 
             setUser(null);
-            router.push("/");
+            if (shouldRedirect) {
+                router.push("/");
+            }
         }
     }, [router]);
 
@@ -75,7 +77,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const handleUnauthorized = () => {
             console.warn("Session expired or unauthorized. Performing cleanup...");
-            void logout();
+            void logout(false);
         };
 
         window.addEventListener("auth-unauthorized", handleUnauthorized);
