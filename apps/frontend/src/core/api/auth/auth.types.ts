@@ -227,3 +227,12 @@ export interface ApiError {
 export interface SetPasswordResponse {
     success: boolean;
 }
+
+export interface PlayerStatsData {
+    level: number;
+    xp: number;
+    wins: number;
+    losses: number;
+    kills: number;
+    deaths: number;
+}

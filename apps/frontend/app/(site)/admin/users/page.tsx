@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { authClient } from '@/src/core/api/auth/auth.client';
-import { UserAuthView, UserSearchResponse, UpdatePlayerStatsRequest, ConfirmAction } from '@/src/core/api/auth/auth.types';
+import { UserAuthView, UserSearchResponse, ConfirmAction, PlayerStatsData
+} from '@/src/core/api/auth/auth.types';
 import { UserTable } from '@/src/components/admin/UserTable';
 import { UserSearchForm } from '@/src/components/admin/UserSearchForm';
 import { AdminActionModal } from '@/src/components/admin/AdminActionModal';
@@ -15,6 +16,7 @@ export default function AdminUserManagement() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+    const [activeUserStats, setActiveUserStats] = useState<PlayerStatsData | undefined>(undefined);
 
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
@@ -54,14 +56,24 @@ export default function AdminUserManagement() {
         void fetchUsers(query);
     }, [fetchUsers]);
 
-    const handleEditStatsClick = (userId: string) => {
-        const user = data?.items.find(u => u.id === userId);
-        if (user) {
-            setModalConfig({
-                isOpen: true,
-                mode: 'stats',
-                targetUser: user
-            });
+    const handleEditStatsClick = async (userId: string) => {
+        const selectedUser = data?.items.find(u => u.id === userId);
+        if (!selectedUser) return;
+
+
+        setModalConfig({
+            isOpen: true,
+            mode: 'stats',
+            targetUser: selectedUser
+        });
+
+        setActiveUserStats(undefined);
+
+        const response = await authClient.getPlayerStats(userId);
+        if (response.ok) {
+            setActiveUserStats(response.data);
+        } else {
+            console.error("Could not fetch user stats:", response.error.message);
         }
     };
 
@@ -133,9 +145,12 @@ export default function AdminUserManagement() {
                             `Are you sure you want to change the status for ${modalConfig.targetUser?.username}?`
                 }
                 currentRoles={modalConfig.targetUser?.roles || []}
-                requireReason={modalConfig.mode === 'default' && modalConfig.targetUser?.status === 'active'}
+                currentStats={activeUserStats}
                 onConfirm={handleConfirmAction}
-                onClose={() => setModalConfig({ isOpen: false, mode: 'default', targetUser: null })}
+                onClose={() => {
+                    setModalConfig({ isOpen: false, mode: 'default', targetUser: null });
+                    setActiveUserStats(undefined);
+                }}
             />
         </div>
         </ProtectedRoute>

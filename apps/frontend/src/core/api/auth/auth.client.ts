@@ -25,6 +25,7 @@ import type
     SetUserRolesRequest,
     UserRolesResponse,
     UpdatePlayerStatsResponse,
+    PlayerStatsData,
 } from "@/src/core/api/auth/auth.types";
 
 
@@ -296,6 +297,12 @@ export const authClient = {
         return apiFetch<UserRolesResponse>(`${BASE_URL}/admin/users/${userId}/role`, {
             method: 'POST',
             body: JSON.stringify(data),
+        });
+    },
+
+    async getPlayerStats(userId: string): Promise<ApiResult<PlayerStatsData>> {
+        return apiFetch<PlayerStatsData>(`${BASE_URL}/admin/users/${userId}/stats`, {
+            method: 'GET',
         });
     },
 

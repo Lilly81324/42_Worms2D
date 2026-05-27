@@ -1,5 +1,5 @@
 import React, {JSX, useEffect, useState} from 'react';
-import {UpdatePlayerStatsRequest, ConfirmAction} from '@/src/core/api/auth/auth.types';
+import {UpdatePlayerStatsRequest, ConfirmAction, PlayerStatsData} from '@/src/core/api/auth/auth.types';
 
 interface AdminModalProps {
     isOpen: boolean;
@@ -7,12 +7,13 @@ interface AdminModalProps {
     description: string;
     mode: ConfirmAction['mode'];
     currentRoles?: string[];
+    currentStats?: PlayerStatsData;
     onConfirm: (action: ConfirmAction) => void;
     onClose: () => void;
 }
 
 export function AdminActionModal(
-    {isOpen, title, description, mode = 'default', currentRoles = [], onConfirm, onClose
+    {isOpen, title, description, mode = 'default', currentRoles = [], currentStats, onConfirm, onClose
     }: AdminModalProps): JSX.Element | null { // expect a React ui or when fail render nothing
 
     const availableRoles = ['admin', 'user'];
@@ -24,10 +25,19 @@ export function AdminActionModal(
 
     useEffect(() => {
         if (isOpen) {
-            if (mode === 'roles') setSelectedRoles(currentRoles);
-            if (mode === 'stats') setStatsInputs({ level: '0', xp: '0', wins: '0', losses: '0', kills: '0', deaths: '0' });
+            if (mode === 'roles')
+                setSelectedRoles(currentRoles);
+            if (mode === 'stats')
+                setStatsInputs({
+                    level: currentStats?.level?.toString() ?? '1',
+                    xp: currentStats?.xp?.toString() ?? '0',
+                    wins: currentStats?.wins?.toString() ?? '0',
+                    losses: currentStats?.losses?.toString() ?? '0',
+                    kills: currentStats?.kills?.toString() ?? '0',
+                    deaths: currentStats?.deaths?.toString() ?? '0'
+                });
         }
-    }, [isOpen, mode, currentRoles]);
+    }, [isOpen, mode, currentRoles, currentStats]);
 
     if (!isOpen) return null;
 
