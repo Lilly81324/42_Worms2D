@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import EditProfileModal from "@/components/EditProfile";
 import { useAuth } from "@/components/Providers";
 import { authClient } from "@/src/core/api/auth/auth.client";
 import { Pencil } from "lucide-react";
@@ -21,6 +22,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 export default function ProfilePage() {
     const { user, setUser } = useAuth();
     const [activeTab, setActiveTab] = useState<TabType>('Info');
+    const [isEditOpen, setIsEditOpen] = useState(false);
     const [stats, setStats] = useState<PlayerStats | null>(null);
     const [friends, setFriends] = useState<unknown[]>([]);
     const [clans, setClans] = useState<unknown[]>([]);
@@ -148,6 +150,12 @@ export default function ProfilePage() {
 
     return (
         <ProtectedRoute>
+        <EditProfileModal
+            open={isEditOpen}
+            onClose={() => setIsEditOpen(false)}
+            displayName={displayName}
+            email={user?.email ?? ""}
+        />
         <div className="max-w-4xl mx-auto py-12 px-6">
             {dataError && (
                 <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
@@ -174,11 +182,17 @@ export default function ProfilePage() {
                 {/* LEFT: Sidebar Navigation */}
                 <div className="w-full md:w-64 flex flex-col gap-2">
                     <div className="relative p-6 mb-4 bg-zinc-100 dark:bg-zinc-900 rounded-3xl text-center">
-						<span className="absolute top-4 right-4 bg-zinc-300 p-2 rounded-l">Edit</span>
+                        <button
+                            type="button"
+                            onClick={() => setIsEditOpen(true)}
+                            className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/90 px-3 py-2 text-xs font-semibold text-zinc-700 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:text-zinc-900 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-200 dark:hover:border-zinc-700 dark:hover:bg-zinc-900"
+                        >
+                            <Pencil size={14} />
+                            {/*Edit profile*/}
+                        </button>
                         <div
                             className=" w-20 h-20 bg-blue-500 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl border-4 border-white dark:border-zinc-800 shadow-lg">
                             🪱
-						{/*<Pencil size={20} className="absolute bottom-1.5 right-[-5]"/>*/}
                         </div>
 
                         <h2 className="font-black text-l">{displayName.split('@')[0]}</h2>
@@ -203,7 +217,9 @@ export default function ProfilePage() {
 
                 {/* RIGHT: Content Display Area */}
                 <div
-                    className="flex-grow min-h-[400px] bg-white dark:bg-zinc-900 border border-foreground/5 rounded-3xl p-8 shadow-sm">
+                    className="flex-1 bg-white dark:bg-zinc-900 border border-foreground/5 rounded-3xl p-8 shadow-sm"
+                    style={{ minHeight: "400px" }}
+                >
                     <h3 className="text-2xl font-black mb-6 border-b pb-4 border-foreground/5">
                         {activeTab}
                     </h3>
