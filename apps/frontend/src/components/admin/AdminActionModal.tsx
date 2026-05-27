@@ -18,14 +18,14 @@ export function AdminActionModal(
     const availableRoles = ['admin', 'user'];
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
-    const [stats, setStats] = useState<UpdatePlayerStatsRequest>({
-        level: 0, xp: 0, wins: 0, losses: 0, kills: 0, deaths: 0
+    const [statsInputs, setStatsInputs] = useState<Record<string, string>>({
+        level: '0', xp: '0', wins: '0', losses: '0', kills: '0', deaths: '0'
     });
 
     useEffect(() => {
         if (isOpen) {
             if (mode === 'roles') setSelectedRoles(currentRoles);
-            if (mode === 'stats') setStats({ level: 0, xp: 0, wins: 0, losses: 0, kills: 0, deaths: 0 });
+            if (mode === 'stats') setStatsInputs({ level: '0', xp: '0', wins: '0', losses: '0', kills: '0', deaths: '0' });
         }
     }, [isOpen, mode, currentRoles]);
 
@@ -39,12 +39,26 @@ export function AdminActionModal(
         );
     };
 
+    const handleStatChange = (key: string, value: string) => {
+        if (value === '' || /^[0-9]+$/.test(value)) {
+            setStatsInputs(prev => ({ ...prev, [key]: value }));
+        }
+    };
+
     const handleConfirm = () => {
         if (mode === 'roles') {
             onConfirm({ mode: 'roles', payload: selectedRoles });
-        } else if (mode === 'stats')
-            onConfirm({ mode: 'stats', payload: stats });
-        else
+        } else if (mode === 'stats') {
+            const finalStats: UpdatePlayerStatsRequest = {
+                level: Number(statsInputs.level) || 0,
+                xp: Number(statsInputs.xp) || 0,
+                wins: Number(statsInputs.wins) || 0,
+                losses: Number(statsInputs.losses) || 0,
+                kills: Number(statsInputs.kills) || 0,
+                deaths: Number(statsInputs.deaths) || 0,
+            };
+            onConfirm({mode: 'stats', payload: finalStats});
+        } else
             onConfirm({ mode: 'default', payload: '' });
     };
 
@@ -94,10 +108,10 @@ export function AdminActionModal(
                                         {key}
                                     </label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         className="w-full p-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                        value={stats[key] ?? 0}
-                                        onChange={(e) => setStats({ ...stats, [key]: Number(e.target.value) })}
+                                        value={statsInputs[key]}
+                                        onChange={(e) => handleStatChange(key, e.target.value)}
                                     />
                                 </div>
                             ))}
