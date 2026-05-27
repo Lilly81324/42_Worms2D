@@ -1,22 +1,51 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import AvatarEditor from "react-avatar-editor";
+import { saveMyProfile } from "@/src/core/api/profile/profile.client";
 
 type EditProfileModalProps = {
     open: boolean;
     onClose?: () => void;
     displayName?: string;
     email?: string;
+    onAvatarCropped?: (blob: Blob) => void;
 };
 
-export default function EditProfileModal({ open, onClose, displayName, email }: EditProfileModalProps) {
+export default function EditProfileModal({ open, onClose, displayName, email, onAvatarCropped }: EditProfileModalProps) {
     const editorRef = useRef<any>(null);
-    const fileInputId = useMemo(() => "profile-avatar-input", []);
+    const fileInputId = useId();
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarScale, setAvatarScale] = useState(1.2);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null);
+    const [formDisplayName, setFormDisplayName] = useState(displayName ?? "");
+    const [bio, setBio] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
     const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        setAvatarFile(null);
+        setAvatarBlob(null);
+        setAvatarScale(1.2);
+        setFormDisplayName(displayName ?? "");
+        setBio("");
+        setSaveFeedback(null);
+        setSaveError(null);
+    }, [open, displayName]);
+
+    useEffect(() => {
+        return () => {
+            if (avatarPreview) {
+                URL.revokeObjectURL(avatarPreview);
+            }
+        };
+    }, [avatarPreview]);
 
     if (!open) {
         return null;
@@ -40,6 +69,8 @@ export default function EditProfileModal({ open, onClose, displayName, email }: 
         const canvas = editor.getImageScaledToCanvas();
         canvas.toBlob((blob: Blob | null) => {
             if (!blob) return;
+            setAvatarBlob(blob);
+            onAvatarCropped?.(blob);
             const preview = URL.createObjectURL(blob);
             setAvatarPreview((current) => {
                 if (current) URL.revokeObjectURL(current);
@@ -47,6 +78,32 @@ export default function EditProfileModal({ open, onClose, displayName, email }: 
             });
             setSaveFeedback("Avatar cropped locally. Hook this to the BFF next.");
         }, "image/png");
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        setSaveFeedback(null);
+        setSaveError(null);
+
+        try {
+            const result = await saveMyProfile({
+                displayName: formDisplayName.trim() || undefined,
+                bio: bio.trim() || undefined,
+                avatar: avatarBlob,
+            });
+
+            if (!result.ok) {
+                setSaveError(result.error);
+                return;
+            }
+
+            setSaveFeedback("Profile saved successfully.");
+            onClose?.();
+        } catch (error) {
+            setSaveError(error instanceof Error ? error.message : "Failed to save profile.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -125,17 +182,17 @@ export default function EditProfileModal({ open, onClose, displayName, email }: 
                             />
                         </label>
 
-                        <div className="mt-4 flex items-center gap-3">
+                        <div className="mt-4 flex items-center justify-between gap-3">
                             <button
                                 type="button"
                                 onClick={handleAvatarSave}
                                 disabled={!avatarFile}
                                 className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-white"
                             >
-                                Crop avatar
+                                Preview
                             </button>
                             {avatarPreview && (
-                                <div className="h-10 w-10 overflow-hidden rounded-full border border-zinc-200 dark:border-zinc-800">
+                                <div className="h-15 w-15 overflow-hidden rounded-full border border-zinc-200 dark:border-zinc-800">
                                     <img src={avatarPreview} alt="Cropped avatar preview" className="h-full w-full object-cover" />
                                 </div>
                             )}
@@ -151,7 +208,8 @@ export default function EditProfileModal({ open, onClose, displayName, email }: 
                             Display name
                             <input
                                 type="text"
-                                defaultValue={displayName ?? ""}
+                                value={formDisplayName}
+                                onChange={(event) => setFormDisplayName(event.target.value)}
                                 className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50"
                             />
                         </label>
@@ -161,8 +219,10 @@ export default function EditProfileModal({ open, onClose, displayName, email }: 
                             <input
                                 type="email"
                                 defaultValue={email ?? ""}
+                                readOnly
                                 className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50"
                             />
+                            <span className="text-xs text-zinc-500 dark:text-zinc-400">Managed by auth profile.</span>
                         </label>
 
                         <label className="grid gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -170,9 +230,17 @@ export default function EditProfileModal({ open, onClose, displayName, email }: 
                             <textarea
                                 rows={5}
                                 placeholder="Tell others a little about yourself"
+                                value={bio}
+                                onChange={(event) => setBio(event.target.value)}
                                 className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50"
                             />
                         </label>
+
+                        {saveError && (
+                            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                                {saveError}
+                            </p>
+                        )}
 
                         <div className="flex items-center justify-end gap-3 pt-2">
                             <button
@@ -184,11 +252,17 @@ export default function EditProfileModal({ open, onClose, displayName, email }: 
                             </button>
                             <button
                                 type="button"
-                                className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-white"
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-white"
                             >
-                                Save
+                                {isSaving ? "Saving..." : "Save"}
                             </button>
                         </div>
+
+                        {saveFeedback && (
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400">{saveFeedback}</p>
+                        )}
                     </section>
                 </div>
             </div>
