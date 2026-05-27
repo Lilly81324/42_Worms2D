@@ -64,17 +64,24 @@ export async function uploadMyAvatar(file: Blob, fileName = "avatar.png"): Promi
     });
 }
 
+// Submit profile metadata and avatar together in one request.
 export async function saveMyProfile(input: UpdateMyProfileInput & { avatar?: Blob | null }): Promise<ApiResult<unknown>> {
-    if (input.avatar) {
-        const avatarResult = await uploadMyAvatar(input.avatar);
-        if (!avatarResult.ok) {
-            return avatarResult;
-        }
+    const form = new FormData();
+
+    if (input.displayName) {
+        form.set("displayName", input.displayName);
     }
 
-    return updateMyProfile({
-        displayName: input.displayName,
-        bio: input.bio,
-        country: input.country,
+    if (input.bio) {
+        form.set("bio", input.bio);
+    }
+
+    if (input.avatar) {
+        form.set("avatar", input.avatar, "avatar.png");
+    }
+
+    return request<unknown>(`${BASE_URL}/users/me/profile/with-avatar`, {
+        method: "PATCH",
+        body: form,
     });
 }

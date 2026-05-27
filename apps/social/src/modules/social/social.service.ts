@@ -95,6 +95,22 @@ export class SocialService {
     return this.toProfileView(profile, principal.claims.sub, principal);
   }
 
+  // Save profile metadata first, then store the avatar file if provided.
+  async saveProfile(
+    userId: string,
+    input: UpdateProfileDto,
+    file: UploadedMemoryFile | undefined,
+    principal: AuthPrincipal,
+  ) {
+    const updatedProfile = await this.updateProfile(userId, input, principal);
+
+    if (!file?.buffer) {
+      return updatedProfile;
+    }
+
+    return this.uploadAvatar(userId, file, principal);
+  }
+
   async searchUsers(query: ListQueryDto, principal: AuthPrincipal) {
     const limit = query.limit ?? 25;
     const items = await this.prisma.userProfile.findMany({

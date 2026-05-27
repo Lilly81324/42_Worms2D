@@ -55,6 +55,44 @@ export class SocialService {
     );
   }
 
+  // Forward metadata and avatar as multipart form data to the social service.
+  saveMyProfile(input: unknown, file: UploadedMemoryFile | undefined, context: RequestContext) {
+    return this.withMe(context, (userId) =>
+      (() => {
+        const form = new FormData();
+        if (typeof input === 'object' && input !== null) {
+          for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+            if (value === undefined || value === null || value === '') {
+              continue;
+            }
+            form.set(key, String(value));
+          }
+        }
+
+        if (file?.buffer) {
+          const arrayBuffer = file.buffer.buffer.slice(
+            file.buffer.byteOffset,
+            file.buffer.byteOffset + file.buffer.byteLength,
+          ) as ArrayBuffer;
+          form.set(
+            'avatar',
+            new Blob([arrayBuffer], {
+              type: file.mimetype ?? 'application/octet-stream',
+            }),
+            file.originalname ?? 'avatar.png',
+          );
+        }
+
+        return this.callSocialService({
+          method: 'PATCH',
+          path: `/internal/users/${encodeURIComponent(userId)}/profile/with-avatar`,
+          data: form,
+          context,
+        });
+      })(),
+    );
+  }
+
   getUserProfile(userId: string, context: RequestContext) {
     return this.callSocialService({
       method: 'GET',
