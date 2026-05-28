@@ -39,7 +39,7 @@ export class SocialService {
     return this.withMe(context, (userId) =>
       this.callSocialService({
         method: 'GET',
-        path: `/users/${encodeURIComponent(userId)}/profile`,
+        path: `/internal/users/${encodeURIComponent(userId)}/profile`,
         context,
       }),
     );
@@ -50,7 +50,7 @@ export class SocialService {
     return this.withMe(context, (userId) =>
       this.callSocialService({
         method: 'PATCH',
-        path: `/users/${encodeURIComponent(userId)}/profile`,
+        path: `/internal/users/${encodeURIComponent(userId)}/profile`,
         data: input,
         context,
       }),
@@ -88,7 +88,7 @@ export class SocialService {
 		// updated path /internal/users => /users
         return this.callSocialService({
           method: 'PATCH',
-          path: `/users/${encodeURIComponent(userId)}/profile/with-avatar`,
+          path: `/internal/users/${encodeURIComponent(userId)}/profile/with-avatar`,
           data: form,
           context,
         });
@@ -100,7 +100,7 @@ export class SocialService {
   getUserProfile(userId: string, context: RequestContext) {
     return this.callSocialService({
       method: 'GET',
-      path: `/users/${encodeURIComponent(userId)}/profile`,
+      path: `/internal/users/${encodeURIComponent(userId)}/profile`,
       context,
     });
   }
@@ -357,14 +357,16 @@ export class SocialService {
     }
   }
 
+  // edit the error message
   private throwNormalizedError(error: unknown): never {
-    if (error instanceof AxiosError) {
-      const status = error.response?.status;
-      const data: unknown = error.response?.data;
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      const status = axiosError.response?.status;
+      const data: unknown = axiosError.response?.data;
       const message =
         typeof data === 'object' && data !== null && 'message' in data
           ? String((data as { message?: unknown }).message)
-          : error.message;
+          : axiosError.message;
 
       throw new HttpException(
         {

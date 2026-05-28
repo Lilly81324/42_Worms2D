@@ -87,11 +87,18 @@ export default function EditProfileModal({ open, onClose, onSaved, displayName, 
         setSaveError(null);
 
         try {
+            console.log("[EditProfile] save start", {
+                displayName: formDisplayName.trim() || undefined,
+                bio: bio.trim() || undefined,
+                hasAvatar: Boolean(avatarBlob),
+            });
             const result = await saveMyProfile({
                 displayName: formDisplayName.trim() || undefined,
                 bio: bio.trim() || undefined,
                 avatar: avatarBlob,
             });
+
+            console.log("[EditProfile] save result", result);
 
             if (!result.ok) {
                 setSaveError(result.error);
@@ -102,6 +109,7 @@ export default function EditProfileModal({ open, onClose, onSaved, displayName, 
             onSaved?.();
             onClose?.();
         } catch (error) {
+            console.error("[EditProfile] save error", error);
             setSaveError(error instanceof Error ? error.message : "Failed to save profile.");
         } finally {
             setIsSaving(false);
