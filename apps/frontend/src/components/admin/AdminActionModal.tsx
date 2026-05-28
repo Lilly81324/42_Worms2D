@@ -70,15 +70,16 @@ export function AdminActionModal(
         if (mode === 'roles') {
             onConfirm({ mode: 'roles', payload: selectedRoles });
         } else if (mode === 'stats') {
-            const finalStats: UpdatePlayerStatsRequest = {
-                level: Math.min(Math.max(Number(statsInputs.level) || 1, 1), MAX_STAT_LIMIT),
-                xp: Math.min(Math.max(Number(statsInputs.xp) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
-                wins: Math.min(Math.max(Number(statsInputs.wins) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
-                losses: Math.min(Math.max(Number(statsInputs.losses) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
-                kills: Math.min(Math.max(Number(statsInputs.kills) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
-                deaths: Math.min(Math.max(Number(statsInputs.deaths) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+            const rawStats = {
+                level: statsInputs.level || '0',
+                xp: statsInputs.xp || '0',
+                wins: statsInputs.wins || '0',
+                losses: statsInputs.losses || '0',
+                kills: statsInputs.kills || '0',
+                deaths: statsInputs.deaths || '0',
             };
-            onConfirm({mode: 'stats', payload: finalStats});
+            onConfirm({ mode: 'stats', payload: rawStats as unknown as UpdatePlayerStatsRequest
+            });
         } else
             onConfirm({ mode: 'default', payload: '' });
     };

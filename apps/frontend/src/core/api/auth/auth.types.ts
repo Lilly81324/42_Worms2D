@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /** * --- Types ---
  */
 export type UserStatus = string;
@@ -241,3 +243,38 @@ export interface PlayerStatsData {
  */
 export const MAX_STAT_LIMIT = 9999;
 export const MIN_STAT_LIMIT = 0;
+
+/**
+ * --- zod validation for stats ---
+ */
+export const playerStatsValidationSchema = z.object({
+    level: z.coerce.number()
+        .int({ message: "Level must be a whole number" })
+        .min(1, { message: "Level must be at least 1" })
+        .max(MAX_STAT_LIMIT, { message: `Level cannot exceed ${MAX_STAT_LIMIT}` }),
+
+    xp: z.coerce.number()
+        .int()
+        .min(MIN_STAT_LIMIT, { message: "XP cannot be negative" })
+        .max(MAX_STAT_LIMIT, { message: `XP cannot exceed ${MAX_STAT_LIMIT}` }),
+
+    wins: z.coerce.number()
+        .int()
+        .min(MIN_STAT_LIMIT, { message: "Wins cannot be negative" })
+        .max(MAX_STAT_LIMIT, { message: `Wins cannot exceed ${MAX_STAT_LIMIT}` }),
+
+    losses: z.coerce.number()
+        .int()
+        .min(MIN_STAT_LIMIT, { message: "Losses cannot be negative" })
+        .max(MAX_STAT_LIMIT, { message: `Losses cannot exceed ${MAX_STAT_LIMIT}` }),
+
+    kills: z.coerce.number()
+        .int()
+        .min(MIN_STAT_LIMIT, { message: "Kills cannot be negative" })
+        .max(MAX_STAT_LIMIT, { message: `Kills cannot exceed ${MAX_STAT_LIMIT}` }),
+
+    deaths: z.coerce.number()
+        .int()
+        .min(MIN_STAT_LIMIT, { message: "Deaths cannot be negative" })
+        .max(MAX_STAT_LIMIT, { message: `Deaths cannot exceed ${MAX_STAT_LIMIT}` }),
+});

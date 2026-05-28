@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { authClient } from '@/src/core/api/auth/auth.client';
-import { UserAuthView, UserSearchResponse, ConfirmAction, PlayerStatsData, UpdatePlayerStatsRequest, MIN_STAT_LIMIT, MAX_STAT_LIMIT
+import { UserAuthView, UserSearchResponse, ConfirmAction, PlayerStatsData, UpdatePlayerStatsRequest, MIN_STAT_LIMIT, MAX_STAT_LIMIT, playerStatsValidationSchema
 } from '@/src/core/api/auth/auth.types';
 import { UserTable } from '@/src/components/admin/UserTable';
 import { UserSearchForm } from '@/src/components/admin/UserSearchForm';
 import { AdminActionModal } from '@/src/components/admin/AdminActionModal';
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/components/Providers";
+import {ZodError} from "zod";
 
 export default function AdminUserManagement() {
     const { user, isLoading: authLoading } = useAuth();
@@ -91,19 +92,23 @@ export default function AdminUserManagement() {
 
         if (action.mode === 'stats') {
             // Handle Stats update
-            const sanitizedStats: UpdatePlayerStatsRequest = {
-                level: Math.min(Math.max(Number(action.payload.level) || 1, 1), MAX_STAT_LIMIT),
-                xp: Math.min(Math.max(Number(action.payload.xp) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
-                wins: Math.min(Math.max(Number(action.payload.wins) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
-                losses: Math.min(Math.max(Number(action.payload.losses) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
-                kills: Math.min(Math.max(Number(action.payload.kills) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
-                deaths: Math.min(Math.max(Number(action.payload.deaths) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
-            };
-            const result = await authClient.updatePlayerStats(user.id, sanitizedStats);
+            try {
+                const sanitizedStats = playerStatsValidationSchema.parse(action.payload);
+                const result = await authClient.updatePlayerStats(user.id, sanitizedStats);
 
-            if (!result.ok) {
-                console.error("Stats update failed:", result.error.message);
-                alert(`Failed to save changes: ${result.error.message}`);
+                if (!result.ok) {
+                    alert(`Failed to save stats: ${result.error.message}`);
+                    return;
+                }
+
+            } catch (error: any) {
+                if (error instanceof ZodError) {
+                    const errorMessage = error.issues.map(e => e.message).join("\n");
+                    alert(`Validation Error:\n${errorMessage}`);
+                } else {
+                    alert("An unexpected validation issue occurred.");
+                }
+                return;
             }
         }
         else if (action.mode === 'roles') {
