@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/Providers";
 import AuthModal from "@/components/AuthModal";
 import BattleArena from "@/components/BattleArena";
@@ -10,19 +10,23 @@ import SearchHandler from "@/components/SearchHandler";
 
 function LandingPageContent() {
     const { isAuthenticated} = useAuth();
+    const router = useRouter();
     const searchParams = useSearchParams();
     const showLogin = searchParams.get("showLogin");
-
-    const [isAuthModalOpen, setAuthModalOpen] = useState(false);
     const [authType, setAuthType] = useState<'Login' | 'Register'>('Login');
+    const isAuthModalOpen = showLogin === "true" && !isAuthenticated;
 
     useEffect(() => {
         if (showLogin === "true" && !isAuthenticated) {
             setAuthType('Login');
-            setAuthModalOpen(true);
         }
     }, [showLogin, isAuthenticated]);
 
+    const handleCloseModal = () => {
+        if (searchParams.get("showLogin") === "true") {
+            router.push("/");
+        }
+    };
     return (
         <div className="flex flex-col gap-16 py-12 max-w-5xl mx-auto px-6">
 
@@ -30,7 +34,6 @@ function LandingPageContent() {
                 <SearchHandler
                     onLogin={() => {
                         setAuthType('Login');
-                        setAuthModalOpen(true);
                     }}
                 />
             </Suspense>
@@ -145,7 +148,7 @@ function LandingPageContent() {
             </section>
             <AuthModal
                 isOpen={isAuthModalOpen}
-                onClose={() => setAuthModalOpen(false)}
+                onClose={handleCloseModal}
                 type={authType}
                 setType={setAuthType}
             />

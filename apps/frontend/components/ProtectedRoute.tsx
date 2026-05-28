@@ -24,7 +24,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
             const timer = setTimeout(() => {
                 const encodedPath = encodeURIComponent(pathname);
                 router.push(`/?showLogin=true&callbackUrl=${encodedPath}`);
-            }, 10000);
+            }, 5000);
             return () => clearTimeout(timer);
         }
 
