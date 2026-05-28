@@ -7,12 +7,13 @@ import { saveMyProfile } from "@/src/core/api/profile/profile.client";
 type EditProfileModalProps = {
     open: boolean;
     onClose?: () => void;
+    onSaved?: () => void;
     displayName?: string;
     email?: string;
     onAvatarCropped?: (blob: Blob) => void;
 };
 
-export default function EditProfileModal({ open, onClose, displayName, email, onAvatarCropped }: EditProfileModalProps) {
+export default function EditProfileModal({ open, onClose, onSaved, displayName, email, onAvatarCropped }: EditProfileModalProps) {
     const editorRef = useRef<any>(null);
     const fileInputId = useId();
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -98,6 +99,7 @@ export default function EditProfileModal({ open, onClose, displayName, email, on
             }
 
             setSaveFeedback("Profile saved successfully.");
+            onSaved?.();
             onClose?.();
         } catch (error) {
             setSaveError(error instanceof Error ? error.message : "Failed to save profile.");

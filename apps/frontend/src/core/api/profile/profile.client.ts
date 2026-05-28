@@ -24,6 +24,7 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<ApiRe
     const response = await fetch(url, {
         ...options,
         headers,
+        cache: "no-store",
     });
 
     if (response.status === 204) {
@@ -52,6 +53,10 @@ export async function updateMyProfile(input: UpdateMyProfileInput): Promise<ApiR
         method: "PATCH",
         body: JSON.stringify(input),
     });
+}
+
+export async function getMyProfile(): Promise<ApiResult<{ displayName?: string | null; bio?: string | null; avatarUrl?: string | null }>> {
+    return request(`${BASE_URL}/users/me/profile`);
 }
 
 export async function uploadMyAvatar(file: Blob, fileName = "avatar.png"): Promise<ApiResult<unknown>> {
