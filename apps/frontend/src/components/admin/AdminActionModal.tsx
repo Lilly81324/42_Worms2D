@@ -81,7 +81,7 @@ export function AdminActionModal(
             onConfirm({ mode: 'stats', payload: rawStats as unknown as UpdatePlayerStatsRequest
             });
         } else
-            onConfirm({ mode: 'default', payload: '' });
+            onConfirm({ mode: 'default', payload: 'Administrative action override' });
     };
 
     return (

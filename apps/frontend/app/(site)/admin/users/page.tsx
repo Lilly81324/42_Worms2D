@@ -10,6 +10,7 @@ import { AdminActionModal } from '@/src/components/admin/AdminActionModal';
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/components/Providers";
 import {ZodError} from "zod";
+import { Toaster, toast } from 'sonner';
 
 export default function AdminUserManagement() {
     const { user, isLoading: authLoading } = useAuth();
@@ -97,42 +98,78 @@ export default function AdminUserManagement() {
                 const result = await authClient.updatePlayerStats(user.id, sanitizedStats);
 
                 if (!result.ok) {
-                    alert(`Failed to save stats: ${result.error.message}`);
+                    toast.error(`Failed to save stats: ${result.error.message}`);
                     return;
                 }
+                toast.success("Player stats updated successfully!");
 
             } catch (error: any) {
                 if (error instanceof ZodError) {
                     const errorMessage = error.issues.map(e => e.message).join("\n");
-                    alert(`Validation Error:\n${errorMessage}`);
+                    toast.error(`Validation Error: ${errorMessage}`);
                 } else {
-                    alert("An unexpected validation issue occurred.");
+                    toast.error("An unexpected validation issue occurred.");
                 }
                 return;
             }
         }
         else if (action.mode === 'roles') {
             // Handle Role Update
-            const result = await authClient.setUserRoles(user.id, { roles: action.payload });
-            if (!result.ok) console.error("Role update failed:", result.error.message);
-        } else {
-            // Handle Status Toggle (Ban/Unban)
-            const isBanning = user.status === 'active';
-            const reason = action.payload;
+            try {
+                const result = await authClient.setUserRoles(user.id, {roles: action.payload});
 
-            const result = isBanning
-                ? await authClient.disableUser(user.id, { reason })
-                : await authClient.enableUser(user.id, { reason: 'Admin unban' });
+                if (!result.ok) {
+                    console.error("Role update failed:", result.error.message);
+                    toast.error(`Failed to update roles: ${result.error.message}`);
+                    return;
+                }
+                toast.success(`Roles updated successfully for ${user.username}!`);
 
-            if (!result.ok) console.error("Status update failed:", result.error.message);
+            } catch (error) {
+                console.error("Unexpected role update error:", error);
+                toast.error("Network or server failure while updating roles.");
+                return;
+            }
+        }
+        else {
+            // Handle BanToggle
+            try {
+                const isBanning = user.status === 'active';
+
+                const reason = action.payload && action.payload.length >= 3
+                    ? action.payload
+                    : 'Administrative action override';
+
+                const result = isBanning
+                    ? await authClient.disableUser(user.id, {reason})
+                    : await authClient.enableUser(user.id, {reason: 'Admin unban'});
+
+                if (!result.ok) {
+                    console.error("Status update failed:", result.error.message);
+                    toast.error(`Failed to update user status: ${result.error.message}`);
+                    return;
+                }
+
+                if (isBanning) {
+                    toast.success(`${user.username} has been successfully banned.`);
+                } else {
+                    toast.success(`${user.username} has been successfully reinstated.`);
+                }
+
+            } catch (error) {
+                console.error("Unexpected status update error:", error);
+                toast.error("Network or server failure while modifying account status.");
+                return;
+            }
         }
 
         await fetchUsers(searchQuery);
-        setModalConfig({ isOpen: false, mode: 'default', targetUser: null });
+        setModalConfig({isOpen: false, mode: 'default', targetUser: null});
     };
 
     return (
         <ProtectedRoute allowedRoles={['admin']}>
+            <Toaster position="top-right" richColors />
         <div className="container mx-auto py-8 px-4 min-h-[80vh]">
             <h1 className="text-2xl font-bold mb-6">User Management</h1>
 
