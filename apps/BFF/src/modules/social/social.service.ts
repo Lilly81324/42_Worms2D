@@ -34,21 +34,23 @@ export class SocialService {
     return verified.user.id;
   }
 
+  // updated /internal/users => /users
   getMyProfile(context: RequestContext) {
     return this.withMe(context, (userId) =>
       this.callSocialService({
         method: 'GET',
-        path: `/internal/users/${encodeURIComponent(userId)}/profile`,
+        path: `/users/${encodeURIComponent(userId)}/profile`,
         context,
       }),
     );
   }
 
+  // updated path: /internal/users => /users
   updateMyProfile(input: unknown, context: RequestContext) {
     return this.withMe(context, (userId) =>
       this.callSocialService({
         method: 'PATCH',
-        path: `/internal/users/${encodeURIComponent(userId)}/profile`,
+        path: `/users/${encodeURIComponent(userId)}/profile`,
         data: input,
         context,
       }),
@@ -83,9 +85,10 @@ export class SocialService {
           );
         }
 
+		// updated path /internal/users => /users
         return this.callSocialService({
           method: 'PATCH',
-          path: `/internal/users/${encodeURIComponent(userId)}/profile/with-avatar`,
+          path: `/users/${encodeURIComponent(userId)}/profile/with-avatar`,
           data: form,
           context,
         });
@@ -93,10 +96,11 @@ export class SocialService {
     );
   }
 
+  // updated path /internal/users => /users
   getUserProfile(userId: string, context: RequestContext) {
     return this.callSocialService({
       method: 'GET',
-      path: `/internal/users/${encodeURIComponent(userId)}/profile`,
+      path: `/users/${encodeURIComponent(userId)}/profile`,
       context,
     });
   }
