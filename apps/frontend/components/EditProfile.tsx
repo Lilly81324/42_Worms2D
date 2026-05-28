@@ -7,13 +7,14 @@ import { saveMyProfile } from "@/src/core/api/profile/profile.client";
 type EditProfileModalProps = {
     open: boolean;
     onClose?: () => void;
-    onSaved?: () => void;
+    onSaved?: () => Promise<void> | void;
     displayName?: string;
+    bio?: string;
     email?: string;
     onAvatarCropped?: (blob: Blob) => void;
 };
 
-export default function EditProfileModal({ open, onClose, onSaved, displayName, email, onAvatarCropped }: EditProfileModalProps) {
+export default function EditProfileModal({ open, onClose, onSaved, displayName, bio: initialBio, email, onAvatarCropped }: EditProfileModalProps) {
     const editorRef = useRef<any>(null);
     const fileInputId = useId();
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -35,10 +36,10 @@ export default function EditProfileModal({ open, onClose, onSaved, displayName, 
         setAvatarBlob(null);
         setAvatarScale(1.2);
         setFormDisplayName(displayName ?? "");
-        setBio("");
+        setBio(initialBio ?? "");
         setSaveFeedback(null);
         setSaveError(null);
-    }, [open, displayName]);
+    }, [open, displayName, initialBio]);
 
     useEffect(() => {
         return () => {
@@ -99,14 +100,17 @@ export default function EditProfileModal({ open, onClose, onSaved, displayName, 
             });
 
             console.log("[EditProfile] save result", result);
-
+			
             if (!result.ok) {
+				
+				console.log("[EditProfile] Error result", result);
+				console.log("[EditProfile] Error result", result.error);
                 setSaveError(result.error);
                 return;
             }
 
             setSaveFeedback("Profile saved successfully.");
-            onSaved?.();
+            await onSaved?.();
             onClose?.();
         } catch (error) {
             console.error("[EditProfile] save error", error);

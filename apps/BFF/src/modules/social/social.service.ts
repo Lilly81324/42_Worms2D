@@ -8,6 +8,7 @@ import {
 import axios, { AxiosError } from 'axios';
 import { BffConfigService } from '../config/bff-config.service';
 import { AuthService } from '../auth/auth.service';
+import { UpdateProfileService } from './updateProfile.service';
 
 type RequestContext = {
   requestId?: string;
@@ -26,11 +27,16 @@ export class SocialService {
   constructor(
     private readonly config: BffConfigService,
     private readonly authService: AuthService,
+    private readonly updateProfileService: UpdateProfileService,
   ) {}
 
   async currentUserId(context: RequestContext): Promise<string> {
+    console.log("[BFF/social.service] currentUserId called", {
+      authorization: context.authorization ? context.authorization.substring(0, 30) : "MISSING",
+    });
     this.ensureAuthorization(context.authorization);
     const verified = await this.authService.verify(context);
+    console.log("[BFF/social.service] verified user", { userId: verified.user.id });
     return verified.user.id;
   }
 
@@ -47,53 +53,62 @@ export class SocialService {
 
   // updated path: /internal/users => /users
   updateMyProfile(input: unknown, context: RequestContext) {
-    return this.withMe(context, (userId) =>
-      this.callSocialService({
-        method: 'PATCH',
-        path: `/internal/users/${encodeURIComponent(userId)}/profile`,
-        data: input,
-        context,
-      }),
-    );
+    return this.updateProfileService.updateMyProfile(input, context);
   }
 
   // Forward metadata and avatar as multipart form data to the social service.
   saveMyProfile(input: unknown, file: UploadedMemoryFile | undefined, context: RequestContext) {
-    return this.withMe(context, (userId) =>
-      (() => {
-        const form = new FormData();
-        if (typeof input === 'object' && input !== null) {
-          for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
-            if (value === undefined || value === null || value === '') {
-              continue;
-            }
-            form.set(key, String(value));
+    return this.withMe(context, async (userId) => {
+      const metadata: Record<string, unknown> = {};
+      if (typeof input === 'object' && input !== null) {
+        for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+          if (value === undefined || value === null || value === '') {
+            continue;
           }
+          metadata[key] = value;
         }
+      }
 
-        if (file?.buffer) {
-          const arrayBuffer = file.buffer.buffer.slice(
-            file.buffer.byteOffset,
-            file.buffer.byteOffset + file.buffer.byteLength,
-          ) as ArrayBuffer;
-          form.set(
-            'avatar',
-            new Blob([arrayBuffer], {
-              type: file.mimetype ?? 'application/octet-stream',
-            }),
-            file.originalname ?? 'avatar.png',
-          );
-        }
-
-		// updated path /internal/users => /users
-        return this.callSocialService({
+      // Persist profile metadata through the JSON endpoint first.
+      if (Object.keys(metadata).length > 0) {
+        await this.callSocialService({
           method: 'PATCH',
-          path: `/internal/users/${encodeURIComponent(userId)}/profile/with-avatar`,
-          data: form,
+          path: `/internal/users/${encodeURIComponent(userId)}/profile`,
+          data: metadata,
           context,
         });
-      })(),
-    );
+      }
+
+      // If no avatar was uploaded, return current profile after metadata update.
+      if (!file?.buffer) {
+        return this.callSocialService({
+          method: 'GET',
+          path: `/internal/users/${encodeURIComponent(userId)}/profile`,
+          context,
+        });
+      }
+
+      const form = new FormData();
+      const arrayBuffer = file.buffer.buffer.slice(
+        file.buffer.byteOffset,
+        file.buffer.byteOffset + file.buffer.byteLength,
+      ) as ArrayBuffer;
+      form.append(
+        'file',
+        new Blob([arrayBuffer], {
+          type: file.mimetype ?? 'application/octet-stream',
+        }),
+        file.originalname ?? 'avatar.png',
+      );
+
+      // Reuse avatar endpoint that is known to persist file and profile avatar id.
+      return this.callSocialService({
+        method: 'POST',
+        path: `/internal/users/${encodeURIComponent(userId)}/avatar`,
+        data: form,
+        context,
+      });
+    });
   }
 
   // updated path /internal/users => /users
@@ -301,6 +316,11 @@ export class SocialService {
   }
 
   private ensureAuthorization(authorization?: string): void {
+    console.log("[BFF/social.service] ensureAuthorization check", {
+      hasAuthorization: Boolean(authorization),
+      authorizationStart: authorization ? authorization.substring(0, 30) : "MISSING",
+      startsWithBearer: authorization?.toLowerCase().startsWith('bearer '),
+    });
     if (!authorization?.toLowerCase().startsWith('bearer ')) {
       throw new UnauthorizedException({
         code: 'missing_bearer_token',

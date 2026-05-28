@@ -55,6 +55,13 @@ export class SocialController {
     @Headers('x-request-id') requestId?: string,
     @Headers('authorization') authorization?: string,
   ) {
+    console.log("[BFF/social] saveMyProfile called", {
+      hasAuthorization: Boolean(authorization),
+      authorizationStart: authorization ? authorization.substring(0, 30) : "MISSING",
+      body,
+      hasFile: Boolean(file),
+      requestId,
+    });
     return this.social.saveMyProfile(
       body,
       file,
