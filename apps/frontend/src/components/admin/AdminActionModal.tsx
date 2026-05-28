@@ -1,5 +1,5 @@
 import React, {JSX, useEffect, useState} from 'react';
-import {UpdatePlayerStatsRequest, ConfirmAction, PlayerStatsData} from '@/src/core/api/auth/auth.types';
+import {UpdatePlayerStatsRequest, ConfirmAction, PlayerStatsData, MIN_STAT_LIMIT, MAX_STAT_LIMIT} from '@/src/core/api/auth/auth.types';
 
 interface AdminModalProps {
     isOpen: boolean;
@@ -50,8 +50,19 @@ export function AdminActionModal(
     };
 
     const handleStatChange = (key: string, value: string) => {
-        if (value === '' || /^[0-9]+$/.test(value)) {
-            setStatsInputs(prev => ({ ...prev, [key]: value }));
+        if (value === '') {
+            setStatsInputs(prev => ({ ...prev, [key]: '' }));
+            return;
+        }
+
+        if (/^[0-9]+$/.test(value)) {
+            const numericValue = Number(value);
+
+            if (numericValue > MAX_STAT_LIMIT) {
+                setStatsInputs(prev => ({...prev, [key]: MAX_STAT_LIMIT.toString()}));
+            } else {
+                setStatsInputs(prev => ({...prev, [key]: value}));
+            }
         }
     };
 
@@ -60,12 +71,12 @@ export function AdminActionModal(
             onConfirm({ mode: 'roles', payload: selectedRoles });
         } else if (mode === 'stats') {
             const finalStats: UpdatePlayerStatsRequest = {
-                level: Number(statsInputs.level) || 0,
-                xp: Number(statsInputs.xp) || 0,
-                wins: Number(statsInputs.wins) || 0,
-                losses: Number(statsInputs.losses) || 0,
-                kills: Number(statsInputs.kills) || 0,
-                deaths: Number(statsInputs.deaths) || 0,
+                level: Math.min(Math.max(Number(statsInputs.level) || 1, 1), MAX_STAT_LIMIT),
+                xp: Math.min(Math.max(Number(statsInputs.xp) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+                wins: Math.min(Math.max(Number(statsInputs.wins) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+                losses: Math.min(Math.max(Number(statsInputs.losses) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+                kills: Math.min(Math.max(Number(statsInputs.kills) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+                deaths: Math.min(Math.max(Number(statsInputs.deaths) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
             };
             onConfirm({mode: 'stats', payload: finalStats});
         } else

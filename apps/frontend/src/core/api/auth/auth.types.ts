@@ -236,3 +236,8 @@ export interface PlayerStatsData {
     kills: number;
     deaths: number;
 }
+/**
+ * --- stat hard limit ---
+ */
+export const MAX_STAT_LIMIT = 9999;
+export const MIN_STAT_LIMIT = 0;

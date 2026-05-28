@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { authClient } from '@/src/core/api/auth/auth.client';
-import { UserAuthView, UserSearchResponse, ConfirmAction, PlayerStatsData
+import { UserAuthView, UserSearchResponse, ConfirmAction, PlayerStatsData, UpdatePlayerStatsRequest, MIN_STAT_LIMIT, MAX_STAT_LIMIT
 } from '@/src/core/api/auth/auth.types';
 import { UserTable } from '@/src/components/admin/UserTable';
 import { UserSearchForm } from '@/src/components/admin/UserSearchForm';
@@ -91,8 +91,20 @@ export default function AdminUserManagement() {
 
         if (action.mode === 'stats') {
             // Handle Stats update
-            const result = await authClient.updatePlayerStats(user.id, action.payload);
-            if (!result.ok) console.error("Stats update failed:", result.error.message);
+            const sanitizedStats: UpdatePlayerStatsRequest = {
+                level: Math.min(Math.max(Number(action.payload.level) || 1, 1), MAX_STAT_LIMIT),
+                xp: Math.min(Math.max(Number(action.payload.xp) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+                wins: Math.min(Math.max(Number(action.payload.wins) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+                losses: Math.min(Math.max(Number(action.payload.losses) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+                kills: Math.min(Math.max(Number(action.payload.kills) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+                deaths: Math.min(Math.max(Number(action.payload.deaths) || 0, MIN_STAT_LIMIT), MAX_STAT_LIMIT),
+            };
+            const result = await authClient.updatePlayerStats(user.id, sanitizedStats);
+
+            if (!result.ok) {
+                console.error("Stats update failed:", result.error.message);
+                alert(`Failed to save changes: ${result.error.message}`);
+            }
         }
         else if (action.mode === 'roles') {
             // Handle Role Update
