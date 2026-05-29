@@ -133,17 +133,6 @@ export class Worm {
         this.previousPos = this.collider.position.clone();
 	}
 
-    initClickable(setterFunction: (chosen: Worm) => void) {
-        if (this.initialised)
-            return ;
-        this.initialised = true;
-        this.action = new ExecuteCodeAction({
-            trigger: ActionManager.OnPickUpTrigger}
-            , () => {
-            setterFunction(this);
-        })
-    }
-
     /**
      * Tells the Worm to activate the functionality for being able to pick a worm
      */

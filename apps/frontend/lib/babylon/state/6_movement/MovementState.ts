@@ -4,7 +4,7 @@ import { Turn } from '../4_turn_start/Turn';
 import { IState } from '../IState'
 import { StateMachine } from '../StateMachine';
 import { GameState } from '@/shared/state/GameState';
-import { ExecuteCodeAction, ActionManager, IAction, Quaternion, Axis, Vector3, Scene, Observer, Observable } from '@babylonjs/core'
+import { ExecuteCodeAction, ActionManager, IAction, AbstractActionManager, Quaternion, Axis, Vector3, Scene, Observer, Observable } from '@babylonjs/core'
 
 /**
  * Uses Notification system to display custom message based on if this client is active
@@ -15,6 +15,18 @@ function turnMessage(machine: StateMachine) {
 	}
 	else {
 		machine.guiHelper?.notifications.add(`${machine.getActiveUser().name} is worming around`);
+	}
+}
+
+function manuallyChooseWeapon(action: AbstractActionManager, machine: StateMachine) {
+	for (let i = 0; i < 9; i++) {
+		action.registerAction(new ExecuteCodeAction({
+			trigger: ActionManager.OnKeyUpTrigger,
+			parameter: `${i + 1}`
+		}, () => {
+			console.log("Choosing")
+			machine.turn?.chooseWeapon(machine.weapons.find((weapon) => (weapon.weaponId == i)));
+		}));
 	}
 }
 
@@ -44,6 +56,9 @@ export class MovementState implements IState {
 		// For inactive players, dont allow picking worms
 		if (!this.machine.isActiveUser() || !this.machine.turn || !this.machine.players)
 			return ;
+
+		manuallyChooseWeapon(action, this.machine);
+		this.machine.turn?.chosenWeapon?.show(true);
 
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyDownTrigger,
