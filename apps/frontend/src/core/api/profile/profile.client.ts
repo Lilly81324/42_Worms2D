@@ -120,6 +120,7 @@ export async function saveMyProfile(input: UpdateMyProfileInput & { avatar?: Blo
         form.set("avatar", input.avatar, "avatar.png");
     }
 
+	console.log("BASE_URL: ", BASE_URL);
     return request<unknown>(`${BASE_URL}/users/me/profile/with-avatar`, {
         method: "PATCH",
         body: form,

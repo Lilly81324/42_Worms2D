@@ -12,9 +12,18 @@ type EditProfileModalProps = {
     bio?: string;
     email?: string;
     onAvatarCropped?: (blob: Blob) => void;
+    setProfile?: (profile: any) => void;
 };
 
-export default function EditProfileModal({ open, onClose, onSaved, displayName, bio: initialBio, email, onAvatarCropped }: EditProfileModalProps) {
+export default function EditProfileModal({
+    open,
+    onClose,
+    onSaved,
+    displayName,
+    bio: initialBio,
+    email,
+    onAvatarCropped,
+}: EditProfileModalProps) {
     const editorRef = useRef<any>(null);
     const fileInputId = useId();
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -99,8 +108,6 @@ export default function EditProfileModal({ open, onClose, onSaved, displayName, 
                 avatar: avatarBlob,
             });
 
-            console.log("[EditProfile] save result", result);
-			
             if (!result.ok) {
 				
 				console.log("[EditProfile] Error result", result);
@@ -108,9 +115,10 @@ export default function EditProfileModal({ open, onClose, onSaved, displayName, 
                 setSaveError(result.error);
                 return;
             }
-
             setSaveFeedback("Profile saved successfully.");
-            await onSaved?.();
+            //await onSaved?.();
+			onSaved?.(result.data as { displayName?: string | null; bio?: string | null; avatarUrl?: string | null });
+			console.log("[EditProfile] save result, 100% saved this", result);
             onClose?.();
         } catch (error) {
             console.error("[EditProfile] save error", error);
