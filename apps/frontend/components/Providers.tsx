@@ -20,6 +20,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
+    // Debug: show provider render and basic session presence (safe fields only)
+    console.log("[Providers] render", { isLoading, user: user ? { id: user.id, email: user.email } : null });
+
     // useCallBack prevents rerun every react render
     const logout = useCallback(async () => {
         const accessToken = sessionStorage.getItem("auth.accessToken");
@@ -47,6 +50,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         const bootstrapSession = async () => {
             const token = sessionStorage.getItem('auth.accessToken');
 
+            console.log("[Providers] bootstrapSession: token present", !!token);
+
             if (!token) {
                 setIsLoading(false);
                 return;
@@ -56,6 +61,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 const result = await authClient.getMe();
 
                 if (result.ok) {
+                    console.log("[Providers] bootstrapSession: got me", { id: result.data.user.id, email: result.data.user.email });
                     setUser(result.data.user);
                 } else {
                     sessionStorage.removeItem('auth.accessToken');
@@ -65,6 +71,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 console.error("Bootstrap failed", error);
             } finally {
                 setIsLoading(false);
+                console.log("[Providers] bootstrapSession: finished, isLoading set to false");
             }
         };
 

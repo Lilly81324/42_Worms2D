@@ -10,6 +10,9 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     const router = useRouter();
     const pathname = usePathname();
 
+    // Debug: surface auth state so we can see why children may not render
+    console.log("[ProtectedRoute] render", { isLoading, isAuthenticated, pathname });
+
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
             const timer = setTimeout(() => {
@@ -71,5 +74,6 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         );
     }
 
+    console.log("[ProtectedRoute] returning children");
     return <>{children}</>;
 }

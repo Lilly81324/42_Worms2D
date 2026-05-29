@@ -116,8 +116,9 @@ export default function EditProfileModal({
                 return;
             }
             setSaveFeedback("Profile saved successfully.");
-            //await onSaved?.();
-			onSaved?.(result.data as { displayName?: string | null; bio?: string | null; avatarUrl?: string | null });
+			await onSaved?.();
+			// Keep parent in sync if it wants the returned profile data later.
+			onAvatarCropped?.(avatarBlob ?? new Blob());
 			console.log("[EditProfile] save result, 100% saved this", result);
             onClose?.();
         } catch (error) {

@@ -104,25 +104,23 @@ export async function uploadMyAvatar(file: Blob, fileName = "avatar.png"): Promi
     });
 }
 
-// Submit profile metadata and avatar together in one request.
+// Submit profile metadata and avatar separately to avoid the combined route.
 export async function saveMyProfile(input: UpdateMyProfileInput & { avatar?: Blob | null }): Promise<ApiResult<unknown>> {
-    const form = new FormData();
+    const { avatar, ...metadata } = input;
 
-    if (input.displayName) {
-        form.set("displayName", input.displayName);
+    const profileResult = await updateMyProfile(metadata);
+    if (!profileResult.ok) {
+        return profileResult;
     }
 
-    if (input.bio) {
-        form.set("bio", input.bio);
+    if (!avatar) {
+        return profileResult;
     }
 
-    if (input.avatar) {
-        form.set("avatar", input.avatar, "avatar.png");
+    const avatarResult = await uploadMyAvatar(avatar);
+    if (!avatarResult.ok) {
+        return avatarResult;
     }
 
-	console.log("BASE_URL: ", BASE_URL);
-    return request<unknown>(`${BASE_URL}/users/me/profile/with-avatar`, {
-        method: "PATCH",
-        body: form,
-    });
+    return profileResult;
 }
