@@ -97,11 +97,6 @@ export default function EditProfileModal({
         setSaveError(null);
 
         try {
-            console.log("[EditProfile] save start", {
-                displayName: formDisplayName.trim() || undefined,
-                bio: bio.trim() || undefined,
-                hasAvatar: Boolean(avatarBlob),
-            });
             const result = await saveMyProfile({
                 displayName: formDisplayName.trim() || undefined,
                 bio: bio.trim() || undefined,
@@ -109,9 +104,7 @@ export default function EditProfileModal({
             });
 
             if (!result.ok) {
-				
-				console.log("[EditProfile] Error result", result);
-				console.log("[EditProfile] Error result", result.error);
+
                 setSaveError(result.error);
                 return;
             }
@@ -119,10 +112,8 @@ export default function EditProfileModal({
 			await onSaved?.();
 			// Keep parent in sync if it wants the returned profile data later.
 			onAvatarCropped?.(avatarBlob ?? new Blob());
-			console.log("[EditProfile] save result, 100% saved this", result);
             onClose?.();
         } catch (error) {
-            console.error("[EditProfile] save error", error);
             setSaveError(error instanceof Error ? error.message : "Failed to save profile.");
         } finally {
             setIsSaving(false);

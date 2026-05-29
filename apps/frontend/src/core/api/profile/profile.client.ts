@@ -21,16 +21,7 @@ async function request<T>(url: string, options: RequestInit = {}, hasRetried = f
 
     if (token) {
         headers.set("Authorization", `Bearer ${token}`);
-        console.log("[profile.client] request sent with Authorization header", {
-            url,
-            method: options.method,
-            hasToken: Boolean(token),
-            tokenLength: token.length,
-            headers: {
-                Authorization: `Bearer ${token.substring(0, 20)}...`,
-                ContentType: headers.get("Content-Type"),
-            },
-        });
+        
     } else {
         console.log("[profile.client] NO token in sessionStorage!", { url, method: options.method });
     }

@@ -28,15 +28,10 @@ type SocialProfile = {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
-// Module-level log to verify client JS loads
-console.log("[ProfilePage.module] loading on client");
 
 export default function ProfilePage() {
-    console.log("[ProfilePage] render START - component is rendering");
     // Log when component mounts (after first render)
-    useEffect(() => {
-        console.log("[ProfilePage] mounted");
-    }, []);
+
     const { user, setUser } = useAuth();
     const [activeTab, setActiveTab] = useState<TabType>('Info');
     const [isEditOpen, setIsEditOpen] = useState(false);
@@ -61,8 +56,6 @@ export default function ProfilePage() {
 		try {
 			const socialProfile = await getMyProfile();
 			if (socialProfile.ok) setProfile(socialProfile.data);
-
-			console.log("get profile after saved: ", socialProfile);
 			const me = await authClient.getMe();
 			const resolvedUser = me.data.user;
 			const token = sessionStorage.getItem("auth.accessToken");
@@ -80,7 +73,13 @@ export default function ProfilePage() {
 					: Promise.resolve(null),
 			]);
 
-			const safeJson = async (r: Response | null) => (r && r.ok ? r.json() : null);
+			const safeJson = async (r: Response | null) => {
+				if (r && r.ok) {
+					const json = await r.json();
+					return Array.isArray(json) ? json : [];
+				}
+				return [];
+			};
 
 			setFriends(await safeJson(friendsRes));
 			setClans(await safeJson(clansRes));
@@ -93,14 +92,8 @@ export default function ProfilePage() {
 
 	// ✅ Now useEffect just calls it
 	useEffect(() => {
-		console.log("[ProfilePage] loadProfileData effect firing");
 		void loadProfileData();
 	}, [loadProfileData]);
-
-	// Log displayName and user whenever they change
-	useEffect(() => {
-		console.log("[ProfilePage] displayName or user changed", { displayName, userId: user?.id });
-	}, [displayName, user?.id]);
 
 
     const computedStats = useMemo(() => {
@@ -139,18 +132,8 @@ export default function ProfilePage() {
         {name: 'Invitations', icon: '✉️'},
     ];
 
-    console.log("[ProfilePage] about to render JSX", { displayName, statsLevel: stats?.level, profileData: profile });
-
     return (
         <ProtectedRoute>
-        {/*<EditProfileModal
-			open={isEditOpen}
-			onClose={() => setIsEditOpen(false)}
-			onSaved={loadProfileData}
-			displayName={displayName}
-			bio={bio ?? ""}
-			email={user?.email ?? ""}
-		/>*/}
         <EditProfileModal
             open={isEditOpen}
             onClose={() => setIsEditOpen(false)}
@@ -163,7 +146,6 @@ export default function ProfilePage() {
             bio={bio ?? ""}
             email={user?.email ?? ""}
         />
-        {console.log("profile: ", profile)}
         <div className="max-w-4xl mx-auto py-12 px-6">
             {dataError && (
                 <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
@@ -200,7 +182,7 @@ export default function ProfilePage() {
                         </button>
                         <div
                             className=" w-20 h-20 bg-blue-500 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl border-4 border-white dark:border-zinc-800 shadow-lg">
-                            {avatarUrl ? (
+							{avatarUrl ? (
                                 <img src={avatarUrl} alt="Profile avatar" className="h-full w-full rounded-full object-cover" />
                             ) : (
                                 "🪱"
@@ -208,7 +190,7 @@ export default function ProfilePage() {
                         </div>
 
                         <h2 className="font-black text-l">{displayName}</h2>
-                        <p className="text-xs text-zinc-500 font-mono uppercase">Level {level} Recruit</p>
+                        <p className="text-xs text-zinc-500 font-mono uppercase">Level {level} <span className="font-bold">{bio || ""}</span></p>
                     </div>
 
                     {tabs.map((tab) => (
@@ -250,10 +232,10 @@ export default function ProfilePage() {
                                         Victories</label>
                                     <p className="font-medium">{computedStats.wins} Matches Won</p>
                                 </div>
-                                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                                {/*<div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                                     <label className="text-[10px] uppercase font-bold text-zinc-400">Bio</label>
                                     <p className="font-medium whitespace-pre-wrap">{bio || "No bio set yet."}</p>
-                                </div>
+                                </div>*/}
                                 <div className="mt-8">
                                     <h4 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">Achievements</h4>
                                     <div className="flex flex-wrap gap-3">
