@@ -2,7 +2,7 @@ import { BadGatewayException, HttpException, Injectable, StreamableFile, Unautho
 import axios, { AxiosError } from 'axios';
 import { BffConfigService } from '../config/bff-config.service';
 import { AuthService } from '../auth/auth.service';
-import { uploadedMemoryFileToForm, sanitizeMetadata, saveProfileWithAvatar, uploadAvatarFile } from './utils';
+import { uploadedMemoryFileToForm, sanitizeMetadata } from './utils';
 
 type RequestContext = {
   requestId?: string;
@@ -36,17 +36,37 @@ export class UpdateProfileService {
 
   async saveMyProfile(input: unknown, file: UploadedMemoryFile | undefined, context: RequestContext) {
     const userId = await this.currentUserId(context);
-    return saveProfileWithAvatar(
-      userId,
-      input,
-      file,
-      (callOpts) =>
-        this.callSocialService({
-          ...callOpts,
-          context,
-        }),
+
+    const metadata = sanitizeMetadata(input);
+
+    // Persist profile metadata through the JSON endpoint first.
+    if (Object.keys(metadata).length > 0) {
+      await this.callSocialService({
+        method: 'PATCH',
+        path: `/internal/users/${encodeURIComponent(userId)}/profile`,
+        data: metadata,
+        context,
+      });
+    }
+
+    // If no avatar was uploaded, return current profile after metadata update.
+    if (!file?.buffer) {
+      return this.callSocialService({
+        method: 'GET',
+        path: `/internal/users/${encodeURIComponent(userId)}/profile`,
+        context,
+      });
+    }
+
+    const form = uploadedMemoryFileToForm(file, 'file', file.originalname ?? 'avatar.png');
+
+    // Reuse avatar endpoint that is known to persist file and profile avatar id.
+    return this.callSocialService({
+      method: 'POST',
+      path: `/internal/users/${encodeURIComponent(userId)}/avatar`,
+      data: form,
       context,
-    );
+    });
   }
 
   async uploadMyAvatar(file: UploadedMemoryFile, context: RequestContext) {
@@ -58,16 +78,15 @@ export class UpdateProfileService {
     }
 
     const userId = await this.currentUserId(context);
-    return uploadAvatarFile(
-      userId,
-      file,
-      async (callOpts) =>
-        this.callSocialService({
-          ...callOpts,
-          context,
-        }),
+    const form = uploadedMemoryFileToForm(file, 'file', file.originalname ?? 'avatar');
+
+    return this.callSocialService({
+      method: 'POST',
+      path: `/internal/users/${encodeURIComponent(userId)}/avatar`,
+      data: form,
       context,
-    );
+      extraHeaders: {},
+    });
   }
 
   async deleteMyAvatar(context: RequestContext) {
