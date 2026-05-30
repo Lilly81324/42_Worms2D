@@ -19,13 +19,15 @@ function turnMessage(machine: StateMachine) {
 }
 
 function manuallyChooseWeapon(action: AbstractActionManager, machine: StateMachine) {
+	if (!machine.loaded) 
+		return ;
 	for (let i = 0; i < 9; i++) {
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: `${i + 1}`
 		}, () => {
-			console.log("Choosing")
-			machine.turn?.chooseWeapon(machine.weapons.find((weapon) => (weapon.weaponId == i)));
+			if (machine.loaded)
+				machine.loaded.turn.chooseWeapon(machine.loaded.weapons.find((weapon) => (weapon.weaponId == i)));
 		}));
 	}
 }
@@ -45,7 +47,9 @@ export class MovementState implements IState {
 	constructor(private machine: StateMachine) {}
 
 	enter() {
-		this.reset()
+		this.reset();
+		if (!this.machine.loaded)
+			return;
 
 		// Setup
 		turnMessage(this.machine);
@@ -58,7 +62,7 @@ export class MovementState implements IState {
 			return ;
 
 		manuallyChooseWeapon(action, this.machine);
-		this.machine.turn?.chosenWeapon?.show(true);
+		this.machine.loaded.turn.chosenWeapon?.show(true);
 
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyDownTrigger,

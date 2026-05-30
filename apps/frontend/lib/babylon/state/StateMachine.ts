@@ -1,4 +1,4 @@
-import { IAction, Scene, ActionManager } from '@babylonjs/core';
+import { IAction, Scene, ActionManager, AbstractMesh } from '@babylonjs/core';
 import { GameState } from '@/shared/state/GameState';
 import { CS_DEV_SetGameState, CS_RequestChangeGameState, CS_Type } from '@/shared/packets/ClientServerPackets';
 import { gameData } from '@/shared/packets/util';
@@ -22,7 +22,17 @@ import { TurnEndState }			from './8_turn_end/TurnEndState';
 import { GameEndState }			from './9_game_end/GameEndState';
 import { MessageQueue } from '../MessageQueue';
 import { handlePacket } from '@/lib/packets/handlePacket';
+import { aimingMeshes } from './1_loading/loadGame';
 import { Achievements } from '../data/achievments';
+
+// Stores the part of the statemachine that are created in the loading step
+export interface loaded {
+	ground: Ground,
+	weapons: Array<IWeapon>,
+	players: Array<Player>,
+	turn: Turn,
+	aiming: aimingMeshes,
+}
 
 export class StateMachine {
 	public userId: string;
@@ -34,11 +44,9 @@ export class StateMachine {
 	
 	public queue: MessageQueue | undefined;
 	public guiHelper: GuiHelper | undefined;
-	public ground: Ground | undefined;
+	public loaded: loaded | undefined;
 	public state: GameState | undefined;
 	public currentState: IState | undefined;
-	public players: Array<Player>;
-	public weapons: Array<IWeapon>;
 	public activePlayerId: string;
 	public turn: Turn | undefined;
 	public achievements: Achievements;
@@ -65,12 +73,10 @@ export class StateMachine {
 		// Set when game starts proper
 		
 		// Set on Loading
-		this.weapons = [];
-		this.players = [];
 		this.state = undefined;
 		this.currentState = undefined;
 		this.guiHelper = undefined;
-		this.ground = undefined;
+		this.loaded = undefined;
 		this.activePlayerId = "";
 		this.turn = undefined;
 		this.achievements = new Achievements();
@@ -159,16 +165,13 @@ export class StateMachine {
 	 */
 	clearGame() {
 		// Clean Players and their worms
-		this.weapons.forEach(w => w.dispose());
-		this.weapons = [];
-		this.players.forEach(p => p.dispose());
-		this.players = [];
-		this.turn?.dispose()
-		this.turn = undefined;
+		this.loaded?.weapons.forEach(w => w.dispose());
+		this.loaded?.players.forEach(p => p.dispose());
+		this.loaded?.turn?.dispose()
 		this.guiHelper?.dispose()
 		this.guiHelper = undefined;
-		this.ground?.dispose();
-		this.ground = undefined;
+		this.loaded?.ground?.dispose();
+		this.loaded = undefined;
 	}
 
 	/**
@@ -192,13 +195,15 @@ export class StateMachine {
 	 * @returns bool wether current player is the active player this turn
 	 */
 	isActiveUser() : boolean {
-		if (this.turn && this.turn.activePlayerId == this.userId) 
+		if (this.loaded && this.loaded.turn.activePlayerId == this.userId) 
 			return true;
 		return false;
 	}
 
 	getActiveUser() {
-		return (this.players.find((player) => player.id == this.activePlayerId) ?? this.players[0]);
+		if (!this.loaded)
+			throw new Error("Cannot get active user, when game isnt loaded");
+		return (this.loaded.players.find((player) => player.id == this.activePlayerId) ?? this.loaded.players[0]);
 	}
 
 	/**
