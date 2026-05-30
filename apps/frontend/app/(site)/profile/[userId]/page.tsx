@@ -70,21 +70,22 @@ export default function ProfilePage() {
 			const socialProfile = await getMyProfile();
 			if (socialProfile.ok) setProfile(socialProfile.data);
 			const me = await authClient.getMe();
-			const resolvedUser = me.data.user;
+            if (!me.ok) {
+                setDataError(typeof me.error === "string" ? me.error : "Unable to load current user.");
+                return;
+            }
+            const resolvedUser = me.data.user;
 			const token = sessionStorage.getItem("auth.accessToken");
 			const headers: HeadersInit = {
 				"Content-Type": "application/json",
 				...(token ? { Authorization: `Bearer ${token}` } : {}),
 			};
 
-			const [friendsRes, clansRes, invitesRes, statsRes] = await Promise.all([
-				fetch(`${API_BASE}/friends`, { headers }),
-				fetch(`${API_BASE}/clans/me`, { headers }),
-				fetch(`${API_BASE}/clans/me/invites`, { headers }),
-                resolvedUser?.id
-                    ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers })
-					: Promise.resolve(null),
-			]);
+            const [friendsRes, clansRes, invitesRes] = await Promise.all([
+                fetch(`${API_BASE}/friends`, { headers }),
+                fetch(`${API_BASE}/clans/me`, { headers }),
+                fetch(`${API_BASE}/clans/me/invites`, { headers }),
+            ]);
 
 			const safeJson = async (r: Response | null) => {
 				if (r && r.ok) {
@@ -94,10 +95,21 @@ export default function ProfilePage() {
 				return [];
 			};
 
+            const safeObject = async <T,>(r: Response | null): Promise<T | null> => {
+                if (r && r.ok) {
+                    return (await r.json()) as T;
+                }
+                return null;
+            };
+
+            const statsRes = resolvedUser?.id
+                ? await fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers })
+                : null;
+
 			setFriends(await safeJson(friendsRes));
 			setClans(await safeJson(clansRes));
 			setInvites(await safeJson(invitesRes));
-			setStats(await safeJson(statsRes));
+            setStats(await safeObject<PlayerStats>(statsRes));
 		} finally {
 			setIsLoadingData(false);
 		}

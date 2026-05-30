@@ -34,7 +34,7 @@ Content-Type: application/json
 GET http://localhost:3004/internal/stats/user
 
 ### get by id=> full player profile view/Admin dashboard	
-GET http://localhost:3004/internal/stats/user/d200724c-2856-4319-aefa-b41a73a0a0eb
+GET http://localhost:3004/internal/stats/user/f413ec97-376c-4e09-92cb-a743f765c603
 
 ### GET    /internal/stats/user/:userId/matches (match history)
 GET http://localhost:3004/internal/stats/user/d200724c-2856-4319-aefa-b41a73a0a0eb/matches
