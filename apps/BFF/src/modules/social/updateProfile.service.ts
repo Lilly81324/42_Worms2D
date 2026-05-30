@@ -1,11 +1,19 @@
-import { BadGatewayException, HttpException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadGatewayException, HttpException, Injectable, StreamableFile, UnauthorizedException } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
 import { BffConfigService } from '../config/bff-config.service';
 import { AuthService } from '../auth/auth.service';
+import { uploadedMemoryFileToForm, sanitizeMetadata, saveProfileWithAvatar, uploadAvatarFile } from './utils';
 
 type RequestContext = {
   requestId?: string;
   authorization?: string;
+};
+
+type UploadedMemoryFile = {
+  buffer?: Buffer;
+  originalname?: string;
+  mimetype?: string;
+  size?: number;
 };
 
 @Injectable()
@@ -26,13 +34,82 @@ export class UpdateProfileService {
     });
   }
 
+  async saveMyProfile(input: unknown, file: UploadedMemoryFile | undefined, context: RequestContext) {
+    const userId = await this.currentUserId(context);
+    return saveProfileWithAvatar(
+      userId,
+      input,
+      file,
+      (callOpts) =>
+        this.callSocialService({
+          ...callOpts,
+          context,
+        }),
+      context,
+    );
+  }
+
+  async uploadMyAvatar(file: UploadedMemoryFile, context: RequestContext) {
+    if (!file?.buffer) {
+      throw new HttpException(
+        { code: 'avatar_file_required', message: 'Avatar file is required.' },
+        400,
+      );
+    }
+
+    const userId = await this.currentUserId(context);
+    return uploadAvatarFile(
+      userId,
+      file,
+      async (callOpts) =>
+        this.callSocialService({
+          ...callOpts,
+          context,
+        }),
+      context,
+    );
+  }
+
+  async deleteMyAvatar(context: RequestContext) {
+    const userId = await this.currentUserId(context);
+    return this.callSocialService({
+      method: 'DELETE',
+      path: `/internal/users/${encodeURIComponent(userId)}/avatar`,
+      context,
+    });
+  }
+
+  async getAvatar(fileName: string, context: RequestContext) {
+    const response = await this.callSocialRaw({
+      method: 'GET',
+      path: `/internal/uploads/avatars/${encodeURIComponent(fileName)}`,
+      context,
+      responseType: 'stream',
+    });
+
+    return {
+      streamable: new StreamableFile(response.data),
+      contentType: response.headers['content-type'] as string | undefined,
+      contentLength: response.headers['content-length'] as string | undefined,
+    };
+  }
+
   private async currentUserId(context: RequestContext): Promise<string> {
+    console.log("[BFF/updateProfile.service] currentUserId called", {
+      authorization: context.authorization ? context.authorization.substring(0, 30) : "MISSING",
+    });
     this.ensureAuthorization(context.authorization);
     const verified = await this.authService.verify(context as any);
+    console.log("[BFF/updateProfile.service] verified user", { userId: verified.user.id });
     return verified.user.id;
   }
 
   private ensureAuthorization(authorization?: string): void {
+    console.log("[BFF/updateProfile.service] ensureAuthorization check", {
+      hasAuthorization: Boolean(authorization),
+      authorizationStart: authorization ? authorization.substring(0, 30) : "MISSING",
+      startsWithBearer: authorization?.toLowerCase().startsWith('bearer '),
+    });
     if (!authorization?.toLowerCase().startsWith('bearer ')) {
       throw new UnauthorizedException({
         code: 'missing_bearer_token',
