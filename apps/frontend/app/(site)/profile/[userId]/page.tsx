@@ -17,7 +17,20 @@ type PlayerStats = {
     losses?: number;
     kills?: number;
     deaths?: number;
-    achievements?: Array<{ id?: string; type?: string } | string>;
+    achievements?: Array<string | {
+		id?: string;
+		type?: string;
+		name?: string;
+		description?: string;
+		icon?: string;
+		xpReward?: number;
+		points?: number;
+		progress?: number;
+		progressTarget?: number;
+		achieved?: boolean;
+		achievedAt?: string;
+		meta?: Record<string, any>;
+		}>;
 };
 
 type SocialProfile = {
@@ -115,6 +128,7 @@ export default function ProfilePage() {
         };
     }, [stats]);
 
+	console.log("stats: ", stats);
     const achievementBadges = (stats?.achievements ?? []).map((achievement, index) => {
         if (typeof achievement === "string") {
             return { id: `ach-${index}-${achievement}`, label: achievement };
