@@ -8,8 +8,9 @@ import { useAuth } from "@/components/Providers";
 import { authClient } from "@/src/core/api/auth/auth.client";
 import { getMyProfile } from "@/src/core/api/profile/profile.client";
 import { Pencil } from "lucide-react";
+import { Achievements } from "@/components/Achievements";
 
-type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations';
+type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations' | 'Achievements';
 
 type PlayerStats = {
     level?: number;
@@ -141,21 +142,12 @@ export default function ProfilePage() {
     }, [stats]);
 
 	console.log("stats: ", stats);
-    const achievementBadges = (stats?.achievements ?? []).map((achievement, index) => {
-        if (typeof achievement === "string") {
-            return { id: `ach-${index}-${achievement}`, label: achievement };
-        }
-        return {
-            id: achievement.id ?? `ach-${index}`,
-            label: achievement.type ?? "Achievement",
-        };
-    });
-
     const tabs: { name: TabType; icon: string }[] = [
         {name: 'Info', icon: '👤'},
         {name: 'Friends', icon: '👥'},
         {name: 'Clan', icon: '🛡️'},
         {name: 'Invitations', icon: '✉️'},
+        {name: 'Achievements', icon: '✉️'},
     ];
 
     return (
@@ -216,7 +208,7 @@ export default function ProfilePage() {
                         </div>
 
                         <h2 className="font-black text-l">{displayName}</h2>
-                        <p className="text-xs text-zinc-500 font-mono uppercase">Level {level} <span className="font-bold">{bio || ""}</span></p>
+                        <p className="text-xs text-zinc-500 font-mono uppercase">Level {level} Recruit</p>
                     </div>
 
                     {tabs.map((tab) => (
@@ -258,23 +250,9 @@ export default function ProfilePage() {
                                         Victories</label>
                                     <p className="font-medium">{computedStats.wins} Matches Won</p>
                                 </div>
-                                {/*<div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                                     <label className="text-[10px] uppercase font-bold text-zinc-400">Bio</label>
                                     <p className="font-medium whitespace-pre-wrap">{bio || "No bio set yet."}</p>
-                                </div>*/}
-                                <div className="mt-8">
-                                    <h4 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">Achievements</h4>
-                                    <div className="flex flex-wrap gap-3">
-                                        {achievementBadges.length === 0 && (
-                                            <span className="text-sm text-zinc-500">No achievements yet.</span>
-                                        )}
-                                        {achievementBadges.map((badge) => (
-                                            <span key={badge.id}
-                                                  className="px-3 py-1 bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border border-yellow-500/20 rounded-full text-xs font-bold">
-        {badge.label}
-      </span>
-                                        ))}
-                                    </div>
                                 </div>
                             </div>
                         )}
@@ -339,6 +317,13 @@ export default function ProfilePage() {
                                     ))
                                 )}
                             </div>
+                        )}
+                        {activeTab === 'Achievements' && (
+                            <Achievements
+                                achievements={stats?.achievements ?? []}
+                                emptyTitle="No relics yet."
+                                emptyDescription="Complete quests, win matches, and forge your legend."
+                            />
                         )}
                     </div>
                 </div>
