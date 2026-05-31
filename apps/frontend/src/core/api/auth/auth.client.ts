@@ -26,6 +26,8 @@ import type
     UserRolesResponse,
     UpdatePlayerStatsResponse,
     PlayerStatsData,
+    RevokeSessionsResponse,
+    RevokeSessionsRequest,
 } from "@/src/core/api/auth/auth.types";
 
 
@@ -288,6 +290,13 @@ export const authClient = {
 
     async enableUser(userId: string, data: UserEnabledRequest = {}): Promise<ApiResult<UserEnabledResponse>> {
         return apiFetch<UserEnabledResponse>(`${BASE_URL}/admin/users/${userId}/enable`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    async revokeUserSessions(userId: string, data: RevokeSessionsRequest = {}): Promise<ApiResult<RevokeSessionsResponse>> {
+        return apiFetch<RevokeSessionsResponse>(`${BASE_URL}/admin/users/${userId}/sessions/revoke`, {
             method: 'POST',
             body: JSON.stringify(data),
         });

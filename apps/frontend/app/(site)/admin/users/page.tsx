@@ -87,9 +87,17 @@ export default function AdminUserManagement() {
         setModalConfig({ isOpen: true, mode: "roles", targetUser: user });
     };
 
+    const handleKickSessionsClick = (user: UserAuthView) => {
+        setModalConfig({ isOpen: true, mode: "kick", targetUser: user });
+    };
+
     const handleConfirmAction = async (action: ConfirmAction) => {
         const user = modalConfig.targetUser;
         if (!user) return;
+
+        const reason = action.payload && typeof action.payload === 'string' && action.payload.length >= 3
+            ? action.payload
+            : 'Administrative action override';
 
         if (action.mode === 'stats') {
             // Handle Stats update
@@ -131,14 +139,25 @@ export default function AdminUserManagement() {
                 return;
             }
         }
+        // handle kick button
+        else if (action.mode === 'kick') {
+            try {
+                const kickResult = await authClient.revokeUserSessions(user.id, { reason });
+                if (kickResult.ok) {
+                    toast.success(`Successfully terminated ${kickResult.data.revokedSessions} active session(s) for ${user.username}.`);
+                } else {
+                    toast.error(`Failed to terminate sessions: ${kickResult.error.message}`);
+                    return;
+                }
+            } catch (error) {
+                toast.error("Network error while attempting session revocation.");
+                return;
+            }
+        }
         else {
             // Handle BanToggle
             try {
                 const isBanning = user.status === 'active';
-
-                const reason = action.payload && action.payload.length >= 3
-                    ? action.payload
-                    : 'Administrative action override';
 
                 const result = isBanning
                     ? await authClient.disableUser(user.id, {reason})
@@ -151,7 +170,13 @@ export default function AdminUserManagement() {
                 }
 
                 if (isBanning) {
-                    toast.success(`${user.username} has been successfully banned.`);
+                    const kickResult = await authClient.revokeUserSessions(user.id, {reason});
+                    if (kickResult.ok) {
+                        toast.success(`${user.username} has been successfully banned.`);
+                    } else {
+                        console.warn("User disabled, but active session kick failed:", kickResult.error.message);
+                        toast.success(`${user.username} has been banned, but active sessions failed to clear immediately.`);
+                    }
                 } else {
                     toast.success(`${user.username} has been successfully reinstated.`);
                 }
@@ -183,6 +208,7 @@ export default function AdminUserManagement() {
                 onEditStats={handleEditStatsClick}
                 onToggleStatus={handleToggleStatusClick}
                 onEditRoles={handleEditRolesClick}
+                onKickSessions={handleKickSessionsClick}
             />
 
             <AdminActionModal
@@ -190,12 +216,12 @@ export default function AdminUserManagement() {
                 mode={modalConfig.mode}
                 title={
                     modalConfig.mode === 'roles' ? 'Manage Roles' :
-                        modalConfig.mode === 'stats' ? 'Edit Player Stats' :
-                            (modalConfig.targetUser?.status === 'active' ? 'Disable User' : 'Enable User')
+                    modalConfig.mode === 'stats' ? 'Edit Player Stats' : modalConfig.mode === 'kick' ? 'Force Disconnect User' :
+                        (modalConfig.targetUser?.status === 'active' ? 'Disable User' : 'Enable User')
                 }
                 description={
                     modalConfig.mode === 'roles' ? `Assign roles for ${modalConfig.targetUser?.username}` :
-                        modalConfig.mode === 'stats' ? `Updating gameplay metrics for ${modalConfig.targetUser?.username}` :
+                    modalConfig.mode === 'stats' ? `Updating gameplay metrics for ${modalConfig.targetUser?.username}` :
                             `Are you sure you want to change the status for ${modalConfig.targetUser?.username}?`
                 }
                 currentRoles={modalConfig.targetUser?.roles || []}

@@ -18,13 +18,14 @@ export function AdminActionModal(
 
     const availableRoles = ['admin', 'user'];
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-
+    const [actionReason, setActionReason] = useState<string>('');
     const [statsInputs, setStatsInputs] = useState<Record<string, string>>({
         level: '0', xp: '0', wins: '0', losses: '0', kills: '0', deaths: '0'
     });
 
     useEffect(() => {
         if (isOpen) {
+            setActionReason('');
             if (mode === 'roles')
                 setSelectedRoles(currentRoles);
             if (mode === 'stats')
@@ -80,9 +81,13 @@ export function AdminActionModal(
             };
             onConfirm({ mode: 'stats', payload: rawStats as unknown as UpdatePlayerStatsRequest
             });
+        } else if (mode === 'kick') {
+            onConfirm({ mode: 'kick', payload: actionReason.trim() });
         } else
-            onConfirm({ mode: 'default', payload: 'Administrative action override' });
+            onConfirm({ mode: 'default', payload: actionReason.trim() });
     };
+
+    const showReasonField = mode === 'kick' || mode === 'default';
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-all p-4">
@@ -140,7 +145,21 @@ export function AdminActionModal(
                         </div>
                     </div>
                 )}
-
+                {/* --- BAN REASON FIELD --- */}
+                {showReasonField && (
+                    <div className="mb-6 space-y-2">
+                        <label className="block text-xs font-semibold text-gray-500 uppercase">
+                            Action Reason (Optional)
+                        </label>
+                        <textarea
+                            className="w-full p-3 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none h-20"
+                            placeholder="Provide a clear reason for our audit logs..."
+                            maxLength={255}
+                            value={actionReason}
+                            onChange={(e) => setActionReason(e.target.value)}
+                        />
+                    </div>
+                )}
                 {/* --- FOOTER ACTIONS --- */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
                     <button

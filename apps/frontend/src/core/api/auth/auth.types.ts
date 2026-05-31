@@ -210,12 +210,23 @@ export interface UpdatePlayerStatsResponse {
     updatedAt?: string;
 }
 
+export interface RevokeSessionsRequest {
+    reason?: string;
+}
+
+export interface RevokeSessionsResponse {
+    userId: string;
+    revokedSessions: number;
+}
+
+
 /**
  * --- Admin UI Helper Types ---
  */
 export type ConfirmAction =
     | { mode: 'stats'; payload: UpdatePlayerStatsRequest }
     | { mode: 'roles'; payload: string[] }
+    | { mode: 'kick'; payload: string }
     | { mode: 'default'; payload: string };
 
 /** * --- Errors ---

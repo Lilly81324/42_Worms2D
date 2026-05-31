@@ -8,10 +8,11 @@ interface UserTableProps {
     onEditStats: (userId: string) => void;
     onToggleStatus: (user: UserAuthView) => void;
     onEditRoles: (user: UserAuthView) => void;
+    onKickSessions: (user: UserAuthView) => void;
 }
 
 export function UserTable(
-    {users, isLoading, onEditStats, onToggleStatus, onEditRoles
+    {users, isLoading, onEditStats, onToggleStatus, onEditRoles, onKickSessions
     }: UserTableProps): JSX.Element | null {
 
     return (
@@ -80,6 +81,11 @@ export function UserTable(
                                     Edit Stats
                                 </button>
                                 <button
+                                    onClick={() => onKickSessions(user)}
+                                    className="text-amber-600 hover:text-amber-900 mr-4 transition-colors">
+                                    Kick Sessions
+                                </button>
+                                <button
                                     onClick={() => onToggleStatus(user)}
                                     className={`${user.status === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} transition-colors`}>
                                     {user.status === 'active' ? 'Disable' : 'Enable'}
@@ -92,4 +98,4 @@ export function UserTable(
             </table>
         </div>
     );
-};
+}
