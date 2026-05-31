@@ -194,45 +194,88 @@ export default function AdminUserManagement() {
 
     return (
         <ProtectedRoute allowedRoles={['admin']}>
-            <Toaster position="top-right" richColors />
-        <div className="container mx-auto py-8 px-4 min-h-[80vh]">
-            <h1 className="text-2xl font-bold mb-6">User Management</h1>
+            <AdminErrorBoundary>
+                <Toaster position="top-right" richColors/>
+                <div className="container mx-auto py-8 px-4 min-h-[80vh]">
+                    <h1 className="text-2xl font-bold mb-6">User Management</h1>
 
-            <div className="mb-6">
-                <UserSearchForm onSearch={handleSearch} />
-            </div>
+                    <div className="mb-6">
+                        <UserSearchForm onSearch={handleSearch}/>
+                    </div>
 
-            <UserTable
-                users={data?.items || []}
-                isLoading={loading && !hasLoadedOnce}
-                onEditStats={handleEditStatsClick}
-                onToggleStatus={handleToggleStatusClick}
-                onEditRoles={handleEditRolesClick}
-                onKickSessions={handleKickSessionsClick}
-            />
+                    <UserTable
+                        users={data?.items || []}
+                        isLoading={loading && !hasLoadedOnce}
+                        onEditStats={handleEditStatsClick}
+                        onToggleStatus={handleToggleStatusClick}
+                        onEditRoles={handleEditRolesClick}
+                        onKickSessions={handleKickSessionsClick}
+                    />
 
-            <AdminActionModal
-                isOpen={modalConfig.isOpen}
-                mode={modalConfig.mode}
-                title={
-                    modalConfig.mode === 'roles' ? 'Manage Roles' :
-                    modalConfig.mode === 'stats' ? 'Edit Player Stats' : modalConfig.mode === 'kick' ? 'Force Disconnect User' :
-                        (modalConfig.targetUser?.status === 'active' ? 'Disable User' : 'Enable User')
-                }
-                description={
-                    modalConfig.mode === 'roles' ? `Assign roles for ${modalConfig.targetUser?.username}` :
-                    modalConfig.mode === 'stats' ? `Updating gameplay metrics for ${modalConfig.targetUser?.username}` :
-                            `Are you sure you want to change the status for ${modalConfig.targetUser?.username}?`
-                }
-                currentRoles={modalConfig.targetUser?.roles || []}
-                currentStats={activeUserStats}
-                onConfirm={handleConfirmAction}
-                onClose={() => {
-                    setModalConfig({ isOpen: false, mode: 'default', targetUser: null });
-                    setActiveUserStats(undefined);
-                }}
-            />
-        </div>
+                    <AdminActionModal
+                        isOpen={modalConfig.isOpen}
+                        mode={modalConfig.mode}
+                        title={
+                            modalConfig.mode === 'roles' ? 'Manage Roles' :
+                                modalConfig.mode === 'stats' ? 'Edit Player Stats' : modalConfig.mode === 'kick' ? 'Force Disconnect User' :
+                                    (modalConfig.targetUser?.status === 'active' ? 'Disable User' : 'Enable User')
+                        }
+                        description={
+                            modalConfig.mode === 'roles' ? `Assign roles for ${modalConfig.targetUser?.username}` :
+                                modalConfig.mode === 'stats' ? `Updating gameplay metrics for ${modalConfig.targetUser?.username}` :
+                                    `Are you sure you want to change the status for ${modalConfig.targetUser?.username}?`
+                        }
+                        currentRoles={modalConfig.targetUser?.roles || []}
+                        currentStats={activeUserStats}
+                        onConfirm={handleConfirmAction}
+                        onClose={() => {
+                            setModalConfig({isOpen: false, mode: 'default', targetUser: null});
+                            setActiveUserStats(undefined);
+                        }}
+                    />
+                </div>
+            </AdminErrorBoundary>
         </ProtectedRoute>
     );
+}
+
+class AdminErrorBoundary extends React.Component<
+    { children: React.ReactNode },
+    { hasError: boolean; error: Error | null }
+> {
+    constructor(props: { children: React.ReactNode }) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+        console.error("Admin Panel Error caught by boundary:", error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="container mx-auto py-12 px-4 text-center">
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-8 max-w-md mx-auto shadow-sm">
+                        <h2 className="text-lg font-bold text-red-700 mb-2">Something went wrong</h2>
+                        <p className="text-sm text-red-600 mb-6">
+                            The Admin Dashboard encountered a rendering error.
+                        </p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-sm transition-colors shadow-sm"
+                        >
+                            Reload Dashboard
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
 }
