@@ -150,7 +150,7 @@ export default function ProfilePage() {
         {name: 'Friends', icon: '👥'},
         {name: 'Clan', icon: '🛡️'},
         {name: 'Invitations', icon: '✉️'},
-        {name: 'Achievements', icon: '✉️'},
+        {name: 'Achievements', icon: '🏆'},
     ];
 
     return (
