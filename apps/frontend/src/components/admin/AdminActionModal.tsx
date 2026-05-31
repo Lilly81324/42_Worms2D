@@ -1,5 +1,12 @@
 import React, {JSX, useEffect, useState} from 'react';
-import {UpdatePlayerStatsRequest, ConfirmAction, PlayerStatsData, MIN_STAT_LIMIT, MAX_STAT_LIMIT} from '@/src/core/api/auth/auth.types';
+import {
+    UpdatePlayerStatsRequest,
+    ConfirmAction,
+    PlayerStatsData,
+    MAX_STAT_LIMIT,
+    adminActionSchema
+} from '@/src/core/api/auth/auth.types';
+import {toast} from "sonner";
 
 interface AdminModalProps {
     isOpen: boolean;
@@ -83,8 +90,22 @@ export function AdminActionModal(
             });
         } else if (mode === 'kick') {
             onConfirm({ mode: 'kick', payload: actionReason.trim() });
-        } else
-            onConfirm({ mode: 'default', payload: actionReason.trim() });
+        } else {
+            const validation = adminActionSchema.safeParse({ reason: actionReason });
+
+            if (!validation.success) {
+                const errorMsg = validation.error.issues[0]?.message || "Invalid input";
+                toast.error(errorMsg);
+                return;
+            }
+
+            const cleanReason = validation.data.reason || 'Administrative action override';
+
+            onConfirm({
+                mode: mode,
+                payload: cleanReason
+            });
+        }
     };
 
     const showReasonField = mode === 'kick' || mode === 'default';

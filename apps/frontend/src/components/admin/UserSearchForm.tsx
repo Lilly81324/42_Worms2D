@@ -16,7 +16,13 @@ export function UserSearchForm({ onSearch }: UserSearchFormProps): JSX.Element {
 
         // Wait 500ms after the user stops typing before searching
         const delayDebounceTimeout = setTimeout(() => {
-            onSearch(searchTerm);
+            const sanitizedQuery = searchTerm
+                .trim() // Remove spaces in the beginning
+                .replace(/[<>"{}\\]/g, '');
+            if (sanitizedQuery !== '' || searchTerm === '') {
+                console.log(sanitizedQuery)
+                onSearch(sanitizedQuery);
+            }
         }, 500);
 
         return () => clearTimeout(delayDebounceTimeout);

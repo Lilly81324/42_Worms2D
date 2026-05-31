@@ -289,3 +289,14 @@ export const playerStatsValidationSchema = z.object({
         .min(MIN_STAT_LIMIT, { message: "Deaths cannot be negative" })
         .max(MAX_STAT_LIMIT, { message: `Deaths cannot exceed ${MAX_STAT_LIMIT}` }),
 });
+
+export const adminActionSchema = z.object({
+    reason: z
+        .string()
+        .trim()
+        .max(255, { message: "Reason must be 255 characters or less" })
+        .transform((val) => {
+            return val.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        })
+        .optional(),
+});
