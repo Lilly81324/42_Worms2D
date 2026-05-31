@@ -9,6 +9,7 @@ import { authClient } from "@/src/core/api/auth/auth.client";
 import { getMyProfile } from "@/src/core/api/profile/profile.client";
 import { Pencil } from "lucide-react";
 import { Achievements } from "@/components/Achievements";
+import { FaCrown, FaMedal, FaTrophy } from "react-icons/fa";
 
 type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations' | 'Achievements';
 
@@ -141,6 +142,8 @@ export default function ProfilePage() {
         };
     }, [stats]);
 
+    const achievementCount = stats?.achievements?.length ?? 0;
+
 	console.log("stats: ", stats);
     const tabs: { name: TabType; icon: string }[] = [
         {name: 'Info', icon: '👤'},
@@ -252,7 +255,45 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                                     <label className="text-[10px] uppercase font-bold text-zinc-400">Bio</label>
-                                    <p className="font-medium whitespace-pre-wrap">{bio || "No bio set yet."}</p>
+                                    <p className="font-medium whitespace-pre-wrap">
+                                        {bio?.trim() ? bio : "Recruit exploring the arena."}
+                                    </p>
+                                </div>
+								<div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                    {[
+                                        {
+                                            label: "Rank",
+                                            value: `Lv ${level}`,
+                                            icon: <FaCrown className="text-amber-500" />,
+                                        },
+                                        {
+                                            label: "Wins",
+                                            value: String(computedStats.wins),
+                                            icon: <FaTrophy className="text-yellow-500" />,
+                                        },
+                                        {
+                                            label: "Rewars",
+                                            value: String(achievementCount),
+                                            icon: <FaMedal className="text-emerald-500" />,
+                                        },
+                                    ].map((item) => (
+                                        <div
+                                            key={item.label}
+                                            className="flex items-center gap-3 rounded-xl border border-zinc-200/70 bg-white/80 px-3 py-2 shadow-sm dark:border-zinc-700/80 dark:bg-zinc-950/40"
+                                        >
+                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-lg dark:bg-zinc-800">
+                                                {item.icon}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+                                                    {item.label}
+                                                </p>
+                                                <p className="truncate text-sm font-black text-zinc-900 dark:text-zinc-50">
+                                                    {item.value}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}

@@ -23,6 +23,9 @@ type AchievementCard = {
     achieved: boolean;
     progressValue: number | null;
     progressTarget: number | null;
+    xpReward: number | null;
+    points: number | null;
+    achievedAt: string | null;
     accent: string;
     ring: string;
     badgeLabel: string;
@@ -51,6 +54,9 @@ export function Achievements({
                 achieved: true,
                 progressValue: null,
                 progressTarget: null,
+                xpReward: null,
+                points: null,
+                achievedAt: null,
                 accent: "from-amber-500/20 via-yellow-500/10 to-amber-400/5",
                 ring: "ring-amber-400/30",
                 badgeLabel: "Completed",
@@ -60,6 +66,9 @@ export function Achievements({
         const achieved = achievement.achieved ?? false;
         const progressTarget = achievement.progressTarget ?? null;
         const progressValue = achievement.progress ?? null;
+        const xpReward = achievement.xpReward ?? null;
+        const points = achievement.points ?? null;
+        const achievedAt = achievement.achievedAt ?? null;
 
         return {
             id: achievement.id ?? `ach-${index}`,
@@ -69,10 +78,13 @@ export function Achievements({
             achieved,
             progressValue,
             progressTarget,
+            xpReward,
+            points,
+            achievedAt,
             accent: achieved
-                ? "from-emerald-500/20 via-amber-500/10 to-yellow-400/5"
-                : "from-zinc-500/15 via-zinc-500/10 to-zinc-400/5",
-            ring: achieved ? "ring-emerald-400/30" : "ring-zinc-400/20",
+                ? "from-emerald-50 via-yellow-50 to-white"
+                : "from-white via-zinc-50 to-white",
+            ring: achieved ? "ring-emerald-200/80" : "ring-zinc-200",
             badgeLabel: achieved ? "Completed" : "Quest",
         };
     });
@@ -81,84 +93,132 @@ export function Achievements({
     const totalCount = achievementCards.length;
     const pendingCount = totalCount - completedCount;
 
+    const cardGridClassName =
+        achievementCards.length === 0
+            ? "grid-cols-1"
+            : achievementCards.length === 1
+                ? "grid-cols-1"
+                : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
+
+    const formatDate = (value: string | null) => {
+        if (!value) return null;
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return null;
+        return new Intl.DateTimeFormat(undefined, {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        }).format(date);
+    };
+
     return (
         <div
-            className={`mt-2 rounded-3xl border border-yellow-500/10 bg-linear-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-4 shadow-lg shadow-yellow-500/5 sm:p-5 ${className}`}
+            className={`mt-2 rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 ${className}`}
         >
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mb-5 flex flex-col gap-3 border-b border-zinc-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h4 className="text-sm font-bold uppercase tracking-[0.3em] text-yellow-200/80">Achievements</h4>
-                    <p className="mt-1 text-xs text-zinc-400">Fantasy relics, progression, and completed feats.</p>
+                    <h4 className="text-sm font-black uppercase tracking-[0.3em] text-zinc-500">Achievements</h4>
+                    <p className="mt-1 text-xs text-zinc-500">Progress, rewards, and completed feats.</p>
                 </div>
-                <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-300">
-                    <span className="rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1">
+                <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1">
                         {completedCount} Cleared
                     </span>
-                    <span className="rounded-full border border-zinc-600/40 bg-zinc-800/60 px-3 py-1">
+                    <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1">
                         {pendingCount} Pending
                     </span>
-                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1">
+                    <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1">
                         {totalCount} Total
                     </span>
                 </div>
             </div>
 
             {achievementCards.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-zinc-700/80 bg-zinc-900/40 px-4 py-8 text-center text-sm text-zinc-400">
-                    <div className="text-base font-bold text-zinc-200">{emptyTitle}</div>
-                    <p className="mt-2 text-sm text-zinc-400">{emptyDescription}</p>
+                <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-500">
+                    <div className="text-base font-bold text-zinc-800">{emptyTitle}</div>
+                    <p className="mt-2 text-sm text-zinc-500">{emptyDescription}</p>
                 </div>
             ) : (
-                <div className={`grid gap-3 ${achievementCards.length === 1 ? 'grid-cols-1' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
+                <div className={`grid gap-3 ${cardGridClassName}`}>
                     {achievementCards.map((badge) => {
                         const progressPercent =
                             badge.progressTarget && badge.progressTarget > 0 && badge.progressValue !== null
                                 ? Math.min(100, Math.max(0, (badge.progressValue / badge.progressTarget) * 100))
                                 : null;
+                        const achievedDate = formatDate(badge.achievedAt);
 
                         return (
                             <div
                                 key={badge.id}
-                                className={`group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br ${badge.accent} p-4 shadow-md transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-yellow-500/10 ${badge.ring}`}
+                                className={`group relative w-full overflow-hidden rounded-2xl border bg-linear-to-br ${badge.accent} p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md ${badge.ring}`}
                             >
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_40%)] opacity-80" />
-                                <div className="relative flex items-start gap-3">
-                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-zinc-950/70 text-lg shadow-inner shadow-black/30">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.55),transparent_42%)] opacity-80" />
+                                <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start">
+                                    {/*<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-200 bg-white text-lg shadow-sm">
+                                    </div>*/}
+
+                                    <div className="min-w-0 flex-1 space-y-3">
                                         {badge.icon}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <h5 className="truncate text-sm font-extrabold text-white">{badge.title}</h5>
+                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="min-w-0">
+                                                <h5 className="truncate text-sm font-extrabold text-zinc-900">{badge.title}</h5>
+                                                <p className="mt-1 line-clamp-2 text-xs leading-5 text-zinc-600">{badge.subtitle}</p>
+                                            </div>
                                             <span
-                                                className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.25em] ${
+                                                className={`self-start rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.25em] ${
                                                     badge.achieved
-                                                        ? "bg-emerald-400/15 text-emerald-200"
-                                                        : "bg-zinc-400/15 text-zinc-300"
+                                                        ? "bg-emerald-100 text-emerald-700"
+                                                        : "bg-zinc-100 text-zinc-600"
                                                 }`}
                                             >
                                                 {badge.badgeLabel}
                                             </span>
                                         </div>
-                                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-zinc-200/80">{badge.subtitle}</p>
+
+                                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2">
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400">XP</p>
+                                                <p className="text-sm font-black text-zinc-900">{badge.xpReward ?? "—"}</p>
+                                            </div>
+                                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2">
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400">Points</p>
+                                                <p className="text-sm font-black text-zinc-900">{badge.points ?? "—"}</p>
+                                            </div>
+                                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2">
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400">Progress</p>
+                                                <p className="text-sm font-black text-zinc-900">
+                                                    {progressPercent !== null ? `${badge.progressValue}/${badge.progressTarget}` : "—"}
+                                                </p>
+                                            </div>
+                                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2">
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400">Status</p>
+                                                <p className="text-sm font-black text-zinc-900">{badge.achieved ? "Done" : "Quest"}</p>
+                                            </div>
+                                        </div>
+
                                         {progressPercent !== null && (
-                                            <div className="mt-3">
-                                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-300/80">
+                                            <div>
+                                                <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">
                                                     <span>Progress</span>
-                                                    <span>
-                                                        {badge.progressValue}/{badge.progressTarget}
-                                                    </span>
+                                                    <span>{Math.round(progressPercent)}%</span>
                                                 </div>
-                                                <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-950/60">
+                                                <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
                                                     <div
                                                         className={`h-full rounded-full ${
                                                             badge.achieved
-                                                                ? "bg-linear-to-r from-emerald-300 to-yellow-300"
-                                                                : "bg-linear-to-r from-zinc-400 to-zinc-200"
+                                                                ? "bg-linear-to-r from-blue-500 to-emerald-400"
+                                                                : "bg-linear-to-r from-zinc-400 to-zinc-300"
                                                         }`}
                                                         style={{ width: `${progressPercent}%` }}
                                                     />
                                                 </div>
                                             </div>
+                                        )}
+
+                                        {achievedDate && (
+                                            <p className="text-[11px] font-medium text-zinc-500">
+                                                Achieved {achievedDate}
+                                            </p>
                                         )}
                                     </div>
                                 </div>
