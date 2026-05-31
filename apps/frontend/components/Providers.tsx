@@ -15,7 +15,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+function AuthProviderContent({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<UserAuthView | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
@@ -93,6 +93,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     );
 }
 
+export default function Providers({ children }: { children: React.ReactNode }) {
+    return (
+        <React.Suspense fallback={null}>
+            <AuthProviderContent>
+                {children}
+            </AuthProviderContent>
+        </React.Suspense>
+    );
+}
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) throw new Error("useAuth must be used within a Providers component");
