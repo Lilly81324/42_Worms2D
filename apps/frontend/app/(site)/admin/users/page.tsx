@@ -19,6 +19,9 @@ export default function AdminUserManagement() {
     const [searchQuery, setSearchQuery] = useState('');
     const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
     const [activeUserStats, setActiveUserStats] = useState<PlayerStatsData | undefined>(undefined);
+    const [cursorHistory, setCursorHistory] = useState<string[]>([]); // saves previous last entry
+    const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
+    const ITEMS_PER_PAGE = 10;
 
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
@@ -30,15 +33,20 @@ export default function AdminUserManagement() {
         targetUser: null
     });
 
-    const fetchUsers = useCallback(async (query = '') => {
+    const fetchUsers = useCallback(async (query = '', cursor?: string) => {
         console.log("fetching users");
         setLoading(true);
-        const result = await authClient.searchUsers({ query, limit: 10 });
+        const result = await authClient.searchUsers({
+            query,
+            limit: ITEMS_PER_PAGE,
+            cursor: cursor
+        });
         if (result.ok) {
             setData(result.data);
             setHasLoadedOnce(true);
         } else {
             console.error("Failed to fetch users:", result.error.message);
+            toast.error("Failed to refresh user list.");
         }
         setLoading(false);
     }, []);
@@ -51,12 +59,35 @@ export default function AdminUserManagement() {
         if (isAdmin) {
             void fetchUsers();
         }
-    }, [authLoading, user, fetchUsers]);
+    }, [authLoading, user, fetchUsers, currentCursor, searchQuery]);
 
     const handleSearch = useCallback((query: string) => {
         setSearchQuery(query);
-        void fetchUsers(query);
+        setCurrentCursor(undefined);
+        setCursorHistory([]);
+        void fetchUsers(query, undefined);
     }, [fetchUsers]);
+
+    const handleNextPage = () => {
+        const nextCursor = data?.pageInfo?.nextCursor || (data?.pageInfo as any)?.endCursor;
+
+        if (!nextCursor) return;
+
+        setCursorHistory(prev => [...prev, currentCursor || '']);
+        setCurrentCursor(nextCursor);
+        void fetchUsers(searchQuery, nextCursor);
+    };
+
+    const handlePreviousPage = () => {
+        if (cursorHistory.length === 0) return;
+
+        const previousHistory = [...cursorHistory];
+        const targetCursor = previousHistory.pop();
+
+        setCursorHistory(previousHistory);
+        setCurrentCursor(targetCursor === '' ? undefined : targetCursor);
+        void fetchUsers(searchQuery, targetCursor === '' ? undefined : targetCursor);
+    };
 
     const handleEditStatsClick = async (userId: string) => {
         const selectedUser = data?.items.find(u => u.id === userId);
@@ -192,6 +223,8 @@ export default function AdminUserManagement() {
         setModalConfig({isOpen: false, mode: 'default', targetUser: null});
     };
 
+    const hasNextCursor = !!data?.pageInfo?.nextCursor || (data?.pageInfo as any)?.endCursor;
+
     return (
         <ProtectedRoute allowedRoles={['admin']}>
             <AdminErrorBoundary>
@@ -210,6 +243,10 @@ export default function AdminUserManagement() {
                         onToggleStatus={handleToggleStatusClick}
                         onEditRoles={handleEditRolesClick}
                         onKickSessions={handleKickSessionsClick}
+                        canGoPrevious={cursorHistory.length > 0}
+                        canGoNext={hasNextCursor}
+                        onNextPage={handleNextPage}
+                        onPreviousPage={handlePreviousPage}
                     />
 
                     <AdminActionModal

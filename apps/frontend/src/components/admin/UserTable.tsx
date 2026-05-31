@@ -9,10 +9,23 @@ interface UserTableProps {
     onToggleStatus: (user: UserAuthView) => void;
     onEditRoles: (user: UserAuthView) => void;
     onKickSessions: (user: UserAuthView) => void;
+    canGoPrevious: boolean;
+    canGoNext: boolean;
+    onNextPage: () => void;
+    onPreviousPage: () => void;
 }
 
 export function UserTable(
-    {users, isLoading, onEditStats, onToggleStatus, onEditRoles, onKickSessions
+    {users,
+        isLoading,
+        onEditStats,
+        onToggleStatus,
+        onEditRoles,
+        onKickSessions,
+        canGoPrevious,
+        canGoNext,
+        onNextPage,
+        onPreviousPage,
     }: UserTableProps): JSX.Element | null {
 
     return (
@@ -96,6 +109,22 @@ export function UserTable(
                 )}
                 </tbody>
             </table>
+            <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100 mt-4">
+                <button
+                    onClick={onPreviousPage}
+                    disabled={!canGoPrevious || isLoading}
+                    className="px-4 py-1.5 text-sm font-semibold text-gray-700 rounded-lg border border-gray-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-all shadow-sm"
+                >
+                    Previous
+                </button>
+                <button
+                    onClick={onNextPage}
+                    disabled={!canGoNext || isLoading}
+                    className="px-4 py-1.5 text-sm font-semibold text-gray-700 rounded-lg border border-gray-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-all shadow-sm"
+                >
+                    Next
+                </button>
+            </div>
         </div>
     );
 }
