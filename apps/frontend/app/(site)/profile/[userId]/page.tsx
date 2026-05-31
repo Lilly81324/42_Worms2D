@@ -169,7 +169,7 @@ export default function ProfilePage() {
         />
         <div className="max-w-4xl mx-auto py-12 px-6">
             {dataError && (
-                <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
                     {dataError}
                 </div>
             )}
@@ -188,10 +188,10 @@ export default function ProfilePage() {
                     </div>
                 ))}
             </div>
-            <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex flex-col gap-8 md:flex-row md:items-stretch md:h-[calc(100vh-18rem)] md:max-h-[calc(100vh-18rem)]">
 
                 {/* LEFT: Sidebar Navigation */}
-                <div className="w-full md:w-64 flex flex-col gap-2">
+                <div className="w-full md:w-64 flex flex-col gap-2 md:h-full md:self-stretch">
                     <div className="relative p-6 mb-4 bg-zinc-100 dark:bg-zinc-900 rounded-3xl text-center">
                         <button
                             type="button"
@@ -232,14 +232,13 @@ export default function ProfilePage() {
 
                 {/* RIGHT: Content Display Area */}
                 <div
-                    className="flex-1 bg-white dark:bg-zinc-900 border border-foreground/5 rounded-3xl p-8 shadow-sm"
-                    style={{ minHeight: "400px" }}
+                    className="flex-1 bg-white dark:bg-zinc-900 border border-foreground/5 rounded-3xl p-8 shadow-sm flex min-h-0 flex-col md:h-full md:self-stretch"
                 >
                     <h3 className="text-2xl font-black mb-6 border-b pb-4 border-foreground/5">
                         {activeTab}
                     </h3>
-
-                    <div className="space-y-4">
+{/* hhhhhhh */}
+                    <div className="min-h-0 flex-1 space-y-4 pr-1 overflow-hidden">
 
                         {activeTab === 'Info' && (
                             <div className="grid gap-4">

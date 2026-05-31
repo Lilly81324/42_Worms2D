@@ -112,10 +112,8 @@ export function Achievements({
     };
 
     return (
-        <div
-            className={`mt-2 rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 ${className}`}
-        >
-            <div className="mb-5 flex flex-col gap-3 border-b border-zinc-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className={`mt-2 flex h-full min-h-0 flex-col rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 ${className} `} >
+            <div className="mb-5 flex flex-col gap-3 border-b border-zinc-200 pb-4 sm:flex-row sm:items-end sm:justify-between ">
                 <div>
                     <h4 className="text-sm font-black uppercase tracking-[0.3em] text-zinc-500">Achievements</h4>
                     <p className="mt-1 text-xs text-zinc-500">Progress, rewards, and completed feats.</p>
@@ -139,8 +137,9 @@ export function Achievements({
                     <p className="mt-2 text-sm text-zinc-500">{emptyDescription}</p>
                 </div>
             ) : (
-                <div className={`grid gap-3 ${cardGridClassName}`}>
-                    {achievementCards.map((badge) => {
+                <div className="min-h-0 flex-1 overflow-y-auto pr-2">
+                    <div className="flex flex-col gap-5">
+                        {achievementCards.map((badge) => {
                         const progressPercent =
                             badge.progressTarget && badge.progressTarget > 0 && badge.progressValue !== null
                                 ? Math.min(100, Math.max(0, (badge.progressValue / badge.progressTarget) * 100))
@@ -150,7 +149,7 @@ export function Achievements({
                         return (
                             <div
                                 key={badge.id}
-                                className={`group relative w-full overflow-hidden rounded-2xl border bg-linear-to-br ${badge.accent} p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md ${badge.ring}`}
+                                className={`relative w-full overflow-hidden rounded-2xl border bg-linear-to-br ${badge.accent} p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md ${badge.ring}`}
                             >
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.55),transparent_42%)] opacity-80" />
                                 <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -224,7 +223,8 @@ export function Achievements({
                                 </div>
                             </div>
                         );
-                    })}
+                        })}
+                    </div>
                 </div>
             )}
         </div>

@@ -17,7 +17,7 @@ Content-Type: application/json
 
 
 ### update the stats for player
-PUT http://localhost:3004/internal/stats/user/f413ec97-376c-4e09-92cb-a743f765c603
+PUT http://localhost:3004/internal/stats/user/2c412fa9-d2d5-420d-a5cc-12c78e9ba20b
 Content-Type: application/json
 
 {
@@ -132,8 +132,8 @@ POST http://localhost:3004/internal/stats/achievements
 Content-Type: application/json
 
 {
-  "userId": "f413ec97-376c-4e09-92cb-a743f765c603",
-  "type": "sharp_shooter",
+  "userId": "2c412fa9-d2d5-420d-a5cc-12c78e9ba20b",
+  "type": "sharp_shooter r",
   "name": "Sharp Shooter",
   "description": "Hit 10 accurate shots",
   "icon": "🎯",
@@ -170,7 +170,7 @@ GET http://localhost:3004/internal/stats/achievements/{{achievementId}}
 GET http://localhost:3004/internal/stats/achievements/user/d200724c-2856-4319-aefa-b41a73a0a0eb
 
 ### update achievement by id
-PATCH http://localhost:3004/internal/stats/achievements/{{achievementId}}
+PATCH http://localhost:3004/internal/stats/achievements/27e190ba-972b-4af1-9f6c-da2bb4013335
 Content-Type: application/json
 
 {
@@ -181,4 +181,4 @@ Content-Type: application/json
 }
 
 ### delete achievement by id
-DELETE http://localhost:3004/internal/stats/achievements/{{achievementId}}
+DELETE http://localhost:3004/internal/stats/achievements/27e190ba-972b-4af1-9f6c-da2bb4013335
