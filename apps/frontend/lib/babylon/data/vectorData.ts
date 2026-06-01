@@ -4,82 +4,82 @@ import { Vector3 } from "@babylonjs/core";
 // SPAWN AREAS
 const area1 = 
 [
-	new Vector3(-36, -15, 0),
-	new Vector3(-34, -15, 0),
-	new Vector3(-32, -14, 0)
+	new Vector3(36, -15, 0),
+	new Vector3(34, -15, 0),
+	new Vector3(32, -14, 0)
 ];
 
 const area2 = 
 [
-	new Vector3(-35, 3, 0),
-	new Vector3(-33, 3, 0),
-	new Vector3(-31, 3, 0)
+	new Vector3(35, 3, 0),
+	new Vector3(33, 3, 0),
+	new Vector3(31, 3, 0)
 ];
 
 const area3 = 
 [
-	new Vector3(-33.5, 14, 0),
-	new Vector3(-30, 18, 0)
+	new Vector3(33.5, 14, 0),
+	new Vector3(30, 18, 0)
 ];
 
 const area4 =
 [
-	new Vector3(-26.5, 22, 0),
-	new Vector3(-24.5, 21.5, 0),
-	new Vector3(-22.5, 21, 0)
+	new Vector3(26.5, 22, 0),
+	new Vector3(24.5, 21.5, 0),
+	new Vector3(22.5, 21, 0)
 ]
 
 const area5 = 
 [
-	new Vector3(-24, 9, 0),
-	new Vector3(-22, 8, 0),
-	new Vector3(-20, 8, 0),
-	new Vector3(-18, 8, 0),
-	new Vector3(-16, 8, 0)
+	new Vector3(24, 9, 0),
+	new Vector3(22, 8, 0),
+	new Vector3(20, 8, 0),
+	new Vector3(18, 8, 0),
+	new Vector3(16, 8, 0)
 ]
 
 const area6 =
 [
-	new Vector3(-27.5, -3, 0),
-	new Vector3(-25.8, -2.8, 0)
+	new Vector3(27.5, -3, 0),
+	new Vector3(25.8, -2.8, 0)
 ]
 
 const area7 = 
 [
-	new Vector3(-24, 1, 0),
-	new Vector3(-22, 1, 0),
-	new Vector3(-20, 1, 0),
-	new Vector3(-18, 1, 0),
+	new Vector3(24, 1, 0),
+	new Vector3(22, 1, 0),
+	new Vector3(20, 1, 0),
+	new Vector3(18, 1, 0),
 ]
 
 const area8 =
 [
-	new Vector3(-16, 0.5, 0),
-	new Vector3(-14, 0, 0),
-	new Vector3(-12, -0.5, 0)
+	new Vector3(16, 0.5, 0),
+	new Vector3(14, 0, 0),
+	new Vector3(12, -0.5, 0)
 ]
 
 const area9 =
 [
-	new Vector3(-21, -16, 0),
-	new Vector3(-18.5, -24, 0)
+	new Vector3(21, -16, 0),
+	new Vector3(18.5, -24, 0)
 ]
 
 const area10 = 
 [
-	new Vector3(-16, -16, 0),
-	new Vector3(-14, -14.7, 0),
-	new Vector3(-12, -14.5, 0),
-	new Vector3(-10, -14.5, 0)
+	new Vector3(16, -16, 0),
+	new Vector3(14, -14.7, 0),
+	new Vector3(12, -14.5, 0),
+	new Vector3(10, -14.5, 0)
 ]
 
 const area11 =
 [
-	new Vector3(-8, -14.5, 0),
-	new Vector3(-6, -14.5, 0),
-	new Vector3(-4, -15.5, 0),
-	new Vector3(-2, -16.5, 0),
-	new Vector3(-0, -17.5, 0)
+	new Vector3(8, -14.5, 0),
+	new Vector3(6, -14.5, 0),
+	new Vector3(4, -15.5, 0),
+	new Vector3(2, -16.5, 0),
+	new Vector3(0, -17.5, 0)
 ]
 
 const area12 = 
@@ -98,79 +98,79 @@ const area13 =
 
 const area14 =
 [
-	new Vector3(-1, 7, 0),
-	new Vector3(1, 7.5, 0),
-	new Vector3(3, 8.2, 0),
-	new Vector3(5, 8.9, 0),
-	new Vector3(7, 9.6, 0)
+	new Vector3(1, 7, 0),
+	new Vector3(-1, 7.5, 0),
+	new Vector3(-3, 8.2, 0),
+	new Vector3(-5, 8.9, 0),
+	new Vector3(-7, 9.6, 0)
 ]
 
 const area15 =
 [
-	new Vector3(10.5, 4, 0),
-	new Vector3(12.5, 3, 0),
-	new Vector3(14.5, 2.2, 0),
-	new Vector3(16.5, 2.5, 0)
+	new Vector3(-10.5, 4, 0),
+	new Vector3(-12.5, 3, 0),
+	new Vector3(-14.5, 2.2, 0),
+	new Vector3(-16.5, 2.5, 0)
 ]
 
 const area16 = 
 [
-	new Vector3(13, 24.2, 0),
-	new Vector3(15, 24.2, 0),
-	new Vector3(17, 24, 0),
+	new Vector3(-13, 24.2, 0),
+	new Vector3(-15, 24.2, 0),
+	new Vector3(-17, 24, 0),
 ]
 
 const area17 =
 [
-	new Vector3(19, 24, 0),
-	new Vector3(21, 24, 0),
-	new Vector3(23, 24, 0)
+	new Vector3(-19, 24, 0),
+	new Vector3(-21, 24, 0),
+	new Vector3(-23, 24, 0)
 ]
 
 const area18 = 
 [
-	new Vector3(20.5, 28, 0),
-	new Vector3(22.5, 28.7, 0),
-	new Vector3(24.5, 28.7, 0),
-	new Vector3(26.5, 28.5, 0),
+	new Vector3(-20.5, 28, 0),
+	new Vector3(-22.5, 28.7, 0),
+	new Vector3(-24.5, 28.7, 0),
+	new Vector3(-26.5, 28.5, 0),
 ]
 
 const area19 =
 [
-	new Vector3(28.5, 28.5, 0),
-	new Vector3(30.5, 28.5, 0),
-	new Vector3(32.5, 28.3, 0)
+	new Vector3(-28.5, 28.5, 0),
+	new Vector3(-30.5, 28.5, 0),
+	new Vector3(-32.5, 28.3, 0)
 ]
 
 const area20 =
 [
-	new Vector3(29.5, 12.7, 0),
-	new Vector3(31.5, 13, 0),
-	new Vector3(33.5, 13.3, 0),
-	new Vector3(35.5, 13.6, 0),
-	new Vector3(37.5, 13.9, 0)
+	new Vector3(-29.5, 12.7, 0),
+	new Vector3(-31.5, 13, 0),
+	new Vector3(-33.5, 13.3, 0),
+	new Vector3(-35.5, 13.6, 0),
+	new Vector3(-37.5, 13.9, 0)
 ]
 
 const area21 =
 [
-	new Vector3(29, -1, 0),
-	new Vector3(31, -0.7, 0),
-	new Vector3(33, -0.4, 0),
-	new Vector3(35, -0.1, 0),
-	new Vector3(37, -1.3, 0)
+	new Vector3(-29, -1, 0),
+	new Vector3(-31, -0.7, 0),
+	new Vector3(-33, -0.4, 0),
+	new Vector3(-35, -0.1, 0),
+	new Vector3(-37, -1.3, 0)
 ]
 
 const area22 = 
 [
-	new Vector3(32.3, -14.3, 0),
-	new Vector3(32.3, -14.3, 0),
-	new Vector3(34.3, -14.6, 0)
+	new Vector3(-32.3, -14.3, 0),
+	new Vector3(-32.3, -14.3, 0),
+	new Vector3(-34.3, -14.6, 0)
 ]
 
 const area23 =
 [
-	new Vector3(28.5, -24.1, 0),
-	new Vector3(30.5, -24.6, 0)
+	new Vector3(-28.5, -24.1, 0),
+	new Vector3(-30.5, -24.6, 0)
 ]
 
 export function generateSpawnAreas(): Vector3[][] {

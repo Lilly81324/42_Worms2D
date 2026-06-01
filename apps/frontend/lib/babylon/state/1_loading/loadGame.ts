@@ -5,6 +5,8 @@ import { Ground } from "./Ground";
 import { Player } from "@/lib/babylon/player/Player";
 import { Worm } from "@/lib/babylon/player/Worm";
 import { loadWeapons, loadingWeaponResult } from "./loadWeapons";
+import { Mesh } from '@babylonjs/core';
+import { loadWormModels, wormModelData } from '../../player/loadWormModels';
 
 /**
  * Helper class, that offers the send function to send packages with an ever increasing percentage
@@ -55,9 +57,12 @@ export async function loadGame(machine: StateMachine, data: gameData) {
 
 	// Create new Players and Worms
 	machine.players = new Array<Player>();
+	const wormModels: wormModelData = await loadWormModels(machine.scene);
 	data.players.forEach((player: playerData) => {
-		machine.players.push(new Player(machine.scene, player));
+		machine.players.push(new Player(machine.scene, player, wormModels));
 	});
+	wormModels.collider.dispose();
+	wormModels.model.dispose();
 	// Assume first player is active until otherwise specified
 	if (machine.players.length > 0)
 		machine.activePlayerId = machine.players[0].id;

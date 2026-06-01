@@ -22,6 +22,7 @@ import { TurnEndState }			from './8_turn_end/TurnEndState';
 import { GameEndState }			from './9_game_end/GameEndState';
 import { MessageQueue } from '../MessageQueue';
 import { handlePacket } from '@/lib/packets/handlePacket';
+import { Achievements } from '../data/achievments';
 
 export class StateMachine {
 	public userId: string;
@@ -40,6 +41,7 @@ export class StateMachine {
 	public weapons: Array<IWeapon>;
 	public activePlayerId: string;
 	public turn: Turn | undefined;
+	public achievements: Achievements;
 	private initialized: boolean = false;
 
 	constructor(canvas: HTMLCanvasElement, scene: Scene, msgToServer: msgToServerType, userId: string, log: (data: string) => void) {
@@ -71,6 +73,7 @@ export class StateMachine {
 		this.ground = undefined;
 		this.activePlayerId = "";
 		this.turn = undefined;
+		this.achievements = new Achievements();
 	}
 
 	// Called only once per canvas, when sockets have been set up
@@ -82,6 +85,8 @@ export class StateMachine {
 		this.setState(GameState.GAME_PENDING);
 		this.scene.onBeforeRenderObservable.add(() => {
 			this.handlePackets();
+		})
+		this.scene.onBeforePhysicsObservable.add(() => {
 			this.currentState?.tick?.();
 		})
 	}

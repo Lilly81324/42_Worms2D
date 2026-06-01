@@ -1,4 +1,4 @@
-import { MeshBuilder, Mesh, Scene, Nullable, Observer } from '@babylonjs/core';
+import { MeshBuilder, Mesh, Scene, Nullable, Observer, AbstractMesh } from '@babylonjs/core';
 
 /**
  * Creates simple mesh for pointing at a worm by merging simple shapes
@@ -31,14 +31,14 @@ function createMesh(scene: Scene): Mesh {
 export class WormPointer {
 	private sceneRef: Scene;
 	private mesh: Mesh;
-	public target: Mesh | undefined;
+	public target: AbstractMesh | undefined = undefined;
 	public offset: number = 0.5;
 	public distance: number = 0.5;
 	public radiansPerFrame: number = 3 / 180 * Math.PI;
 	private progress: number = 0;
 	private progressPerFrame: number;
 	private animation: Nullable<Observer<Scene>>;
-	constructor (scene: Scene, target: Mesh | undefined = undefined) {
+	constructor (scene: Scene, target: AbstractMesh | undefined = undefined) {
 		this.sceneRef = scene;
 		this.target = target;
 
@@ -55,7 +55,7 @@ export class WormPointer {
 		this.progressPerFrame = VALUE / (FPS * DURATION);
 		this.animation = scene.onBeforeRenderObservable.add(() => {
 			this.mesh.rotation.y = (this.mesh.rotation.y + this.radiansPerFrame) % LOOP_VALUE;
-			this.mesh.position.x = (this.target) ? this.target.position.x : 0;
+			this.mesh.position.x = (this.target) ? this.target.position.x * -1 : 0;
 			this.mesh.position.y = (this.target) ? this.target.position.y : 0;
 			this.mesh.position.y += this.offset + (Math.sin(this.progress * Math.PI) + 1 ) * this.distance;
 			this.progress = (this.progress + this.progressPerFrame) % VALUE;
