@@ -9,9 +9,10 @@ import { authClient } from "@/src/core/api/auth/auth.client";
 import { getMyProfile } from "@/src/core/api/profile/profile.client";
 import { Pencil } from "lucide-react";
 import { Achievements } from "@/components/Achievements";
+import MatchHistory from "@/components/MatchHistory";
 import { FaCrown, FaMedal, FaTrophy } from "react-icons/fa";
 
-type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations' | 'Achievements';
+type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations' | 'Achievements' | 'Match History';
 
 type PlayerStats = {
     level?: number;
@@ -144,13 +145,13 @@ export default function ProfilePage() {
 
     const achievementCount = stats?.achievements?.length ?? 0;
 
-	console.log("stats: ", stats);
     const tabs: { name: TabType; icon: string }[] = [
         {name: 'Info', icon: '👤'},
         {name: 'Friends', icon: '👥'},
         {name: 'Clan', icon: '🛡️'},
         {name: 'Invitations', icon: '✉️'},
         {name: 'Achievements', icon: '🏆'},
+        {name: 'Match History', icon: '📜'},
     ];
 
     return (
@@ -271,7 +272,7 @@ export default function ProfilePage() {
                                             icon: <FaTrophy className="text-yellow-500" />,
                                         },
                                         {
-                                            label: "Rewars",
+                                            label: "Rewards",
                                             value: String(achievementCount),
                                             icon: <FaMedal className="text-emerald-500" />,
                                         },
@@ -363,6 +364,12 @@ export default function ProfilePage() {
                                 achievements={stats?.achievements ?? []}
                                 emptyTitle="No relics yet."
                                 emptyDescription="Complete quests, win matches, and forge your legend."
+                            />
+                        )}
+                        {activeTab === 'Match History' && (
+                            <MatchHistory
+                                emptyTitle="No battles recorded yet."
+                                emptyDescription="Your past matches will appear here once the stats pipeline is connected."
                             />
                         )}
                     </div>
