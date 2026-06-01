@@ -1,3 +1,4 @@
+import { CS_Type, CS_WeaponChosen } from '@/shared/packets/ClientServerPackets';
 import { Player } from '../../player/Player';
 import { Worm } from '../../player/Worm';
 import { Turn } from '../4_turn_start/Turn';
@@ -26,8 +27,12 @@ function manuallyChooseWeapon(action: AbstractActionManager, machine: StateMachi
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: `${i + 1}`
 		}, () => {
-			if (machine.loaded)
-				machine.loaded.turn.chooseWeapon(machine.loaded.weapons.find((weapon) => (weapon.weaponId == i)));
+			if (!machine.loaded)
+				return ;
+			const weapon = machine.loaded.weapons.find((weapon) => (weapon.weaponId == i));
+			machine.msgToServer<CS_WeaponChosen>(CS_Type.CS_WeaponChosen, {
+				id: (weapon?.weaponId ?? 0)
+			});
 		}));
 	}
 }
@@ -57,10 +62,16 @@ export class MovementState implements IState {
 		// Actions
 		const action = this.machine.scene.actionManager;
 
+		// Display first weapon as default
+		this.machine.msgToServer<CS_WeaponChosen>(CS_Type.CS_WeaponChosen, {
+			id: this.machine.loaded.weapons[0].weaponId,
+		});
+
 		// For inactive players, dont allow picking worms
 		if (!this.machine.isActiveUser() || !this.machine.turn || !this.machine.players)
 			return ;
 
+		// Allow registering of weapons for the active user
 		manuallyChooseWeapon(action, this.machine);
 		this.machine.loaded.turn.chosenWeapon?.show(true);
 
