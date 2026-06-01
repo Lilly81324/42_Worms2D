@@ -19,7 +19,7 @@ export default function HomePage() {
             </div>
 
             {/* Main Content , big game button*/}
-            <div className="flex flex-col lg:flex-row gap-6 flex-grow overflow-hidden">
+            <div className="flex flex-col lg:flex-row gap-6 grow overflow-hidden">
 				<BattleArena className="bg-zinc-100 dark:bg-zinc-900" border={true} dashed={true}/>
 
                 {/* Chat Window Component*/}

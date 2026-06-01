@@ -96,6 +96,11 @@ model Match {
   id                String             @id @default(uuid())
   status            MatchStatus        @default(PENDING)
   duration          Int?
+  mode              String?
+  mapName           String?
+  score             String?
+  summary           String?
+  endedAt           DateTime?
   createdAt         DateTime           @default(now())
   matchParticipants MatchParticipant[]
   playerStatsId     String?
@@ -105,6 +110,8 @@ model MatchParticipant {
   id       String  @id @default(uuid())
   matchId  String
   userId   String
+  displayName String?
+  avatarUrl String?
   isWinner Boolean @default(false)
   kills    Int     @default(0)
   deaths   Int     @default(0)

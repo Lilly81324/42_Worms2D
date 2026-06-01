@@ -14,12 +14,36 @@ import { FaCrown, FaMedal, FaTrophy } from "react-icons/fa";
 
 type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations' | 'Achievements' | 'Match History';
 
+type MatchHistoryParticipant = {
+    userId: string;
+    displayName?: string | null;
+    avatarUrl?: string | null;
+    isWinner?: boolean;
+    kills: number;
+    deaths: number;
+};
+
+type MatchHistoryEntry = {
+    id: string;
+    status: 'PENDING' | 'IN_PROGRESS' | 'FINISHED';
+    duration?: number | null;
+    createdAt: string;
+    endedAt?: string | null;
+    mode?: string | null;
+    mapName?: string | null;
+    score?: string | null;
+    summary?: string | null;
+    player: MatchHistoryParticipant;
+    participants?: MatchHistoryParticipant[];
+};
+
 type PlayerStats = {
     level?: number;
     wins?: number;
     losses?: number;
     kills?: number;
     deaths?: number;
+        matchHistory?: MatchHistoryEntry[];
     achievements?: Array<string | {
 		id?: string;
 		type?: string;
@@ -54,6 +78,7 @@ export default function ProfilePage() {
     const [profileReloadKey, setProfileReloadKey] = useState(0);
     const [profile, setProfile] = useState<SocialProfile | null>(null);
     const [stats, setStats] = useState<PlayerStats | null>(null);
+    const [matchHistory, setMatchHistory] = useState<MatchHistoryEntry[]>([]);
     const [friends, setFriends] = useState<unknown[]>([]);
     const [clans, setClans] = useState<unknown[]>([]);
     const [invites, setInvites] = useState<unknown[]>([]);
@@ -84,10 +109,11 @@ export default function ProfilePage() {
 				...(token ? { Authorization: `Bearer ${token}` } : {}),
 			};
 
-            const [friendsRes, clansRes, invitesRes] = await Promise.all([
+            const [friendsRes, clansRes, invitesRes, statsRes] = await Promise.all([
                 fetch(`${API_BASE}/friends`, { headers }),
                 fetch(`${API_BASE}/clans/me`, { headers }),
                 fetch(`${API_BASE}/clans/me/invites`, { headers }),
+                resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
             ]);
 
 			const safeJson = async (r: Response | null) => {
@@ -105,19 +131,80 @@ export default function ProfilePage() {
                 return null;
             };
 
-            const statsRes = resolvedUser?.id
-                ? await fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers })
-                : null;
+            setFriends(await safeJson(friendsRes));
+            setClans(await safeJson(clansRes));
+            setInvites(await safeJson(invitesRes));
 
-			setFriends(await safeJson(friendsRes));
-			setClans(await safeJson(clansRes));
-			setInvites(await safeJson(invitesRes));
-            setStats(await safeObject<PlayerStats>(statsRes));
+            const statsObj = await safeObject<PlayerStats>(statsRes);
+            if (statsObj) {
+                setStats(statsObj);
+
+                // Normalize match entries into the shape MatchHistory component expects
+                const rawMatches = Array.isArray((statsObj as any).matchHistory) ? (statsObj as any).matchHistory : [];
+                const normalized = rawMatches.map((entry: any) => {
+                    const match = entry.match ?? entry;
+                    const rawParticipants = match.matchParticipants ?? match.matchParticipants ?? [];
+                    const participants: MatchHistoryParticipant[] = rawParticipants.map((p: any) => ({
+                        userId: p.userId,
+                        displayName: p.displayName ?? null,
+                        avatarUrl: p.avatarUrl ?? null,
+                        isWinner: p.isWinner ?? false,
+                        kills: p.kills ?? 0,
+                        deaths: p.deaths ?? 0,
+                    }));
+
+                    // Try to locate the current user's participant snapshot, or fallback to first participant
+                    let playerSnapshot: any = null;
+                    if ((entry as any).player) {
+                        playerSnapshot = (entry as any).player;
+                    } else {
+                        playerSnapshot = participants.find((p) => p.userId === (resolvedUser?.id)) ?? participants[0] ?? null;
+                    }
+
+                    const player: MatchHistoryParticipant = playerSnapshot
+                        ? {
+                              userId: playerSnapshot.userId ?? resolvedUser?.id ?? 'unknown',
+                              displayName: playerSnapshot.displayName ?? (playerSnapshot.userId === resolvedUser?.id ? 'You' : null),
+                              avatarUrl: playerSnapshot.avatarUrl ?? null,
+                              isWinner: playerSnapshot.isWinner ?? false,
+                              kills: playerSnapshot.kills ?? 0,
+                              deaths: playerSnapshot.deaths ?? 0,
+                          }
+                        : {
+                              userId: resolvedUser?.id ?? 'unknown',
+                              displayName: 'You',
+                              avatarUrl: null,
+                              isWinner: false,
+                              kills: 0,
+                              deaths: 0,
+                          };
+
+                    return {
+                        id: match.id,
+                        status: match.status,
+                        duration: match.duration ?? null,
+                        createdAt: match.createdAt,
+                        endedAt: match.endedAt ?? null,
+                        mode: match.mode ?? null,
+                        mapName: match.mapName ?? null,
+                        score: match.score ?? null,
+                        summary: match.summary ?? null,
+                        player,
+                        participants,
+                    } as MatchHistoryEntry;
+                });
+
+                setMatchHistory(normalized);
+            } else {
+                setStats(null);
+                setMatchHistory([]);
+            }
 		} finally {
 			setIsLoadingData(false);
 		}
 	}, []); // add any real deps if needed
 
+	console.log("stats: ", stats);
 	// ✅ Now useEffect just calls it
 	useEffect(() => {
 		void loadProfileData();
@@ -368,6 +455,8 @@ export default function ProfilePage() {
                         )}
                         {activeTab === 'Match History' && (
                             <MatchHistory
+                                matches={matchHistory}
+                                currentUserId={user?.id ?? undefined}
                                 emptyTitle="No battles recorded yet."
                                 emptyDescription="Your past matches will appear here once the stats pipeline is connected."
                             />

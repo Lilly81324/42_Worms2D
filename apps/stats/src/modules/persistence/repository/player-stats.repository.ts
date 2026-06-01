@@ -35,16 +35,31 @@ export class PlayerStatsRepository {
     const matchParticipants = await this.prisma.matchParticipant.findMany({
       where: { userId: userIdStr },
       select: {
+        userId: true,
+        displayName: true,
+        avatarUrl: true,
+        isWinner: true,
+        kills: true,
+        deaths: true,
         match: {
           select: {
             id: true,
             status: true,
             duration: true,
             createdAt: true,
+            endedAt: true,
+            mode: true,
+            mapName: true,
+            score: true,
+            summary: true,
             matchParticipants: {
-              where: { userId: { not: userIdStr } },
               select: {
                 userId: true,
+                displayName: true,
+                avatarUrl: true,
+                isWinner: true,
+                kills: true,
+                deaths: true,
               },
             },
           },
@@ -57,7 +72,26 @@ export class PlayerStatsRepository {
       },
     });
 
-    return matchParticipants.map((mp) => mp.match);
+    return matchParticipants.map((mp) => ({
+      id: mp.match.id,
+      status: mp.match.status,
+      duration: mp.match.duration,
+      createdAt: mp.match.createdAt,
+      endedAt: mp.match.endedAt,
+      mode: mp.match.mode,
+      mapName: mp.match.mapName,
+      score: mp.match.score,
+      summary: mp.match.summary,
+      player: {
+        userId: mp.userId,
+        displayName: mp.displayName,
+        avatarUrl: mp.avatarUrl,
+        isWinner: mp.isWinner,
+        kills: mp.kills,
+        deaths: mp.deaths,
+      },
+      participants: mp.match.matchParticipants,
+    }));
   }
 
   /* create stats for the new user*/
