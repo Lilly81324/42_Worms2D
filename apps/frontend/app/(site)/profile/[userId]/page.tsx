@@ -143,7 +143,7 @@ export default function ProfilePage() {
                 const rawMatches = Array.isArray((statsObj as any).matchHistory) ? (statsObj as any).matchHistory : [];
                 const normalized = rawMatches.map((entry: any) => {
                     const match = entry.match ?? entry;
-                    const rawParticipants = match.matchParticipants ?? match.matchParticipants ?? [];
+                    const rawParticipants = match.matchParticipants ?? [];
                     const participants: MatchHistoryParticipant[] = rawParticipants.map((p: any) => ({
                         userId: p.userId,
                         displayName: p.displayName ?? null,
@@ -153,12 +153,23 @@ export default function ProfilePage() {
                         deaths: p.deaths ?? 0,
                     }));
 
-                    // Try to locate the current user's participant snapshot, or fallback to first participant
+                    // The /stats/user/:id response stores current user's stats on the entry root.
+                    const entryRootSnapshot = {
+                        userId: entry.userId,
+                        displayName: entry.displayName,
+                        avatarUrl: entry.avatarUrl,
+                        isWinner: entry.isWinner,
+                        kills: entry.kills,
+                        deaths: entry.deaths,
+                    };
+
                     let playerSnapshot: any = null;
-                    if ((entry as any).player) {
+                    if (entryRootSnapshot.userId) {
+                        playerSnapshot = entryRootSnapshot;
+                    } else if ((entry as any).player) {
                         playerSnapshot = (entry as any).player;
                     } else {
-                        playerSnapshot = participants.find((p) => p.userId === (resolvedUser?.id)) ?? participants[0] ?? null;
+                        playerSnapshot = participants.find((p) => p.userId === resolvedUser?.id) ?? participants[0] ?? null;
                     }
 
                     const player: MatchHistoryParticipant = playerSnapshot
@@ -179,6 +190,21 @@ export default function ProfilePage() {
                               deaths: 0,
                           };
 
+                    const mergedParticipants = participants.length
+                        ? participants
+                        : playerSnapshot
+                        ? [
+                              {
+                                  userId: playerSnapshot.userId ?? resolvedUser?.id ?? 'unknown',
+                                  displayName: playerSnapshot.displayName ?? null,
+                                  avatarUrl: playerSnapshot.avatarUrl ?? null,
+                                  isWinner: playerSnapshot.isWinner ?? false,
+                                  kills: playerSnapshot.kills ?? 0,
+                                  deaths: playerSnapshot.deaths ?? 0,
+                              },
+                          ]
+                        : [];
+
                     return {
                         id: match.id,
                         status: match.status,
@@ -190,7 +216,7 @@ export default function ProfilePage() {
                         score: match.score ?? null,
                         summary: match.summary ?? null,
                         player,
-                        participants,
+                        participants: mergedParticipants,
                     } as MatchHistoryEntry;
                 });
 

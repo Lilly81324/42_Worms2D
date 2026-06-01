@@ -94,7 +94,7 @@ Content-Type: application/json
       "userId"  :"2c412fa9-d2d5-420d-a5cc-12c78e9ba20b",
       "displayName": "You",
       "avatarUrl": null,
-      "isWinner" : true,
+      "isWinner" : true, // is winer why in UI is signed as defeat? 
       "kills"    : 5,
       "deaths"   : 1
     },

@@ -2,12 +2,18 @@ import { BadRequestException } from '@nestjs/common';
 import { extname } from 'path';
 import type { AuthPrincipal } from '../auth/auth-principal';
 import type { UpdateProfileDto } from './social.dto';
+import type { PrismaService } from '../prisma/prisma.service';
 
 type UploadedMemoryFile = {
   buffer?: Buffer;
   originalname?: string;
   mimetype?: string;
   size?: number;
+};
+
+export type UserProfileWithAvatar = {
+  displayName: string | null;
+  avatarUrl: string | null;
 };
 
 export function assertImageFile(file: UploadedMemoryFile, maxBytes: number) {
@@ -59,4 +65,28 @@ export async function saveProfileWithAvatarFile(
   }
 
   return uploadAvatar(userId, file, principal);
+}
+
+/**
+ * Fetch a user's profile displayName and avatarUrl for use in match histories and other services.
+ * Returns null values if user doesn't exist or profile is deleted.
+ * Used by stats service to enrich MatchParticipant records.
+ */
+export async function getUserProfileWithAvatar(
+  userId: string,
+  prisma: PrismaService,
+): Promise<UserProfileWithAvatar> {
+  const profile = await prisma.userProfile.findUnique({
+    where: { userId },
+    include: { avatarFile: true },
+  });
+
+  if (!profile) {
+    return { displayName: null, avatarUrl: null };
+  }
+
+  return {
+    displayName: profile.displayName,
+    avatarUrl: profile.avatarFile?.deletedAt ? null : (profile.avatarFile?.publicPath ?? null),
+  };
 }

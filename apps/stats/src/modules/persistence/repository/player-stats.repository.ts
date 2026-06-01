@@ -41,6 +41,12 @@ export class PlayerStatsRepository {
         isWinner: true,
         kills: true,
         deaths: true,
+        // include the linked player record so we can prefer the latest avatar
+        player: {
+          select: {
+            avatarUrl: true,
+          },
+        },
         match: {
           select: {
             id: true,
@@ -60,6 +66,11 @@ export class PlayerStatsRepository {
                 isWinner: true,
                 kills: true,
                 deaths: true,
+                player: {
+                  select: {
+                    avatarUrl: true,
+                  },
+                },
               },
             },
           },
@@ -85,12 +96,20 @@ export class PlayerStatsRepository {
       player: {
         userId: mp.userId,
         displayName: mp.displayName,
-        avatarUrl: mp.avatarUrl,
+        //// prefer the participant-level avatar if present, otherwise fall back to the current player avatar
+        //avatarUrl: mp.avatarUrl ?? mp.player?.avatarUrl ?? null,
         isWinner: mp.isWinner,
         kills: mp.kills,
         deaths: mp.deaths,
       },
-      participants: mp.match.matchParticipants,
+      participants: mp.match.matchParticipants.map((p) => ({
+        userId: p.userId,
+        displayName: p.displayName,
+        avatarUrl: p.avatarUrl ?? p.player?.avatarUrl ?? null,
+        isWinner: p.isWinner,
+        kills: p.kills,
+        deaths: p.deaths,
+      })),
     }));
   }
 

@@ -75,16 +75,22 @@ function formatDuration(duration?: number | null) {
 
 function getMatchOutcome(match: MatchHistoryItem) {
 	if (match.status !== 'FINISHED') return 'pending' as const;
+
+	// Prefer explicit player winner flag from backend payload.
+	if (typeof match.player?.isWinner === 'boolean') {
+		return match.player.isWinner ? 'win' as const : 'loss' as const;
+	}
+
 	if (match.score && /^\s*(\d+)\s*[-:]\s*(\d+)\s*$/.test(match.score)) {
 		const [, left, right] = match.score.match(/^\s*(\d+)\s*[-:]\s*(\d+)\s*$/) ?? [];
 		if (left && right) {
 			const leftValue = Number(left);
 			const rightValue = Number(right);
 			if (leftValue === rightValue) return 'draw' as const;
-			return leftValue > rightValue ? (match.player.isWinner ? 'win' : 'loss') : (match.player.isWinner ? 'win' : 'loss');
+			return leftValue > rightValue ? 'win' as const : 'loss' as const;
 		}
 	}
-	if (match.player.isWinner) return 'win' as const;
+
 	return 'loss' as const;
 }
 
@@ -92,6 +98,7 @@ function getDisplayName(participant: MatchHistoryParticipant, currentUserId?: st
 	if (participant.userId === currentUserId) return 'You';
 	return participant.displayName?.trim() || participant.userId.slice(0, 8);
 }
+
 
 function ParticipantAvatar({ participant, currentUserId }: { participant: MatchHistoryParticipant; currentUserId?: string }) {
 	const label = getDisplayName(participant, currentUserId);
@@ -164,7 +171,7 @@ export function MatchHistory({
 											<div className="min-w-0 flex-1">
 												<div className="flex flex-wrap items-center gap-2">
 													<p className="text-sm font-black text-zinc-900">{match.mode ?? 'Match'}</p>
-													<span className={`rounded-full border px-2.5 py-1 text-[10px] bg-blue-700 font-black uppercase tracking-[0.25em] ${meta.chip}`}>{meta.label}</span>
+													<span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.25em] ${meta.chip}`}>{meta.label}</span>
 												</div>
 												{/*<p className="mt-1 text-xs leading-5 text-zinc-600">
 													{match.summary || 'The match record has been stored in the stats service.'}
@@ -212,12 +219,17 @@ export function MatchHistory({
 													{outcome === 'win' ? 'Victory secured' : outcome === 'loss' ? 'Needs rematch' : outcome === 'draw' ? 'Even fight' : 'Waiting for result'}
 												</p>
 											</div>
-											<div className="flex flex-col">
+											<div className="flex flex-col gap-2">
 												{visibleParticipants.map((participant) => {
 													const isCurrentUser = participant.userId === currentUserId || participant.userId === match.player.userId;
+													const isWinner = Boolean(participant.isWinner);
+													const participantClass = isWinner
+														? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+														: isCurrentUser
+														? 'bg-blue-50 text-blue-700 border-blue-200'
+														: 'bg-zinc-50 text-zinc-700 border-zinc-200';
 													return (
-														<div key={`${match.id}-${participant.userId}`}	className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${
-																isCurrentUser ? 'bg-blue-50 text-blue-700' : 'bg-zinc-50 text-zinc-700'	}`}	>
+														<div key={`${match.id}-${participant.userId}`}	className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm border min-w-0 overflow-hidden ${participantClass}`}>
 															<ParticipantAvatar participant={participant} currentUserId={currentUserId} />
 															<div className="min-w-0 flex-1">
 																<p className="truncate font-bold">{getDisplayName(participant, currentUserId)}</p>
