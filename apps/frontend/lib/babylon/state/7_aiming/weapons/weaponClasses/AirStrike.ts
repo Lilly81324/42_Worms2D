@@ -57,12 +57,7 @@ export class AirStrike extends GenericWeapon implements IWeapon {
 		})
 		// Needs to be called last, so weapon is properly initialised with relevant data
 		this.aimTypes = [
-			new AimingAngle({
-				minAngle: this.allowedAngleMin, 
-				maxAngle: this.allowedAngleMax, 
-				turnSpeed: 3 / 180 * Math.PI,
-			}, state.msgToServer),
-			new PianoPickPosition(weaponHelper, state.msgToServer),
+			new PickPosition(weaponHelper, state.msgToServer),
 			new SwitchTargetAngle({
 				snapAngle: this.snapAngle,
 				minAngle: this.allowedAngleMin,
