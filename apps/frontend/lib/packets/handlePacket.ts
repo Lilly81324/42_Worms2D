@@ -46,6 +46,7 @@ export function handlePacket(data: SC_GenericPacket, state: StateMachine) {
 			if (state.state != GameState.TURN_END)
 				break ;
 			state.ground?.affectTerrain(data.point.x, data.point.y, data.radius);
+			break ;
 		}
 		default : {
 			console.log("BABYLON> Received unhandled type: ", data.type);

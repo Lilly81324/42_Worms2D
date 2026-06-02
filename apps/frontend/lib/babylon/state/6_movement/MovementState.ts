@@ -170,9 +170,9 @@ export class MovementState implements IState {
 			else
 			{
 				if (this.keyStatus['a'])
-					this.machine.turn?.chosenWorm.move(-1, Math.PI / 2);
+					this.machine.turn?.chosenWorm.move(-1, (3 * Math.PI) / 2);
 				else if (this.keyStatus['d'])
-					this.machine.turn?.chosenWorm.move(1, (3 * Math.PI) / 2);
+					this.machine.turn?.chosenWorm.move(1, Math.PI / 2);
 				else
 					this.machine.turn.chosenWorm.stop();
 	

@@ -55,7 +55,7 @@ export class WormPointer {
 		this.progressPerFrame = VALUE / (FPS * DURATION);
 		this.animation = scene.onBeforeRenderObservable.add(() => {
 			this.mesh.rotation.y = (this.mesh.rotation.y + this.radiansPerFrame) % LOOP_VALUE;
-			this.mesh.position.x = (this.target) ? this.target.position.x * -1 : 0;
+			this.mesh.position.x = (this.target) ? this.target.position.x : 0;
 			this.mesh.position.y = (this.target) ? this.target.position.y : 0;
 			this.mesh.position.y += this.offset + (Math.sin(this.progress * Math.PI) + 1 ) * this.distance;
 			this.progress = (this.progress + this.progressPerFrame) % VALUE;

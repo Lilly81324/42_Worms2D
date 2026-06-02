@@ -23,7 +23,7 @@ export class Turn {
 		if (this.chosenWeapon == undefined)
 			return ;
 		this.chosenWeapon.show(true);
-		this.chosenWeapon.mesh.position.x = this.chosenWorm.collider.position.x * -1;
+		this.chosenWeapon.mesh.position.x = this.chosenWorm.collider.position.x;
 		this.chosenWeapon.mesh.position.y = this.chosenWorm.collider.position.y;
 	}
 

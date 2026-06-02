@@ -1,5 +1,5 @@
 import { wormData } from "@/shared/packets/util";
-import { AbstractMesh, ImportMeshAsync, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, Quaternion, Scene, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, ImportMeshAsync, Mesh, PhysicsAggregate, PhysicsMotionType, PhysicsShapeType, Quaternion, Scene, Vector3 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 
 export interface wormModelData {
@@ -20,7 +20,9 @@ export async function loadWormModels(scene: Scene): Promise<wormModelData> {
     const collider = await loadModel("/assets/Diamond3.glb", scene, 1);
     const model = await loadModel("https://assets.babylonjs.com/meshes/HVGirl.glb", scene, 0);
     
-	return ({
+    // Parent of this mesh inverts its x axis, so remove it :)
+    collider.setParent(null);
+    return ({
         collider: collider,
         model: model,
     })

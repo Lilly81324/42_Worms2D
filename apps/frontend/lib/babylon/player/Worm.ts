@@ -100,7 +100,7 @@ export class Worm {
         if (!coll)
             throw ("Error: collider is Null");
         this.collider = coll;
-        this.collider.position = new Vector3(data.pos.x, data.pos.y + 0.7, 0);
+        this.collider.position = new Vector3(data.pos.x, data.pos.y + 0.2, 0);
         this.collider.rotation = Vector3.Zero();
         this.collider.rotationQuaternion = Quaternion.Identity();
         this.collider.scaling.setAll(0.4);
@@ -114,7 +114,7 @@ export class Worm {
         if (!mod)
             throw ("Error: model is Null");
         this.model = mod;
-        this.model.parent = this.collider;mod
+        this.model.parent = this.collider;
         this.model.position.y = this.model.position.y - 3.2;
         this.model.scaling.setAll(0.2);
         this.aggregate = new PhysicsAggregate
