@@ -33,55 +33,48 @@ export class PlayerStatsRepository {
   async getMatchHistory(userId: UUID) {
     const userIdStr = userId as string;
     const matchParticipants = await this.prisma.matchParticipant.findMany({
-      where: { userId: userIdStr },
+  where: {
+    userId: userIdStr,
+  },
+  select: {
+    userId: true,
+    displayName: true,
+    avatarUrl: true,
+    isWinner: true,
+    kills: true,
+    deaths: true,
+
+    match: {
       select: {
-        userId: true,
-        displayName: true,
-        avatarUrl: true,
-        isWinner: true,
-        kills: true,
-        deaths: true,
-        // include the linked player record so we can prefer the latest avatar
-        player: {
+        id: true,
+        status: true,
+        duration: true,
+        createdAt: true,
+        endedAt: true,
+        mode: true,
+        mapName: true,
+        score: true,
+        summary: true,
+
+        matchParticipants: {
           select: {
+            userId: true,
+            displayName: true,
             avatarUrl: true,
-          },
-        },
-        match: {
-          select: {
-            id: true,
-            status: true,
-            duration: true,
-            createdAt: true,
-            endedAt: true,
-            mode: true,
-            mapName: true,
-            score: true,
-            summary: true,
-            matchParticipants: {
-              select: {
-                userId: true,
-                displayName: true,
-                avatarUrl: true,
-                isWinner: true,
-                kills: true,
-                deaths: true,
-                player: {
-                  select: {
-                    avatarUrl: true,
-                  },
-                },
-              },
-            },
+            isWinner: true,
+            kills: true,
+            deaths: true,
           },
         },
       },
-      orderBy: {
-        match: {
-          createdAt: 'desc',
-        },
-      },
-    });
+    },
+  },
+  orderBy: {
+    match: {
+      createdAt: 'desc',
+    },
+  },
+});
 
     return matchParticipants.map((mp) => ({
       id: mp.match.id,
@@ -103,13 +96,13 @@ export class PlayerStatsRepository {
         deaths: mp.deaths,
       },
       participants: mp.match.matchParticipants.map((p) => ({
-        userId: p.userId,
-        displayName: p.displayName,
-        avatarUrl: p.avatarUrl ?? p.player?.avatarUrl ?? null,
-        isWinner: p.isWinner,
-        kills: p.kills,
-        deaths: p.deaths,
-      })),
+		userId: p.userId,
+		displayName: p.displayName,
+		avatarUrl: p.avatarUrl,
+		isWinner: p.isWinner,
+		kills: p.kills,
+		deaths: p.deaths,
+		})),
     }));
   }
 
