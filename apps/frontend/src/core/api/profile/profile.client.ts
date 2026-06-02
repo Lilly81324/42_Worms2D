@@ -116,3 +116,7 @@ export async function saveMyProfile(input: UpdateMyProfileInput & { avatar?: Blo
     return profileResult;
 }
 
+export async function getMatchMembers(matchId: string) {
+  return request(`${BASE_URL}/stats/match/${matchId}/members`);
+}
+

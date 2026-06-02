@@ -1,3 +1,4 @@
+import { MatchMember } from '@/app/(site)/profile/[userId]/page';
 import type { MatchCardItem } from './MatchHistory/Card';
 import MatchCard from './MatchHistory/Card';
 
@@ -5,6 +6,7 @@ import MatchCard from './MatchHistory/Card';
 export type MatchHistoryItem = MatchCardItem;
 
 export type MatchHistoryProps = {
+	members: MatchMember[];
 	matches?: MatchHistoryItem[];
 	currentUserId?: string;
 	className?: string;
@@ -34,6 +36,7 @@ function getMatchOutcome(match: MatchHistoryItem): 'win' | 'loss' | 'draw' | 'pe
 // ─── MatchHistory ─────────────────────────────────────────────────────────────
 
 export function MatchHistory({
+	members = [],
 	matches = [],
 	currentUserId,
 	className = '',
@@ -45,6 +48,9 @@ export function MatchHistory({
 	const wins = matches.filter((m) => getMatchOutcome(m) === 'win').length;
 	const losses = matches.filter((m) => getMatchOutcome(m) === 'loss').length;
 	const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
+
+	console.log("MATCHES: ", matches);
+	console.log("MAmemberes: ", members);
 
 	return (
 		<div

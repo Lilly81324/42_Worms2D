@@ -6,7 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import EditProfileModal from "@/components/EditProfile";
 import { useAuth } from "@/components/Providers";
 import { authClient } from "@/src/core/api/auth/auth.client";
-import { getMyProfile } from "@/src/core/api/profile/profile.client";
+import { getMatchMembers, getMyProfile } from "@/src/core/api/profile/profile.client";
 import { Pencil } from "lucide-react";
 import { Achievements } from "@/components/Achievements";
 import MatchHistory from "@/components/MatchHistory";
@@ -68,6 +68,30 @@ type SocialProfile = {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
+export type MatchMember = {
+  id: string;
+  matchId: string;
+  userId: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  isWinner: boolean;
+  kills: number;
+  deaths: number;
+  player: {
+    id: string;
+    userId: string;
+    xp: number;
+    level: number;
+    wins: number;
+    losses: number;
+    kills: number;
+    deaths: number;
+    damageDealt: number;
+    damageTaken: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+};
 
 export default function ProfilePage() {
     // Log when component mounts (after first render)
@@ -84,6 +108,7 @@ export default function ProfilePage() {
     const [invites, setInvites] = useState<unknown[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [dataError, setDataError] = useState<string | null>(null);
+    const [members, setMembers] = useState<MatchMember[]>([]);
 
     // Compute displayName, avatarUrl, bio early so useEffect can access them
     const displayName = profile?.displayName || user?.displayName || user?.username || user?.email || "Unknown User";
@@ -91,7 +116,34 @@ export default function ProfilePage() {
     const bio = profile?.bio;
     const level = stats?.level ?? 1;
 
-    // ✅ Define it at component level
+	// Extraxt avatarUrl
+	const fetchAvatarsMap = async (userIds: string[]) => {
+		if (!userIds.length) return {};
+
+		const res = await fetch(
+			`${API_BASE}/users/profiles/avatars?userIds=${userIds.join(",")}`,
+			{
+				headers: {
+					"Content-Type": "application/json",
+					...(sessionStorage.getItem("auth.accessToken")
+						? {
+							Authorization: `Bearer ${sessionStorage.getItem(
+								"auth.accessToken",
+							)}`,
+						}
+						: {}),
+				},
+			},
+		);
+
+		if (!res.ok) return {};
+
+		return (await res.json()) as Record<string, string | null>;
+	};
+
+
+
+    // Define it at component level
 	const loadProfileData = useCallback(async () => {
 		setIsLoadingData(true);
 		try {
@@ -114,6 +166,8 @@ export default function ProfilePage() {
                 fetch(`${API_BASE}/clans/me`, { headers }),
                 fetch(`${API_BASE}/clans/me/invites`, { headers }),
                 resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
+				// add 
+				
             ]);
 
 			const safeJson = async (r: Response | null) => {
@@ -136,8 +190,23 @@ export default function ProfilePage() {
             setInvites(await safeJson(invitesRes));
 
             const statsObj = await safeObject<PlayerStats>(statsRes);
+			//const participant = await fetch(`${API_BASE}/match/${statsObj.matchHistory[0].matchId}/members`
+			//	);
+
+			//	const data = await participant.json();
+			//	console.log("participants:", data);
+
+			const matchId = statsObj.matchHistory[0].matchId;
+
+			const result = await getMatchMembers(matchId);
+
+			setMembers(result.data.matchParticipants);
+			console.log("members:", result.data);
+
+						
             if (statsObj) {
                 setStats(statsObj);
+
 
                 // Normalize match entries into the shape MatchHistory component expects
                 const rawMatches = Array.isArray((statsObj as any).matchHistory) ? (statsObj as any).matchHistory : [];
@@ -197,7 +266,7 @@ export default function ProfilePage() {
                               {
                                   userId: playerSnapshot.userId ?? resolvedUser?.id ?? 'unknown',
                                   displayName: playerSnapshot.displayName ?? null,
-                                  avatarUrl: playerSnapshot.avatarUrl ?? null,
+                                  avatarUrl: playerSnapshot.avatarUrl ?? null, // 
                                   isWinner: playerSnapshot.isWinner ?? false,
                                   kills: playerSnapshot.kills ?? 0,
                                   deaths: playerSnapshot.deaths ?? 0,
@@ -230,7 +299,13 @@ export default function ProfilePage() {
 		}
 	}, []); // add any real deps if needed
 
-	console.log("stats: ", stats);
+
+	console.log("stats: ", stats?.matchHistory[0]);
+	//resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
+	// here can be added the list avatarUrl = stats?.matchHistory.map((obj.id)=>{fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null)}) ? 
+	
+	console.log("url: ", profile?.avatarUrl);
+	console.log("base: ", API_BASE);
 	// ✅ Now useEffect just calls it
 	useEffect(() => {
 		void loadProfileData();
@@ -481,6 +556,7 @@ export default function ProfilePage() {
                         )}
                         {activeTab === 'Match History' && (
                             <MatchHistory
+								members= {members}
                                 matches={matchHistory}
                                 currentUserId={user?.id ?? undefined}
                                 emptyTitle="No battles recorded yet."

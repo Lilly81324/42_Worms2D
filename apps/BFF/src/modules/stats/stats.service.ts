@@ -67,4 +67,14 @@ export class StatsService {
       throw new BadGatewayException({ code: 'stats_service_unreachable', message: 'Unable to reach stats service', details: error });
     }
   }
+
+  // fetch member of match:
+  async fetchMatchMembers(matchId: string, context: { authorization?: string }) {
+	return this.callStatsService({
+		method: 'GET',
+		path: `/internal/stats/match/${matchId}/members`,
+		context,
+	});
+	}
+
 }
