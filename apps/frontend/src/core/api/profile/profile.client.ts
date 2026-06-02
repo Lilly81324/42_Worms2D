@@ -115,3 +115,4 @@ export async function saveMyProfile(input: UpdateMyProfileInput & { avatar?: Blo
 
     return profileResult;
 }
+
