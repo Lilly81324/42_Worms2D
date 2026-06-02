@@ -56,6 +56,7 @@ enum ClanRole {
 enum ChatThreadType {
   DM
   CLAN
+  GLOBAL
 }
 
 enum MessageContentType {

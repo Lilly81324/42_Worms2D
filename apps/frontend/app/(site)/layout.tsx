@@ -1,18 +1,17 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { ChatProvider } from "@/components/ChatContext";
 
-export default function SiteLayout({
-                                     children,
-                                   }: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-      <div>
-        <Header />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
-      </div>
-  );
+export default function SiteLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <ChatProvider>
+            <div className="flex flex-col min-h-screen">
+                <Header />
+                <main className="flex-grow">
+                    {children}
+                </main>
+                <Footer />
+            </div>
+        </ChatProvider>
+    );
 }

@@ -94,6 +94,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!payload?.threadId) {
       return { ok: false, error: 'threadId is required' };
     }
+    // Global Channel skips database validation
+    if (payload.threadId === '99999999-9999-9999-9999-999999999999') {
+      await client.join(`thread:${payload.threadId}`);
+      return { ok: true };
+    }
     await this.social.getThread(payload.threadId, principal);
     await client.join(`thread:${payload.threadId}`);
     return { ok: true };
@@ -131,17 +136,44 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!payload?.threadId || !payload.content) {
       return { ok: false, error: 'threadId and content are required' };
     }
-    const message = await this.social.sendMessage(
-      payload.threadId,
-      {
+
+    let message;
+    if (payload.threadId === '99999999-9999-9999-9999-999999999999') {
+      message = await this.social.sendGlobalMessage({
+        threadId: payload.threadId,
         content: payload.content,
         clientMessageId: payload.clientMessageId,
-      } satisfies SendMessageDto,
-      principal,
+        senderUserId: principal.claims.sub,
+      });
+    } else {
+
+      message = await this.social.sendMessage(
+        payload.threadId,
+        {
+          content: payload.content,
+          clientMessageId: payload.clientMessageId,
+        } satisfies SendMessageDto,
+        principal,
+      );
+    }
+
+    console.log('=== BACKEND PRINCIPAL CLAIMS ===', principal.claims);
+
+    const displayName = await this.social.getUserDisplayName(
+      principal.claims.sub,
     );
-    this.server
-      .to(`thread:${payload.threadId}`)
-      .emit('message.created', message);
+
+    const resolvedUsername =
+      (principal.claims as any).username ||
+      (principal.claims as any).name ||
+      displayName ||
+      'A Worm';
+
+    this.server.to(`thread:${payload.threadId}`).emit('message.created', {
+      ...message,
+      username: resolvedUsername,
+    });
+
     return { ok: true, message };
   }
 

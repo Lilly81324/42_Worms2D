@@ -1195,6 +1195,22 @@ export class SocialService {
     return this.sendMessage(clan.chatThread.id, input, principal);
   }
 
+  async sendGlobalMessage(data: {
+    threadId: string;
+    content: string;
+    clientMessageId?: string;
+    senderUserId: string;
+  }) {
+    return this.prisma.message.create({
+      data: {
+        threadId: data.threadId,
+        senderUserId: data.senderUserId,
+        content: data.content,
+        clientMessageId: data.clientMessageId,
+      },
+    });
+  }
+
   async editMessage(
     messageId: string,
     input: EditMessageDto,
@@ -1610,28 +1626,38 @@ export class SocialService {
     threadId: string,
     principal: AuthPrincipal,
   ) {
+    const thread = await this.prisma.chatThread.findUnique({
+      where: { id: threadId },
+    });
+
+    if (!thread) {
+      throw new NotFoundException('Thread not found');
+    }
+
+    if (thread.type === 'GLOBAL') {
+      return;
+    }
+
     if (isAdmin(principal)) {
-      const thread = await this.prisma.chatThread.findUnique({
-        where: { id: threadId },
-      });
-      if (!thread) {
-        throw new NotFoundException('Thread not found');
-      }
       return;
     }
 
     const participant = await this.prisma.chatParticipant.findUnique({
       where: {
-        threadId_userId: {
-          threadId,
-          userId: principal.claims.sub,
-        },
+        threadId_userId: { threadId, userId: principal.claims.sub },
       },
     });
+
     if (!participant) {
       throw new ForbiddenException('Thread membership is required');
     }
   }
 
-  
+  async getUserDisplayName(userId: string): Promise<string | null> {
+    const profile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+      select: { displayName: true },
+    });
+    return profile?.displayName || null;
+  }
 }
