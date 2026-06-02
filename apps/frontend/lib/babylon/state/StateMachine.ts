@@ -85,8 +85,6 @@ export class StateMachine {
 		this.setState(GameState.GAME_PENDING);
 		this.scene.onBeforeRenderObservable.add(() => {
 			this.handlePackets();
-		})
-		this.scene.onBeforePhysicsObservable.add(() => {
 			this.currentState?.tick?.();
 		})
 	}
