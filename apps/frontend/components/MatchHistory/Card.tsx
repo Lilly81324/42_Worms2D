@@ -2,6 +2,8 @@
 // A single match card extracted from MatchHistory.
 // Drop this file next to MatchHistory.tsx and import it there.
 
+import { MatchMember } from "@/app/(site)/profile/[userId]/page";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type MatchCardParticipant = {
@@ -34,12 +36,12 @@ export type MatchCardProps = {
 	currentUserId?: string;
 	/** Optional extra Tailwind classes on the root <article> */
 	className?: string;
+	members: MatchMember[];
 };
 
 // ─── Lookup table ─────────────────────────────────────────────────────────────
 
-const statusMeta: Record<
-	'win' | 'loss' | 'draw' | 'pending',
+const statusMeta: Record<'win' | 'loss' | 'draw' | 'pending',
 	{ label: string; chip: string; accent: string }
 > = {
 	win: {
@@ -142,7 +144,8 @@ function ParticipantAvatar({
 
 // ─── MatchCard ────────────────────────────────────────────────────────────────
 
-export function MatchCard({ match, currentUserId, className = '' }: MatchCardProps) {
+export function MatchCard({ match, currentUserId, className = '', members }
+	: MatchCardProps) {
 	const outcome = getMatchOutcome(match);
 	const meta = statusMeta[outcome];
 
@@ -235,7 +238,8 @@ export function MatchCard({ match, currentUserId, className = '' }: MatchCardPro
 						</p>
 					</div>
 					<div className="flex flex-col gap-2">
-						{visibleParticipants.map((participant) => {
+						{/* participants: */}
+						{members.map((participant) => {
 							const isCurrentUser =
 								participant.userId === currentUserId ||
 								participant.userId === match.player.userId;
@@ -260,9 +264,11 @@ export function MatchCard({ match, currentUserId, className = '' }: MatchCardPro
 											{participant.isWinner ? 'Winner' : 'Competitor'}
 										</p>
 									</div>
+
 									<div className="flex shrink-0 items-center gap-3 text-[11px] font-black uppercase tracking-[0.18em] text-zinc-500">
 										<span>{participant.kills} K</span>
 										<span>{participant.deaths} D</span>
+
 									</div>
 								</div>
 							);

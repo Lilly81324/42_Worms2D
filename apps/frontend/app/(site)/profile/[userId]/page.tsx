@@ -6,7 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import EditProfileModal from "@/components/EditProfile";
 import { useAuth } from "@/components/Providers";
 import { authClient } from "@/src/core/api/auth/auth.client";
-import { getMatchMembers, getMyProfile } from "@/src/core/api/profile/profile.client";
+import { getAvatarsForMatchMembers, getMatchMembers, getMyProfile, getProfileFromParticipants } from "@/src/core/api/profile/profile.client";
 import { Pencil } from "lucide-react";
 import { Achievements } from "@/components/Achievements";
 import MatchHistory from "@/components/MatchHistory";
@@ -198,10 +198,15 @@ export default function ProfilePage() {
 
 			const matchId = statsObj.matchHistory[0].matchId;
 
-			const result = await getMatchMembers(matchId);
+			const avatarsResult = await getAvatarsForMatchMembers(matchId);
 
-			setMembers(result.data.matchParticipants);
-			console.log("members:", result.data);
+			if (avatarsResult.ok) {
+				console.log("avatars:", avatarsResult.data);
+				setMembers(avatarsResult.data);
+			} else {
+				console.error("failed to load avatars:", avatarsResult.error);
+			}
+
 
 						
             if (statsObj) {
@@ -304,7 +309,7 @@ export default function ProfilePage() {
 	//resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
 	// here can be added the list avatarUrl = stats?.matchHistory.map((obj.id)=>{fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null)}) ? 
 	
-	console.log("url: ", profile?.avatarUrl);
+	console.log("PROFILE: ", profile);
 	console.log("base: ", API_BASE);
 	// ✅ Now useEffect just calls it
 	useEffect(() => {

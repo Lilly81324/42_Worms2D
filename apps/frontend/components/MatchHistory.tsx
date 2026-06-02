@@ -98,6 +98,7 @@ export function MatchHistory({
 								key={match.id}
 								match={match}
 								currentUserId={currentUserId}
+								members = {members}
 							/>
 						))}
 					</div>

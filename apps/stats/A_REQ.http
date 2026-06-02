@@ -196,9 +196,9 @@ POST http://localhost:3004/internal/stats/achievements/upsert
 Content-Type: application/json
 
 {
-  "userId": "d200724c-2856-4319-aefa-b41a73a0a0eb",
-  "type": "sharp_shooter",
-  "name": "Sharp Shooter",
+  "userId": "2c412fa9-d2d5-420d-a5cc-12c78e9ba20b",
+  "type": "sharp_shooter 2334",
+  "name": "Sharp Shooter 234",
   "progress": 12,
   "progressTarget": 10,
   "achieved": true
