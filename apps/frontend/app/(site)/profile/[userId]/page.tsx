@@ -201,7 +201,6 @@ export default function ProfilePage() {
 			const avatarsResult = await getAvatarsForMatchMembers(matchId);
 
 			if (avatarsResult.ok) {
-				console.log("avatars:", avatarsResult.data);
 				setMembers(avatarsResult.data);
 			} else {
 				console.error("failed to load avatars:", avatarsResult.error);
@@ -305,12 +304,8 @@ export default function ProfilePage() {
 	}, []); // add any real deps if needed
 
 
-	console.log("stats: ", stats?.matchHistory[0]);
 	//resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
 	// here can be added the list avatarUrl = stats?.matchHistory.map((obj.id)=>{fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null)}) ? 
-	
-	console.log("PROFILE: ", profile);
-	console.log("base: ", API_BASE);
 	// ✅ Now useEffect just calls it
 	useEffect(() => {
 		void loadProfileData();

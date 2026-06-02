@@ -114,21 +114,13 @@ export class UpdateProfileService {
   }
 
   private async currentUserId(context: RequestContext): Promise<string> {
-    console.log("[BFF/updateProfile.service] currentUserId called", {
-      authorization: context.authorization ? context.authorization.substring(0, 30) : "MISSING",
-    });
+    
     this.ensureAuthorization(context.authorization);
     const verified = await this.authService.verify(context as any);
-    console.log("[BFF/updateProfile.service] verified user", { userId: verified.user.id });
     return verified.user.id;
   }
 
   private ensureAuthorization(authorization?: string): void {
-    console.log("[BFF/updateProfile.service] ensureAuthorization check", {
-      hasAuthorization: Boolean(authorization),
-      authorizationStart: authorization ? authorization.substring(0, 30) : "MISSING",
-      startsWithBearer: authorization?.toLowerCase().startsWith('bearer '),
-    });
     if (!authorization?.toLowerCase().startsWith('bearer ')) {
       throw new UnauthorizedException({
         code: 'missing_bearer_token',

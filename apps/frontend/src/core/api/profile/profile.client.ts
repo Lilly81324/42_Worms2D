@@ -23,7 +23,6 @@ async function request<T>(url: string, options: RequestInit = {}, hasRetried = f
 
     if (token) {
         headers.set("Authorization", `Bearer ${token}`);
-        
     } else {
         console.log("[profile.client] NO token in sessionStorage!", { url, method: options.method });
     }
