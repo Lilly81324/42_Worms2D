@@ -3,6 +3,9 @@ export interface entry {
 	name: string,
 }
 
+/**
+ * Unique identifiers so frontend and backend can identify weapoins based on a shared id
+ */
 export const weaponIds = new Map();
 weaponIds.set("Assault Rifle", 0);
 weaponIds.set("Air Strike", 1);
