@@ -23,6 +23,5 @@ export class Achievements {
 			this.achievements["marathon-mayem"] = true;
 			console.log("achievement unlocked!: marathon-mayem");
 		}
-		console.log("distance traveled: ", this.distanceCounter);
 	}
 }

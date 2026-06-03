@@ -17,30 +17,20 @@ function turnMessage(machine: StateMachine) {
 export class TurnEndState implements IState {
 	constructor(private machine: StateMachine) {}
 
-	enter() : Array<IAction> {
+	enter() {
 		this.reset()
 
 		// Setup
 		turnMessage(this.machine);
 
 		// Actions
-		const actions: Array<IAction> = [];
-
-		// Mock projectile shooting logic
-		const worm = this.machine.turn?.chosenWorm;
-		if (worm) {
-			const pos = worm.collider.position;
-			this.machine.ground?.affectTerrain(pos.x, pos.y, 3);
-		}
-		return (actions);
 	}
 
 	tick() {
 	}
 
 	exit() {
-		this.machine.turn?.end();
-		this.machine.turn = undefined;
+		this.machine.loaded?.turn?.end();
 		this.reset()
 	}
 

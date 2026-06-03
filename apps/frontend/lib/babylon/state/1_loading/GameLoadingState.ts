@@ -1,28 +1,26 @@
 import { IState } from '../IState'
 import { StateMachine } from '../StateMachine';
 import { GameState } from '@/shared/state/GameState';
-import { ExecuteCodeAction, ActionManager, IAction } from '@babylonjs/core'
+import { ExecuteCodeAction, ActionManager } from '@babylonjs/core'
 
 export class GameLoadingState implements IState {
 	private next: boolean = false;
 	constructor(private machine: StateMachine) {}
 
-	enter() : Array<IAction> {
+	enter() {
 		console.log('Entered Loading State');
 		// Setup
 		this.machine.setupGame()
 		this.machine.guiHelper?.notifications.add("Finished loading")
 
 		// Actions
-		const actions: Array<IAction> = [];
-		actions.push(new ExecuteCodeAction({
+		const action = this.machine.scene.actionManager;
+		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: " "
 		}, () => {
 			this.next = true;
 		}));
-
-		return (actions);
 	}
 
 	tick() {
@@ -32,7 +30,7 @@ export class GameLoadingState implements IState {
 	}
 
 	exit() {
-		this.reset()
+		this.reset();
 	}
 
 	reset(): void {

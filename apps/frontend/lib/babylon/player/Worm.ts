@@ -104,6 +104,8 @@ export class Worm {
         this.collider.rotation = Vector3.Zero();
         this.collider.rotationQuaternion = Quaternion.Identity();
         this.collider.scaling.setAll(0.4);
+        // Make invis
+        this.collider.visibility = 0;
 
         const material = new StandardMaterial("material", scene);
 	    material.emissiveColor = colors[slot];
@@ -128,31 +130,32 @@ export class Worm {
         this.aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
 
         this.collider.actionManager = new ActionManager(scene);
+        if (!this.collider.actionManager)
+            throw new Error("Worm Constructor: Collider could not create an Action Manager");
 
         this.pos = this.collider.position.clone();
         this.previousPos = this.collider.position.clone();
-	}
 
-    initClickable(setterFunction: (chosen: Worm) => void) {
-        if (this.initialised)
-            return ;
-        this.initialised = true;
-        this.action = new ExecuteCodeAction({
-            trigger: ActionManager.OnPickUpTrigger}
-            , () => {
-            setterFunction(this);
-        })
-    }
+		this.aggregate.body.setGravityFactor(0);
+	}
 
     /**
      * Tells the Worm to activate the functionality for being able to pick a worm
      */
-    makeClickable() {
+    makeClickable(pickWorm: (worm: Worm) => void) {
         if (this.clickable)
             return ;
         this.clickable = true;
-        if (this.action && this.model.actionManager)
-            this.model.actionManager.registerAction(this.action);
+        this.action = new ExecuteCodeAction({
+            trigger: ActionManager.OnPickUpTrigger
+        }, () => {
+            pickWorm(this);
+            console.log("Picking new Wromy boy!");
+        })
+        if (this.collider.actionManager) {
+            console.log("Assiging Action AMangerger action")
+            this.collider.actionManager.registerAction(this.action);
+        }
     }
 
     /**
@@ -162,8 +165,10 @@ export class Worm {
         if (!this.clickable)
             return ;
         this.clickable = false;
-        if (this.action && this.model.actionManager)
-            this.model.actionManager.unregisterAction(this.action);
+        if (this.action && this.collider.actionManager) {
+            this.collider.actionManager.unregisterAction(this.action);
+            this.action = undefined;
+        }
     }
 
     /**
@@ -174,9 +179,10 @@ export class Worm {
         this.initialised = false;
         this.removeClickable();
         if (this.model) {
-            this.model.actionManager?.dispose();
             this.model.dispose();
         }
+        this.collider.actionManager?.dispose();
+        this.collider.dispose();
     }
 
     move(direction: number, rotation: number) {
@@ -202,8 +208,6 @@ export class Worm {
         this.walkAnim?.stop();
         this.jumpTimer = now + (1000 * this.secUntilNextJump);
 
-        if (!this.airAnim?.isPlaying)
-            this.airAnim?.start(true, 1, this.airAnim.from, this.airAnim.to, false);
 
         this.aggregate.body.applyImpulse
         (

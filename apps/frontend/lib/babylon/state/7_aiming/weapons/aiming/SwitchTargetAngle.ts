@@ -1,48 +1,66 @@
 import { Turn } from "@/lib/babylon/state/4_turn_start/Turn";
 import { activateParam, IAimType } from "./IAimType";
-import { IAction, ExecuteCodeAction, ActionManager, Scene } from '@babylonjs/core';
+import { IAction, ExecuteCodeAction, ActionManager, Mesh, Scene, AbstractMesh } from '@babylonjs/core';
+import { aimingMeshes, weaponHelper } from '../../../1_loading/loadGame';
 import { msgToServerType } from "@/lib/packets/msgToServerType";
-import { CS_AimAngle, CS_SwitchAimState, CS_Type } from "@/shared/packets/ClientServerPackets";
+import { CS_AimTargetAngle, CS_SwitchAimState, CS_Type } from "@/shared/packets/ClientServerPackets";
 import { aimStateId } from "@/shared/packets/util";
 
 const pi2 = Math.PI * 2;
 
-export interface aimingAngleParam {
+export interface switchTargetAngleParam {
+	snapAngle: number, 
 	minAngle: number, 
 	maxAngle: number, 
-	turnSpeed: number
+	startAngle: number | undefined
 }
 
-export class AimingAngle implements IAimType {
+/**
+ * Aiming Type, where the client may use A and D to rotate the target points rotation/direction
+ * Mainly used for air strikes, to switch which direction they are going in
+ */
+export class SwitchTargetAngle implements IAimType {
 	private active: boolean = false;
 	private actions: Array<IAction> = [];
+	private meshRef: AbstractMesh;
+	private snapAngle: number;
+	private startAngle: number;
 	private turnLeft: boolean = false;
 	private turnRight: boolean = false;
-	private turnSpeed: number = 1.5;
 	private allowedAngleMin: number;
 	private allowedAngleMax: number;
 	private span: number;
-	private message: string = "Use A and D to rotate the weapon, confirm with Space";
+	private message: string = "Use A and D to switch between angles. Confirm with Space";
 	private msgToServer: msgToServerType;
 
-	constructor(data: aimingAngleParam, msgToServer: msgToServerType) {
+	constructor(data: switchTargetAngleParam, weaponHelper: weaponHelper, msgToServer: msgToServerType) {
+		this.snapAngle = data.snapAngle;
 		this.allowedAngleMin = data.minAngle;
 		this.allowedAngleMax = data.maxAngle;
-		this.span = (data.maxAngle - data.minAngle + pi2) % pi2;;
-		this.turnSpeed = data.turnSpeed;
-		this.msgToServer = msgToServer;
+		this.span = (data.maxAngle - data.minAngle + pi2) % pi2;
+		this.startAngle = data.startAngle ?? 0;
+		this.meshRef = weaponHelper.direction;
+		this.msgToServer = msgToServer
 	}
 
 	activate(params: activateParam) {
 		if (this.active || params.turn == undefined)
 			return ;
 		this.active = true;
-		const aim = params.turn.aiming;
 		params.broadcast(this.message);
+		const turn = params.turn;
+		// Change visibility of meshes
 		this.msgToServer<CS_SwitchAimState>(CS_Type.CS_SwitchAimState, {
 			entering: true,
-			stateId: aimStateId.AimAngle,
+			stateId: aimStateId.SwitchTargetAngle,
 		});
+		this.msgToServer<CS_AimTargetAngle>(CS_Type.CS_AimTargetAngle, {
+			angle: this.startAngle,
+		});
+
+		turn.aiming.targetAngle = this.startAngle;
+		this.meshRef.position.copyFrom(turn.aiming.target.mesh.position);
+		this.meshRef.setEnabled(true);
 
 		// Turn left
 		this.actions.push(new ExecuteCodeAction({
@@ -53,7 +71,7 @@ export class AimingAngle implements IAimType {
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: "a"
 		}, () => { this.turnLeft = false; }));
-
+		
 		// Turn right
 		this.actions.push(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyDownTrigger,
@@ -68,34 +86,37 @@ export class AimingAngle implements IAimType {
 		this.actions.push(new ExecuteCodeAction({
 			trigger: ActionManager.OnEveryFrameTrigger,
 		}, () => {
+			let newAngle = turn.aiming.targetAngle;
 			if (!this.turnRight && !this.turnLeft)
 				return ;
-			let newAngle = aim.wormAngle;
 			if (this.turnRight) {
-				newAngle += this.turnSpeed;
+				newAngle += this.snapAngle;
 			}
 			if (this.turnLeft) {
-				newAngle -= this.turnSpeed;
+				newAngle -= this.snapAngle;
 			}
 
+			
 			// Lock movement when angles arent fully open
 			if (this.allowedAngleMin == 0 && this.allowedAngleMax == pi2) {
-				newAngle = (newAngle + pi2) % pi2;
+				turn.aiming.targetAngle = (newAngle + pi2) % pi2;
 			} else {
 				const relativeAngle = (newAngle - this.allowedAngleMin + pi2) % pi2;
 				if (relativeAngle <= this.span) {
-					newAngle = (newAngle + pi2) % pi2;
+					turn.aiming.targetAngle = (newAngle + pi2) % pi2;
 				}
 				else if (this.turnLeft) {
-					newAngle = this.allowedAngleMin;
+					turn.aiming.targetAngle = this.allowedAngleMin;
 				}
 				else if (this.turnRight) {
-					newAngle = this.allowedAngleMax;
+					turn.aiming.targetAngle = this.allowedAngleMax;
 				}
 			}
-			this.msgToServer<CS_AimAngle>(CS_Type.CS_AimAngle, {
-				angle:  newAngle
+			this.msgToServer<CS_AimTargetAngle>(CS_Type.CS_AimTargetAngle, {
+				angle: turn.aiming.targetAngle
 			});
+			this.turnRight = false;
+			this.turnLeft = false;
 		}));
 
 		this.actions.forEach(
@@ -111,8 +132,9 @@ export class AimingAngle implements IAimType {
 			return ;
 		this.msgToServer<CS_SwitchAimState>(CS_Type.CS_SwitchAimState, {
 			entering: false,
-			stateId: aimStateId.AimAngle,
+			stateId: aimStateId.SwitchTargetAngle,
 		});
+		this.meshRef.setEnabled(false);
 		this.active = false;
 		this.turnLeft = false;
 		this.turnRight = false;
