@@ -170,7 +170,7 @@ export class MovementState implements IState {
 				worm.airAnim.stop();
 			if (worm.walkAnim?.isPlaying)
 				worm.walkAnim.stop();
-			this.machine.loaded.turn.chosenWorm.idleAnim?.start();
+			worm.idleAnim?.start(true, 1, worm.idleAnim.from, worm.idleAnim.to, false);
 		}
 		this.reset()
 	}

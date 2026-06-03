@@ -2,31 +2,40 @@ import { Scene, Vector3 } from "@babylonjs/core";
 import { keyInfo, MovementState } from "./MovementState";
 import { Worm } from "../../player/Worm";
 import { Achievements } from "../../data/achievments";
+import { GameState } from "@/shared/state/GameState";
 
-function forChosenWorm(worm: Worm, achievements: Achievements, keyStatus: keyInfo) {
+function forChosenWorm(
+	isMovementState: boolean,
+	worm: Worm,
+	achievements: Achievements,
+	keyStatus: keyInfo
+) {
 	const now = Date.now();
 	worm.canJump = now >= worm.jumpTimer;
-	worm.pos.x = worm.collider.position.x
-	const currentX = worm.pos.x;
-	const delta = Math.abs(currentX - worm.previousPos.x);
-	achievements.addToDistance(delta);
-	worm.previousPos.x = currentX;
 
 	if (!worm.onGround)
 		return ; 
 
-	if (worm.canJump && keyStatus['w'])
+	if (worm.canJump && keyStatus.w)
 		worm.jump(-0.65, 6, now);
-	else if (worm.canJump && keyStatus['e'])
+	else if (worm.canJump && keyStatus.e)
 		worm.jump(2.2, 3, now);
 	else
 	{
-		if (keyStatus['a'])
+		if (keyStatus.a)
 			worm.move(-1, (3 * Math.PI) / 2);
-		else if (keyStatus['d'])
+		else if (keyStatus.d)
 			worm.move(1, Math.PI / 2);
 		else
 			worm.stop();
+
+		if (isMovementState && (keyStatus.a || keyStatus.d)) {
+			worm.pos.x = worm.collider.position.x
+			const currentX = worm.pos.x;
+			const delta = Math.abs(currentX - worm.previousPos.x);
+			achievements.addToDistance(delta);
+			worm.previousPos.x = currentX;
+		}
 
 		const currentVel = worm.aggregate.body.getLinearVelocity();
 		worm.aggregate.body.setLinearVelocity
@@ -56,6 +65,13 @@ function forAllWorms(worm: Worm, scene: Scene) {
 	else{
 		worm.onGround = false;
 		worm.canJump = false;
+		// This does not work, and idk why but people are impatient and want this merged
+        if (!worm.idleAnim?.isPlaying)
+			worm.idleAnim?.stop();
+        if (!worm.walkAnim?.isPlaying)
+			worm.walkAnim?.stop();
+        if (!worm.airAnim?.isPlaying)
+            worm.airAnim?.start(true, 1, worm.airAnim.from, worm.airAnim.to, false);
 	}
 
 	// Remove gravity if on ground
@@ -75,5 +91,10 @@ export function movementTick(state: MovementState) {
 			forAllWorms(worm, machine.scene)
 		})
 	})
-	forChosenWorm(machine.loaded.turn.chosenWorm, machine.achievements, state.keyStatus);
+	forChosenWorm(
+		(state.machine.state == GameState.MOVEMENT),
+		machine.loaded.turn.chosenWorm, 
+		machine.achievements, 
+		state.keyStatus
+	);
 }

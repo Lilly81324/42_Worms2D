@@ -208,8 +208,6 @@ export class Worm {
         this.walkAnim?.stop();
         this.jumpTimer = now + (1000 * this.secUntilNextJump);
 
-        if (!this.airAnim?.isPlaying)
-            this.airAnim?.start(true, 1, this.airAnim.from, this.airAnim.to, false);
 
         this.aggregate.body.applyImpulse
         (
