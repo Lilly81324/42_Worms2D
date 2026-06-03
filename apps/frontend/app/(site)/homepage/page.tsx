@@ -4,9 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import BattleArena from "@/components/BattleArena";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useChat } from "@/components/ChatContext";
+import {useAuth} from "@/components/Providers";
 
 export default function HomePage() {
     const { messages, activeTargetUser, sendChatMessage, setPrivateChatTarget } = useChat();
+    const { user } = useAuth();
     const [inputMessage, setInputMessage] = useState("");
     const messageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -77,8 +79,13 @@ export default function HomePage() {
                                 })
                                 .map((msg) => {
                                     const isSystem = msg.sender === "System";
-                                    const isMe = msg.sender === "You";
+                                    const isMe =
+                                        msg.sender === "You" ||
+                                        (user?.username && msg.sender === user.username) ||
+                                        (user?.email && msg.sender === user.email) ||
+                                        (user?.email && msg.sender === user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1)); // Handles "Stefan" vs "stefan@example.com"
 
+                                    const displaySender = isMe ? "You" : msg.sender;
                                     return (
                                         <div
                                             key={msg.id}
@@ -87,7 +94,7 @@ export default function HomePage() {
                                             <span className={`text-[10px] font-bold px-1 ${
                                                 isSystem ? "text-blue-500" : isMe ? "text-zinc-400 mr-1" : "text-purple-500 ml-1"
                                             }`}>
-                                                {msg.sender}
+                                                {displaySender}
                                             </span>
                                             <div className={`p-3 text-sm rounded-2xl max-w-[85%] break-words ${
                                                 isSystem
