@@ -22,6 +22,22 @@ interface ChatContextType {
     activeThreadId: string | null;
 }
 
+export interface BackendThread {
+    id: string;
+    type: string;
+    chatThreadId?: string;
+    threadId?: string;
+    thread?: {
+        type: string;
+    };
+}
+
+interface ChatApiPayload {
+    items?: BackendThread[];
+    data?: BackendThread[];
+    threads?: BackendThread[];
+}
+
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
@@ -56,18 +72,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     }
                 });
 
-                const rawPayload = await response.json();
+                const rawPayload = (await response.json()) as BackendThread[] | ChatApiPayload;
                 console.log("=== CHAT API RAW PAYLOAD ===", rawPayload);
 
-                // Safe Array Normalization
-                let channelsArray: any[] = [];
+                let channelsArray: BackendThread[] = [];
+
                 if (Array.isArray(rawPayload)) {
                     channelsArray = rawPayload;
                 } else if (rawPayload && typeof rawPayload === 'object') {
                     channelsArray = rawPayload.items || rawPayload.data || rawPayload.threads || [];
                 }
 
-                const globalChannel = channelsArray.find((c: any) =>
+                const globalChannel = channelsArray.find((c) =>
                     c.type === "GLOBAL" || c.thread?.type === "GLOBAL"
                 );
 
