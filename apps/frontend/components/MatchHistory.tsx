@@ -85,7 +85,7 @@ export function MatchHistory({
 				</div>
 			) : (
 				// Scrollable card list
-				<div className="min-h-0 grow overflow-y-auto pr-2 scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+				<div className="overflow-y-auto pr-2 max-h-[380px]">
 					<div className="flex flex-col gap-4">
 						{matches.map((match) => (
 							// MatchHistory only passes down what MatchCard needs

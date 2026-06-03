@@ -375,7 +375,7 @@ export default function ProfilePage() {
                     </div>
                 ))}
             </div>
-            <div className="flex flex-col gap-8 md:flex-row md:items-stretch md:h-[calc(100vh-18rem)] md:max-h-[calc(100vh-18rem)]">
+            <div className="flex flex-col gap-8 md:flex-row ">
 
                 {/* LEFT: Sidebar Navigation */}
                 <div className="w-full md:w-64 flex flex-col gap-2 md:h-full md:self-stretch">

@@ -63,6 +63,7 @@ export function Achievements({
             };
         }
 
+
         const achieved = achievement.achieved ?? false;
         const progressTarget = achievement.progressTarget ?? null;
         const progressValue = achievement.progress ?? null;
@@ -93,6 +94,7 @@ export function Achievements({
     const totalCount = achievementCards.length;
     const pendingCount = totalCount - completedCount;
 
+    console.log("ACIEVEMENTS: ", achievements)
     const cardGridClassName =
         achievementCards.length === 0
             ? "grid-cols-1"
@@ -112,7 +114,7 @@ export function Achievements({
     };
 
     return (
-        <div className={`mt-2 flex h-full min-h-0 flex-col rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 ${className}`} >
+        <div className={`mt-2 flex min-h-0 flex-col rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 ${className}`} >
             <div className="mb-5 flex flex-col gap-3 border-b border-zinc-200 pb-4 sm:flex-row sm:items-end sm:justify-between ">
                 <div>
                     <h4 className="text-sm font-black uppercase tracking-[0.3em] text-zinc-500">Achievements</h4>
@@ -132,14 +134,16 @@ export function Achievements({
             </div>
 
             {achievementCards.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-500">
+                <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-500 ">
                     <div className="text-base font-bold text-zinc-800">{emptyTitle}</div>
                     <p className="mt-2 text-sm text-zinc-500">{emptyDescription}</p>
                 </div>
             ) : (
-                <div className="min-h-0 flex-1 overflow-y-auto pr-2">
+                <div className="overflow-y-auto pr-2 max-h-[380px]">
                     <div className="flex flex-col gap-5">
-                        {achievementCards.map((badge) => {
+                        {achievementCards.sort((a, b) => new Date(b.achievedAt) - new Date(a.achievedAt))
+                        .slice(0, 2)
+                        .map((badge) => {
                         const progressPercent =
                             badge.progressTarget && badge.progressTarget > 0 && badge.progressValue !== null
                                 ? Math.min(100, Math.max(0, (badge.progressValue / badge.progressTarget) * 100))
