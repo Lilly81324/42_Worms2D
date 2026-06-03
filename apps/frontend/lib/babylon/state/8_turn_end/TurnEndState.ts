@@ -26,7 +26,7 @@ export class TurnEndState implements IState {
 
 		// Setup
 		turnMessage(this.machine);
-
+		
 		// Actions
 	}
 

@@ -14,6 +14,7 @@ import {
   SC_SwitchAimState,
   SC_AimTargetAngle,
   SC_CancelAiming,
+  SC_EndAimState,
   SC_WormPosition,
   SC_WinningPlayer,
 } from '@/shared/packets/ServerClientPackets';
@@ -136,11 +137,15 @@ export function handleGamePackets(lobby: Lobby, data: CS_GenericPacket) {
       // Do not allow non-active user to submit data
       if (lobby.clientManager.getActive().id != data.userId) return;
       const target = lobby.game.aimingData;
+      target.id = data.id;
       target.wormAngle = data.wormAngle;
       target.position = data.position;
       target.targetAngle = data.targetAngle;
       target.force = data.force;
       target.explosions = data.explosions;
+      lobby.msgToClient<SC_EndAimState>(SC_Type.SC_EndAimState, {
+        ...target
+      });
       requestChangeState(lobby, data.userId, GameState.TURN_END);
       break;
     }

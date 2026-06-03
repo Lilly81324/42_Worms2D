@@ -6,6 +6,7 @@ import { StateMachine } from "../StateMachine";
 import { ImportMesh } from "../1_loading/ImportMesh";
 import { aimingMeshes } from "../1_loading/loadGame";
 import { DotTail } from "../1_loading/DotTail";
+import { Projectile } from "../8_turn_end/Projectile";
 
 const pi2 = Math.PI * 2;
 

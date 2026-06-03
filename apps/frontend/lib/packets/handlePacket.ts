@@ -1,7 +1,7 @@
 import { SC_Type, SC_GenericPacket, frontendServerPackets, SC_ExplosionOccurs } from "@/shared/packets/ServerClientPackets"
 import { StateMachine } from '../babylon/state/StateMachine';
 import { GameState } from '@/shared/state/GameState';
-import { Nullable } from "@babylonjs/core";
+import { Nullable, Vector3 } from "@babylonjs/core";
 import { Control, TextBlock } from "@babylonjs/gui";
 import { Player } from "../babylon/player/Player";
 import { Worm } from '../babylon/player/Worm';

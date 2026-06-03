@@ -264,6 +264,7 @@ export interface CS_WormPosition extends CS_Base {
 }
 
 export interface CS_EndAimState extends CS_Base {
+	id: number,
 	type: CS_Type.CS_EndAimState,
 	wormAngle: number,
 	position: pointData

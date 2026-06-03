@@ -17,6 +17,7 @@ import { explosionData, pointData } from '@/shared/packets/util';
 import { Player } from './gamestate/Player';
 
 interface aimingData {
+  id: number;
   wormAngle: number;
   position: pointData;
   targetAngle: number;
@@ -74,6 +75,7 @@ export class Game {
     this.currentState.enter();
     this.turnOrder = [];
     this.aimingData = {
+      id: 0,
       position: {
         x: 0,
         y: 0,

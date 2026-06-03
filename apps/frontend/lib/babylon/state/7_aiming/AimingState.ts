@@ -30,6 +30,7 @@ function sendAimingDone(machine: StateMachine) {
 		(machine.loaded.turn.chosenWeapon?.getProjectileSpawnPos()?.y ??
 		machine.loaded.turn.chosenWorm.collider.position.y);
 	machine.msgToServer<CS_EndAimState>(CS_Type.CS_EndAimState, {
+		id: machine.loaded.turn.chosenWeapon?.weaponId ?? 0,
 		wormAngle: data.wormAngle,
 		position: {
 			x: pos_x,
