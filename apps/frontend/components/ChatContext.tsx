@@ -44,9 +44,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const token = sessionStorage.getItem("auth.accessToken");
         if (!token) return;
 
+        const hostUrl = typeof window !== "undefined"
+            ? `${window.location.protocol}//${window.location.hostname}:8080`
+            : "http://localhost:8080";
+
         const initializeThreadAndSocket = async () => {
             try {
-                const response = await fetch("http://localhost:8080/api/chats", {
+                const response = await fetch(`${hostUrl}/api/chats`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -63,18 +67,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     channelsArray = rawPayload.items || rawPayload.data || rawPayload.threads || [];
                 }
 
-                // 🔍 Find the official global room cleanly by type
                 const globalChannel = channelsArray.find((c: any) =>
                     c.type === "GLOBAL" || c.thread?.type === "GLOBAL"
                 );
 
-                // Use the static target UUID we seeded as an absolute fallback if list is slow to update
-                let targetUuid: string = globalChannel?.chatThreadId || globalChannel?.id || globalChannel?.threadId || "99999999-9999-9999-9999-999999999999";
+                // Use the static target UUID as a fallback if list is slow to update
+                const targetUuid: string = globalChannel?.chatThreadId || globalChannel?.id || globalChannel?.threadId || "99999999-9999-9999-9999-999999999999";
 
-                console.log(`🎯 Active Global Thread UUID Configured: ${targetUuid}`);
+                console.log(`Global Thread UUID activated: ${targetUuid}`);
                 setActiveThreadId(targetUuid);
 
-                // Initialize WebSocket Engine
                 const socket = io("http://localhost:8080", {
                     path: "/social/socket.io",
                     transports: ["websocket"],
