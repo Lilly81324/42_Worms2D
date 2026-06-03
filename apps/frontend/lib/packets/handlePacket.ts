@@ -1,11 +1,12 @@
-import { SC_Type, SC_GenericPacket, frontendServerPackets } from "@/shared/packets/ServerClientPackets"
+import { SC_Type, SC_GenericPacket, frontendServerPackets, SC_ExplosionOccurs } from "@/shared/packets/ServerClientPackets"
 import { StateMachine } from '../babylon/state/StateMachine';
 import { GameState } from '@/shared/state/GameState';
-import { Nullable } from "@babylonjs/core";
+import { Nullable, Vector3 } from "@babylonjs/core";
 import { Control, TextBlock } from "@babylonjs/gui";
 import { Player } from "../babylon/player/Player";
 import { Worm } from '../babylon/player/Worm';
 import { aimStateId } from "@/shared/packets/util";
+import { CS_DEV_GameWon, CS_DEV_StaleMate, CS_Type } from "@/shared/packets/ClientServerPackets";
 
 function findWormById(players: Array<Player>, wormId: number): Worm | undefined {
 	let worm: Worm | undefined = undefined;
@@ -14,6 +15,101 @@ function findWormById(players: Array<Player>, wormId: number): Worm | undefined 
 		if (worm != undefined) return worm;
 	}
 	return (undefined)
+}
+
+/**
+ * Generates random death message with name
+ * @param name Name of the worm to die
+ * @returns message
+ * Credit to https://www.babbel.com/en/magazine/death-euphemisms
+ */
+function randomDeathMsg(name: string) {
+	const messages = [
+		`${name} bit the dust`,
+		`${name} passed on to the great beyond`,
+		`${name} was laid to rest`,
+		`${name} departed`,
+		`Poor ${name} is no longer with us`,
+		`${name} went to a better place`,
+		`${name} crossed over`,
+		`${name} was annihilated`,
+		`${name} kicked the bucket`,
+		`${name} bit the dust`,
+		`${name} is pushing up daisis`,
+		`${name} is now sleeping with the fishies`,
+		`Goodbye, ${name}, you will be missed`,
+		`${name} expired`,
+		`${name} ceased`,
+		`${name} slipped away`,
+		`${name} lost their life`,
+		`${name} left this life`,
+		`${name} entered eternal rest`,
+		`${name} was called home`,
+		`${name} joined their ancestors`,
+		`${name} passed beyond the veil`,
+		`${name} is in a better place now `,
+	]
+	const random = Math.round(Math.random() * messages.length);
+	return (messages[random - 1]);
+}
+
+/**
+ * Performs damaging operations on worms, handles killing players and worms too
+ * @param data 
+ * @param state 
+ * @returns 
+ */
+function damageWorms(data: SC_ExplosionOccurs, state: StateMachine) {
+	if (!state.loaded)
+		return ;
+	const playersDiedThisTurn = new Array<string>();
+	const explosionVector = new Vector3(data.point.x, data.point.y, 0);
+	state.loaded.players.forEach((player) => {
+		if (!state.loaded)
+			return ;
+
+		// For all worms
+		player.worms.forEach(worm => {
+
+			// Calculate damage
+			const distanceToExplosion = Vector3.Distance(explosionVector, worm.collider.position);
+			if (distanceToExplosion > data.radius)
+				return ;
+			worm.gui.health -= 400  *(1 - distanceToExplosion / data.radius);
+
+			// Kill Worms
+			if (worm.gui.health > 0)
+				return ;
+			const index = player.worms.findIndex((findWorm) => findWorm.id == worm.id);
+			if (index >= 0) {
+				state.guiHelper?.notifications.add(randomDeathMsg(worm.name));
+				player.worms[index].dispose();
+				player.worms.splice(index, 1);
+			}
+		});
+
+		// Kill Players
+		if (player.worms.length > 0)
+			return ;
+		const index = state.loaded.players.findIndex((findPlayer) => findPlayer.id == player.id);
+		if (index >= 0) {
+			playersDiedThisTurn.push(player.id);
+			state.guiHelper?.notifications.add(randomDeathMsg(player.name));
+			state.loaded.players[index].dispose();
+			state.loaded.players.splice(index, 1);
+		}
+	});
+	// WRONG WRONG WRONG, the server should be telling the CLIENT who won
+	if (state.loaded.players.length == 1) {
+		state.msgToServer<CS_DEV_GameWon>(CS_Type.CS_DEV_GameWon, {
+			winnerIds: [state.loaded.players[0].id],
+		})
+	}
+	else if (state.loaded.players.length == 0) {
+		state.msgToServer<CS_DEV_GameWon>(CS_Type.CS_DEV_GameWon, {
+			winnerIds: playersDiedThisTurn,
+		})
+	}
 }
 
 export function handlePacket(data: SC_GenericPacket, state: StateMachine) {
@@ -110,6 +206,7 @@ export function handlePacket(data: SC_GenericPacket, state: StateMachine) {
 			console.log("Handling Explosion");
 			if (state.state != GameState.TURN_END)
 				break ;
+			damageWorms(data, state);
 			state.loaded?.ground?.affectTerrain(data.point.x, data.point.y, data.radius);
 			break ;
 		}

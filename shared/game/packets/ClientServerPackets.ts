@@ -37,6 +37,8 @@ export enum CS_Type {
 	CS_SwitchAimState =			"CS_SwitchAimState",
 	CS_AimTargetAngle =			"CS_AimTargetAngle",
 	CS_CancelAiming =			"CS_CancelAiming",
+	CS_DEV_GameWon =			"CS_DEV_GameWon",
+	CS_DEV_StaleMate =			"CS_DEV_StaleMate",
 }
 
 // Packets that should definitely not show up in logging
@@ -245,6 +247,15 @@ export interface CS_EndAimState extends CS_Base {
 }
 
 // ENDSCREEN ==================================================================
+/**
+ * WRONG WRONG WRONG
+ * This is some dev bullshit, wherer the client tells the server who won,
+ * which is wrong, the server should be teellling this to the client
+ */
+export interface CS_DEV_GameWon extends CS_Base {
+	type: CS_Type.CS_DEV_GameWon,
+	winnerIds: Array<string>
+}
 
 /**
  * DEV MODE, delete later
@@ -261,5 +272,5 @@ export type CS_GenericPacket =
 			CS_GetGameState | CS_DEV_SetGameState | CS_RequestChangeGameState |
 			CS_WormChosen | CS_EndAimState | CS_WeaponChosen |
 			CS_AimMoveTarget | CS_SwitchAimState | CS_AimTargetAngle |
-			CS_AimAngle | CS_CancelAiming
+			CS_AimAngle | CS_CancelAiming | CS_DEV_GameWon
 			;

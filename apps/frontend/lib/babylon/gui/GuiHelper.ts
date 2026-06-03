@@ -19,7 +19,7 @@ export class GuiHelper {
 		canvas: HTMLCanvasElement,
 		msgToServer: msgToServerType
 	) {
-		let count = 0;
+		const count = 0;
 		// Text hitboxes may overlap with buttons and take over control
 
 		// GUI for non-interactable text
@@ -51,25 +51,8 @@ export class GuiHelper {
 		})
 		this.buttonGui.addControl(endGameButton);
 
-		// DEV TOOL sends packet to move to next state of Frontend Pages
-		const sendButton = Button.CreateSimpleButton("send", "SEND");
-		sendButton.color = "#FFF";
-		this.resizeFunctions.push(() => {
-			setButtonSize(sendButton, canvas, 0.2, 0.2);
-			setButtonPos(sendButton, canvas, -1, 1);
-		})
-		sendButton.onPointerUpObservable.add(() => {
-			count++;
-			msgToServer<CS_DEV_ButtonPress>(CS_Type.CS_DEV_ButtonPress, {
-				timestamp: Date.now(),
-				message: `User pressed sendButton for the ${count} time`,
-			});
-		});
-		this.buttonGui.addControl(sendButton);
-
 		// DEV TOOL set up menu for switching between states 
 		this.resizeFunctions.push(stateUi(this.textGui, this.buttonGui, canvas, msgToServer));
-
 
 		// Set up Game Notification UI element
 		this.notifications = new GameNotifications(this.textGui, canvas, scene);

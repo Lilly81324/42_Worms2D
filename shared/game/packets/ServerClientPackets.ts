@@ -42,6 +42,7 @@ export enum SC_Type {
 	SC_SwitchAimState =			"SC_SwitchAimState",
 	SC_AimTargetAngle =			"SC_AimTargetAngle",
 	SC_CancelAiming =			"SC_CancelAiming",
+	SC_PlayersWon =				"SC_PlayersWon",
 }
 
 // Packets that should definitely not show up in logging
@@ -53,11 +54,12 @@ export const hideServerPackets: Array<SC_Type> = [
 
 // Packets that should be considered "handled" by BabylonJs
 export const frontendServerPackets: Array<SC_Type> = [
+	SC_Type.SC_ConnectSuccess,
+	SC_Type.SC_LobbyData,
 	SC_Type.SC_DEV_StartConnecting,
 	SC_Type.SC_InvalidState,
 	SC_Type.SC_StartLobby,
 	SC_Type.SC_ConnectFail,
-	SC_Type.SC_ConnectSuccess,
 	SC_Type.SC_ReadyChange,
 	SC_Type.SC_StartLoading,
 	SC_Type.SC_StartGame,
@@ -336,6 +338,15 @@ export interface SC_GameData extends SC_Base {
 }
 
 /**
+ * Sent when players won the game
+ * @param winnerIds Identifiers for the players who won the game
+ */
+export interface SC_PlayersWon extends SC_Base {
+	type: SC_Type.SC_PlayersWon,
+	winnerIds: Array<string>,
+}
+
+/**
  * Sent when game is started or loaded so Clients can display game
  * @param data Data that is needed for game to be loaded
  */
@@ -359,7 +370,7 @@ export type SC_GenericPacket =
 			SC_GameData | SC_ActivePlayerChanged | SC_WormChosen |
 			SC_ExplosionOccurs | SC_WeaponChosen | SC_AimAngle |
 			SC_AimMoveTarget | SC_SwitchAimState | SC_AimTargetAngle |
-			SC_CancelAiming
+			SC_CancelAiming | SC_PlayersWon
 			;
 
 export type SC_GenericStatePacket = SC_StartLobby | SC_StartLoading |

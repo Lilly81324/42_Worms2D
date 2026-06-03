@@ -7,6 +7,7 @@ import { createCamera } from "./Camera";
 import { msgToServerType } from "../packets/msgToServerType";
 import { StateMachine } from './state/StateMachine';
 import { MessageQueue } from './MessageQueue';
+import { CLIENT_GENERAL_OUTPUT } from "@/shared/packets/config";
 
 export async function createScene(
 	canvas: HTMLCanvasElement, 
@@ -15,7 +16,6 @@ export async function createScene(
 	msgToServer: msgToServerType, 
 	lobbyId: number,
 	userId: string,
-	DEBUG: boolean, 
 ) {
 	const scene = new Scene(engine);
 	scene.actionManager = new ActionManager(scene);
@@ -41,7 +41,7 @@ export async function createScene(
 	}
 
 	let log = (data: string) => {};
-	if (DEBUG) 
+	if (CLIENT_GENERAL_OUTPUT) 
 		log = (data: string) => {
 			console.log(`BABYLON: ${data}`)
 		};
@@ -50,7 +50,7 @@ export async function createScene(
 	const state = new StateMachine(canvas, scene, msgToServer, userId, log);
 
 	// Set up queue and socket before Game starts
-	const queue = new MessageQueue(lobbyId, socket, state, DEBUG, log);
+	const queue = new MessageQueue(lobbyId, socket, state, CLIENT_GENERAL_OUTPUT, log);
 
 	// Then properly initialize and start the Game
 	state.init(queue);

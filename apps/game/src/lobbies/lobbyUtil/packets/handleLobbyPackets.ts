@@ -104,7 +104,9 @@ function connectionAttempt(lobby: Lobby, data: CS_JoinLobby) {
 
   // Add the new Client to Lobby
   let slot = 0;
-  const takenSlots = new Set(lobby.clientManager.clients.map((client) => client.slot));
+  const takenSlots = new Set(
+    lobby.clientManager.clients.map((client) => client.slot),
+  );
   while (takenSlots.has(slot)) {
     slot++;
   }

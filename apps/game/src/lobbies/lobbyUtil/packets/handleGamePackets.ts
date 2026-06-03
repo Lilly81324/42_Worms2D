@@ -15,6 +15,7 @@ import {
   SC_SwitchAimState,
   SC_AimTargetAngle,
   SC_CancelAiming,
+  SC_PlayersWon,
 } from '@/shared/packets/ServerClientPackets';
 import { GameState } from '@/shared/state/GameState';
 
@@ -144,6 +145,15 @@ export function handleGamePackets(lobby: Lobby, data: CS_GenericPacket) {
         point: target.position,
         radius: 3,
       });
+      break;
+    }
+
+    // WRONG The client doesnt tell the server what to do, its teh othere way around
+    case CS_Type.CS_DEV_GameWon: {
+      lobby.msgToClient<SC_PlayersWon>(SC_Type.SC_PlayersWon, {
+        winnerIds: data.winnerIds,
+      });
+      lobby.setState(LobbyStateEnum.EndScreen);
       break;
     }
 

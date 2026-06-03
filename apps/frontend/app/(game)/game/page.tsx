@@ -4,16 +4,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import SubPages from '@/src/components/game/lobby/SubPages';
 import SocketStatus from '@/src/components/game/lobby/SocketStatus';
-import { SC_Type, SC_GenericPacket } from '@/shared/packets/ServerClientPackets';
+import { SC_Type, SC_GenericPacket, frontendServerPackets } from '@/shared/packets/ServerClientPackets';
 import { Client, newClient, COLORS } from "@/shared/packets/Client";
 import { CS_Base, CS_Type } from '@/shared/packets/ClientServerPackets';
 import { useAuth } from "@/components/Providers";
 import { lobbyDataPackets } from '@/shared/packets/util';
 import { GameContext } from '@/src/components/game/lobby/GameContext';
-
-
-const DEBUG: boolean = (process.env.NODE_ENV == "development");
-const LOG_PACKETS: boolean = false; // always true to testing prod as well
+import { CLIENT_LOG_SERVER_PACKETS, CLIENT_LOG_CLIENT_PACKETS, CLIENT_GENERAL_OUTPUT } from '@/shared/packets/config';
 
 const updateSlotReadyState = (
   slots: Client[],
@@ -54,7 +51,7 @@ const buildSlotsFromLobbyData = (
   const newSlots: Client[] = [];
   // fill slots with data from server
   players.forEach(player => {
-    if (LOG_PACKETS) console.log("Processing Player at Index:", player.slot, "Data:", player);
+    if (CLIENT_GENERAL_OUTPUT) console.log("Processing Player at Index:", player.slot, "Data:", player);
     newSlots.push(player);
   });
   return newSlots;
@@ -69,8 +66,12 @@ export default function LobbyPageController() {
   const [state, setState] = useState("CONNECTING");
   const stateRef = useRef(state);
   useEffect(() => {
-    console.log(`Updating state from ${stateRef.current} to ${state}`);
+    if (CLIENT_GENERAL_OUTPUT) console.log(`Updating state from ${stateRef.current} to ${state}`);
     stateRef.current = state; }, [state]);
+
+  /** Ids of the players that won */
+  // Needs ref, because we read it in effect
+  const [winners, setWinners] = useState<Array<string>>([]);
 
   /** Used during failed loading and connecting */
   const [errorMsg, setErrorMsg] = useState("");
@@ -110,7 +111,7 @@ export default function LobbyPageController() {
     const packet_string = JSON.stringify(packet);
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit('msgToServer', packet_string);
-      if (LOG_PACKETS) console.log("NEXT: Client sends packt to Server: ", packet_string);
+      if (CLIENT_LOG_CLIENT_PACKETS) console.log("NEXT: Client sends packt to Server: ", packet_string);
     }
   }, [lobbyId, user]);
 
@@ -139,11 +140,13 @@ export default function LobbyPageController() {
           setSlots(prev =>
             addPlayerToSlots(prev, p.clientData)
           );
-          if (LOG_PACKETS) console.log("Player joined:", p.clientData.id);
+          if (CLIENT_LOG_SERVER_PACKETS) 
+            console.log("Player joined:", p.clientData.id);
           break;
 
         case SC_Type.SC_ClientDisconnect:
-          if (LOG_PACKETS) console.log("Player left:", p.userId);
+          if (CLIENT_LOG_SERVER_PACKETS) 
+            console.log("Player left:", p.userId);
           setSlots(prev =>
             removePlayerFromSlots(prev, p.userId)
           );
@@ -155,7 +158,11 @@ export default function LobbyPageController() {
           setSlots(buildSlotsFromLobbyData(p.lobbyData));
           break;
         }
+        default : {
+          return false;
+        }
       }
+      return true;
     };
 
     const msgToClient = (data: string) => {
@@ -163,7 +170,7 @@ export default function LobbyPageController() {
       const packet: SC_GenericPacket = JSON.parse(data);
 
       if (!packet || !('type' in packet)) {
-        if (LOG_PACKETS) console.error("Frontend received malformed packet:", packet);
+        if (CLIENT_LOG_SERVER_PACKETS) console.error("Frontend received malformed packet:", packet);
         return;
       }
 
@@ -171,7 +178,12 @@ export default function LobbyPageController() {
       if (lobbyIdRef.current != packet.lobbyId)
         return ;
 
-      if (LOG_PACKETS) console.log("NEXT: Client received packet: ", packet);
+      // If we have a not-frontend packet, ignore it
+      if (!(frontendServerPackets.includes(packet.type)))
+        return ;
+
+      if (CLIENT_LOG_SERVER_PACKETS) 
+        console.log("NEXT: Client received packet: ", packet);
 
       // Handle state Transitions
       let packetHandled = true;
@@ -195,17 +207,20 @@ export default function LobbyPageController() {
         updateState("ENDSCREEN");
       else if (packet.type == SC_Type.SC_DEV_StartConnecting)
         updateState("CONNECTING");
+      else if (packet.type == SC_Type.SC_PlayersWon)
+        setWinners(packet.winnerIds);
       else
         packetHandled = false;
-
 
       // We process if we are ALREADY in the lobby,
       // Or if we just received a packet that tells us we are NOW in the lobby
       const isLobbyDataPacket = lobbyDataPackets.includes(packet.type);
       if (stateRef.current === "LOBBY" && isLobbyDataPacket) {
-        handleLobbyUpdates(packet);
-      } else if (!packetHandled){
-        if (LOG_PACKETS) console.warn(`[Frontend Page] Ignored: ${packet.type} in state ${stateRef.current}`);
+        packetHandled = handleLobbyUpdates(packet);
+
+      // Send Error, if packet was for frontend, but not handled anywhere
+      if (!packetHandled && CLIENT_LOG_SERVER_PACKETS) 
+        console.warn(`[Frontend Page] Ignored: ${packet.type} in state ${stateRef.current}`);
       }
     }
 
@@ -247,7 +262,7 @@ export default function LobbyPageController() {
             `Unnamed Player ${user?.id.substring(0, 6)}` :
             "",
       errorMsg,
-      LOG_PACKETS
+      winners,
     }}>
       <div className="min-h-screen bg-slate-800 flex flex-col items-center justify-center"> 
         <SocketStatus isConnected={isConnected}/>

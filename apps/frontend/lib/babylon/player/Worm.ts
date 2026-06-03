@@ -190,6 +190,7 @@ export class Worm {
      */
     dispose() {
         this.initialised = false;
+        this.gui.dispose();
         this.removeClickable();
         if (this.model) {
             this.model.dispose();
