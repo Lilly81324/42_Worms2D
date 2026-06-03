@@ -1,4 +1,4 @@
-import { Scene, Vector2, Vector3, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
+import { Scene, Vector2, Vector3, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsMotionType } from "@babylonjs/core";
 import earcut from "earcut";
 import { mapData, pointData } from '@/shared/packets/util';
 
@@ -53,7 +53,8 @@ export class Ground
 			// Position should be 0, 0, -depth/2
 			this.groundMesh.position = new Vector3(0, 0, -this.depth / 2);
 			if (this.scene.isPhysicsEnabled()) {
-				this.physicsAggregate = new PhysicsAggregate(this.groundMesh, PhysicsShapeType.MESH, { mass: 0 }, this.scene);
+				this.physicsAggregate = new PhysicsAggregate(this.groundMesh, PhysicsShapeType.MESH, { mass: 1, friction: 0.5, restitution: 0 }, this.scene);
+				this.physicsAggregate.body.setMotionType(PhysicsMotionType.STATIC);
 			} else {
 				console.warn("Physics engine is not enabled on the scene. Ground physics aggregate skipped.");
 			}

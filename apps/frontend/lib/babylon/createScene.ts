@@ -35,7 +35,7 @@ export async function createScene(
 		const HavokPhysics = (await import("@babylonjs/havok")).default;
 		const havokInterface = await HavokPhysics();
 		const plugin = new HavokPlugin(undefined, havokInterface);
-		scene.enablePhysics(new Vector3(0, -9.81, 0), plugin);
+		scene.enablePhysics(new Vector3(0, -50, 0), plugin);
 	} catch (error) {
 		console.warn("Babylon physics plugin failed to initialize. Physics features will be disabled.", error);
 	}

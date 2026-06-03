@@ -29,7 +29,7 @@ export class TurnEndState implements IState {
 		// Mock projectile shooting logic
 		const worm = this.machine.turn?.chosenWorm;
 		if (worm) {
-			const pos = worm.mesh.position;
+			const pos = worm.collider.position;
 			this.machine.ground?.affectTerrain(pos.x, pos.y, 3);
 		}
 		return (actions);

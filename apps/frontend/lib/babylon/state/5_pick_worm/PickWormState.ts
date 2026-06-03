@@ -27,8 +27,8 @@ export class PickWormState implements IState {
 
 		// Setup
 		turnMessage(this.machine);
-		this.pointer = new WormPointer(this.machine.scene, this.machine.turn?.chosenWorm.mesh);
-		this.pointer.target = (this.machine.turn) ? this.machine.turn.chosenWorm.mesh : undefined;
+		this.pointer = new WormPointer(this.machine.scene, this.machine.turn?.chosenWorm.collider);
+		this.pointer.target = (this.machine.turn) ? this.machine.turn.chosenWorm.collider : undefined;
 		
 		// Actions
 		const actions: Array<IAction> = [];
@@ -83,8 +83,8 @@ export class PickWormState implements IState {
 	}
 
 	tick() {
-		if (this.pointer && this.machine.turn && this.pointer.target != this.machine.turn.chosenWorm.mesh)
-			this.pointer.target = this.machine.turn.chosenWorm.mesh;
+		if (this.pointer && this.machine.turn && this.pointer.target != this.machine.turn.chosenWorm.collider)
+			this.pointer.target = this.machine.turn.chosenWorm.collider;
 		if (this.next && this.machine.isActiveUser()) {
 			this.machine.sendRequestStatePacket(GameState.MOVEMENT);
 			this.next = false;
