@@ -23,9 +23,12 @@ if [ "$PRISMA_GENERATE_ON_START" = "true" ]; then
 fi
 
 if [ "$PRISMA_RUN_MIGRATIONS" = "true" ]; then
-	echo "Running Prisma migrations..."
-	"$PRISMA_BIN" migrate deploy
+  echo "Running Prisma migrations..."
+  "$PRISMA_BIN" migrate deploy
 fi
+
+  echo "Verifying and seeding core global chat data variables..."
+  npx prisma db seed
 
 echo "Starting app..."
 exec "$@"
