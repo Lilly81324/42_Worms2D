@@ -40,8 +40,9 @@ export interface mapData {
  * @param turnOrder order based on slot numbers (0-3)
  */
 export interface gameData {
-	players: Array<playerData>
-	map: mapData;
+	players: Array<playerData>,
+	map: mapData,
+	max_health: number,
 }
 
 // For checking if the packet contains data that lobby frontend should take care of

@@ -5,6 +5,7 @@ import { Client } from '@/shared/packets/Client';
 
 export const PLAYER_COUNT = 4;
 export const WORMS_PER_PLAYER = 4;
+const MAX_HEALTH = 100;
 
 // Shuffles an existing array
 // Credit: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
@@ -28,6 +29,7 @@ export function generateGameData(clients: Array<Client>) {
     map: {
       points: [],
     },
+    max_health: MAX_HEALTH,
   };
   spawnPlayers(data, clients);
   generateMapData(data);
