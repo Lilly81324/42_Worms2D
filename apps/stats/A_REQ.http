@@ -176,9 +176,9 @@ POST http://localhost:3004/internal/stats/achievements
 Content-Type: application/json
 
 {
-  "userId": "2c412fa9-d2d5-420d-a5cc-12c78e9ba20b",
+  "userId": "a124f36d-5736-46e3-95e8-7a7e003e73e5",
   "type": "sharp_shooter r",
-  "name": "Sharp Shooter",
+  "name": "Sharp Shooter 2",
   "description": "Hit 10 accurate shots",
   "icon": "🎯",
   "xpReward": 100,

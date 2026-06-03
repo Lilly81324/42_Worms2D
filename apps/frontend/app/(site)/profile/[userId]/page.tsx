@@ -1,16 +1,18 @@
 "use client";
 
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import EditProfileModal from "@/components/EditProfile";
 import { useAuth } from "@/components/Providers";
 import { authClient } from "@/src/core/api/auth/auth.client";
-import { getAvatarsForMatchMembers, getMatchMembers, getMyProfile, getProfileFromParticipants } from "@/src/core/api/profile/profile.client";
+import { getAvatarsForMatchMembers, getMyProfile } from "@/src/core/api/profile/profile.client";
 import { Pencil } from "lucide-react";
 import { Achievements } from "@/components/Achievements";
 import MatchHistory from "@/components/MatchHistory";
 import { FaCrown, FaMedal, FaTrophy } from "react-icons/fa";
+import type { MatchMember } from "@/components/MatchHistory/Card";
+import type { MatchMemberAvatar } from "@/src/types/profileTypes";
 
 type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations' | 'Achievements' | 'Match History';
 
@@ -68,30 +70,6 @@ type SocialProfile = {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
-export type MatchMember = {
-  id: string;
-  matchId: string;
-  userId: string;
-  displayName: string | null;
-  avatarUrl: string | null;
-  isWinner: boolean;
-  kills: number;
-  deaths: number;
-  player: {
-    id: string;
-    userId: string;
-    xp: number;
-    level: number;
-    wins: number;
-    losses: number;
-    kills: number;
-    deaths: number;
-    damageDealt: number;
-    damageTaken: number;
-    createdAt: string;
-    updatedAt: string;
-  };
-};
 
 export default function ProfilePage() {
     // Log when component mounts (after first render)
@@ -116,33 +94,20 @@ export default function ProfilePage() {
     const bio = profile?.bio;
     const level = stats?.level ?? 1;
 
-	// Extraxt avatarUrl
-	const fetchAvatarsMap = async (userIds: string[]) => {
-		if (!userIds.length) return {};
+    const safeJson = async (r: Response | null) => {
+        if (r && r.ok) {
+            const json = await r.json();
+            return Array.isArray(json) ? json : [];
+        }
+        return [];
+    };
 
-		const res = await fetch(
-			`${API_BASE}/users/profiles/avatars?userIds=${userIds.join(",")}`,
-			{
-				headers: {
-					"Content-Type": "application/json",
-					...(sessionStorage.getItem("auth.accessToken")
-						? {
-							Authorization: `Bearer ${sessionStorage.getItem(
-								"auth.accessToken",
-							)}`,
-						}
-						: {}),
-				},
-			},
-		);
-
-		if (!res.ok) return {};
-
-		return (await res.json()) as Record<string, string | null>;
-	};
-
-
-
+    const safeObject = async <T,>(r: Response | null): Promise<T | null> => {
+        if (r && r.ok) {
+            return (await r.json()) as T;
+        }
+        return null;
+    };
     // Define it at component level
 	const loadProfileData = useCallback(async () => {
 		setIsLoadingData(true);
@@ -170,20 +135,7 @@ export default function ProfilePage() {
 				
             ]);
 
-			const safeJson = async (r: Response | null) => {
-				if (r && r.ok) {
-					const json = await r.json();
-					return Array.isArray(json) ? json : [];
-				}
-				return [];
-			};
-
-            const safeObject = async <T,>(r: Response | null): Promise<T | null> => {
-                if (r && r.ok) {
-                    return (await r.json()) as T;
-                }
-                return null;
-            };
+			
 
             setFriends(await safeJson(friendsRes));
             setClans(await safeJson(clansRes));
@@ -191,32 +143,75 @@ export default function ProfilePage() {
 
             const statsObj = await safeObject<PlayerStats>(statsRes);
 
-            if (statsObj?.matchHistory?.length) {
-                const matchId = statsObj.matchHistory[0].matchId;
-                if (matchId) {
-                    const avatarsResult = await getAvatarsForMatchMembers(matchId);
-
-                    if (avatarsResult.ok) {
-                        setMembers(avatarsResult.data);
-                    } else {
-                        console.error("failed to load avatars:", avatarsResult.error);
-                        setMembers([]);
-                    }
-                } else {
-                    setMembers([]);
-                }
-            } else {
-                setMembers([]);
-            }
-
-
-						
             if (statsObj) {
                 setStats(statsObj);
 
-
                 // Normalize match entries into the shape MatchHistory component expects
                 const rawMatches = Array.isArray((statsObj as any).matchHistory) ? (statsObj as any).matchHistory : [];
+
+                const matchIds = rawMatches
+                    .map((entry: any) => (entry.match ?? entry)?.id)
+                    .filter((id: unknown): id is string => typeof id === "string" && id.length > 0);
+
+                if (matchIds.length > 0) {
+                    const results = await Promise.all(matchIds.map((id: string) => getAvatarsForMatchMembers(id)));
+
+                    const allMembers = results.flatMap((result, index) => {
+                        if (!result.ok) {
+                            return [];
+                        }
+
+                        const matchId = matchIds[index];
+                        const sourceMatch = rawMatches[index] ?? {};
+                        const rawParticipants = ((sourceMatch.match ?? sourceMatch).matchParticipants ?? []) as Array<{
+                            userId: string;
+                            isWinner?: boolean;
+                            kills?: number;
+                            deaths?: number;
+                            player?: MatchMember["player"];
+                        }>;
+
+                        const participantsByUserId = new Map(
+                            rawParticipants.map((participant) => [participant.userId, participant]),
+                        );
+
+                        return result.data.map((avatar: MatchMemberAvatar) => {
+                            const sourceParticipant = participantsByUserId.get(avatar.userId);
+
+                            return {
+                                id: `${matchId}:${avatar.userId}`,
+                                matchId,
+                                userId: avatar.userId,
+                                displayName: avatar.displayName,
+                                avatarUrl: avatar.avatarUrl,
+                                isWinner: sourceParticipant?.isWinner ?? false,
+                                kills: sourceParticipant?.kills ?? 0,
+                                deaths: sourceParticipant?.deaths ?? 0,
+                                player: sourceParticipant?.player ?? {
+                                    id: `${matchId}:${avatar.userId}:player`,
+                                    userId: avatar.userId,
+                                    xp: 0,
+                                    level: 0,
+                                    wins: 0,
+                                    losses: 0,
+                                    kills: sourceParticipant?.kills ?? 0,
+                                    deaths: sourceParticipant?.deaths ?? 0,
+                                    damageDealt: 0,
+                                    damageTaken: 0,
+                                    createdAt: new Date(0).toISOString(),
+                                    updatedAt: new Date(0).toISOString(),
+                                },
+                            } satisfies MatchMember;
+                        });
+                    });
+
+                    setMembers(allMembers);
+                } else {
+                    setMembers([]);
+                }
+
+
+                
                 const normalized = rawMatches.map((entry: any) => {
                     const match = entry.match ?? entry;
                     const rawParticipants = match.matchParticipants ?? [];
@@ -467,7 +462,7 @@ export default function ProfilePage() {
                                             value: String(achievementCount),
                                             icon: <FaMedal className="text-emerald-500" />,
                                         },
-                                    ].map((item) => (
+                                    ].map((item: { label: string; value: string; icon: ReactNode }) => (
                                         <div
                                             key={item.label}
                                             className="flex items-center gap-3 rounded-xl border border-zinc-200/70 bg-white/80 px-3 py-2 shadow-sm dark:border-zinc-700/80 dark:bg-zinc-950/40"
@@ -496,7 +491,7 @@ export default function ProfilePage() {
                                         You haven't added any battle buddies yet.
                                     </div>
                                 ) : (
-                                    friends.slice(0, 10).map((friend, index) => (
+                                    friends.slice(0, 10).map((friend: unknown, index: number) => (
                                         <div key={index} className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 text-sm">
                                             {typeof friend === "object" && friend !== null
                                                 ? (friend as { displayName?: string; userId?: string }).displayName
@@ -517,7 +512,7 @@ export default function ProfilePage() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {clans.slice(0, 5).map((clan, index) => (
+                                    {clans.slice(0, 5).map((clan: unknown, index: number) => (
                                         <div key={index} className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
                                             {typeof clan === "object" && clan !== null
                                                 ? (clan as { name?: string; id?: string }).name || (clan as { id?: string }).id || "Clan"
@@ -535,7 +530,7 @@ export default function ProfilePage() {
                                         No pending invitations.
                                     </div>
                                 ) : (
-                                    invites.slice(0, 10).map((invite, index) => (
+                                    invites.slice(0, 10).map((invite: unknown, index: number) => (
                                         <div
                                             key={index}
                                             className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800 text-sm"

@@ -2,8 +2,32 @@
 // A single match card extracted from MatchHistory.
 // Drop this file next to MatchHistory.tsx and import it there.
 
-import { MatchMember } from "@/app/(site)/profile/[userId]/page";
+// import { MatchMember } from "@/app/(site)/profile/[userId]/page";
 
+export type MatchMember = {
+  id: string;
+  matchId: string;
+  userId: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  isWinner: boolean;
+  kills: number;
+  deaths: number;
+  player: {
+	id: string;
+	userId: string;
+	xp: number;
+	level: number;
+	wins: number;
+	losses: number;
+	kills: number;
+	deaths: number;
+	damageDealt: number;
+	damageTaken: number;
+	createdAt: string;
+	updatedAt: string;
+  };
+};
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type MatchCardParticipant = {

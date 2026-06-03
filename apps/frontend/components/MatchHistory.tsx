@@ -1,5 +1,4 @@
-import { MatchMember } from '@/app/(site)/profile/[userId]/page';
-import type { MatchCardItem } from './MatchHistory/Card';
+import type { MatchCardItem, MatchMember } from './MatchHistory/Card';
 import MatchCard from './MatchHistory/Card';
 
 // Re-export the item type under the original name so existing imports don't break

@@ -1,6 +1,11 @@
 import { authClient } from "@/src/core/api/auth/auth.client";
 import { MatchMemberAvatar, UserPublicProfile } from "@/src/types/profileTypes";
-import { RandomBlock } from "@babylonjs/core";
+
+declare const process: {
+    env: {
+        NEXT_PUBLIC_API_URL?: string;
+    };
+};
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
@@ -11,6 +16,14 @@ type ApiResult<T> =
 type UpdateMyProfileInput = {
     displayName?: string;
     bio?: string;
+};
+
+type MatchParticipantResponse = {
+    userId: string;
+};
+
+type MatchMembersResponse = {
+    matchParticipants: MatchParticipantResponse[];
 };
 
 async function request<T>(url: string, options: RequestInit = {}, hasRetried = false): Promise<ApiResult<T>> {
@@ -117,8 +130,8 @@ export async function saveMyProfile(input: UpdateMyProfileInput & { avatar?: Blo
     return profileResult;
 }
 
-export async function getMatchMembers(matchId: string) {
-  return request(`${BASE_URL}/stats/match/${matchId}/members`);
+export async function getMatchMembers(matchId: string): Promise<ApiResult<MatchMembersResponse>> {
+    return request<MatchMembersResponse>(`${BASE_URL}/stats/match/${matchId}/members`);
 }
 
 // for one user
