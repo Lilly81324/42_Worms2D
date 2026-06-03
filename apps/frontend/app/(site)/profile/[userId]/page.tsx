@@ -190,21 +190,24 @@ export default function ProfilePage() {
             setInvites(await safeJson(invitesRes));
 
             const statsObj = await safeObject<PlayerStats>(statsRes);
-			//const participant = await fetch(`${API_BASE}/match/${statsObj.matchHistory[0].matchId}/members`
-			//	);
 
-			//	const data = await participant.json();
-			//	console.log("participants:", data);
+            if (statsObj?.matchHistory?.length) {
+                const matchId = statsObj.matchHistory[0].matchId;
+                if (matchId) {
+                    const avatarsResult = await getAvatarsForMatchMembers(matchId);
 
-			const matchId = statsObj.matchHistory[0].matchId;
-
-			const avatarsResult = await getAvatarsForMatchMembers(matchId);
-
-			if (avatarsResult.ok) {
-				setMembers(avatarsResult.data);
-			} else {
-				console.error("failed to load avatars:", avatarsResult.error);
-			}
+                    if (avatarsResult.ok) {
+                        setMembers(avatarsResult.data);
+                    } else {
+                        console.error("failed to load avatars:", avatarsResult.error);
+                        setMembers([]);
+                    }
+                } else {
+                    setMembers([]);
+                }
+            } else {
+                setMembers([]);
+            }
 
 
 						
