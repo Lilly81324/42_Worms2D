@@ -1,11 +1,8 @@
 import { CS_Type, CS_WeaponChosen } from '@/shared/packets/ClientServerPackets';
-import { Player } from '../../player/Player';
-import { Worm } from '../../player/Worm';
-import { Turn } from '../4_turn_start/Turn';
 import { IState } from '../IState'
 import { StateMachine } from '../StateMachine';
+import { ExecuteCodeAction, ActionManager, AbstractActionManager, Vector3 } from '@babylonjs/core'
 import { GameState } from '@/shared/state/GameState';
-import { ExecuteCodeAction, ActionManager, IAction, AbstractActionManager, Quaternion, Axis, Vector3, Scene, Observer, Observable } from '@babylonjs/core'
 
 /**
  * Uses Notification system to display custom message based on if this client is active
@@ -38,19 +35,25 @@ function manuallyChooseWeapon(action: AbstractActionManager, machine: StateMachi
 	}
 }
 
+export interface keyInfo {
+	a: boolean,
+	d: boolean,
+	w: boolean,
+	e: boolean,
+}
+
 export class MovementState implements IState {
 	private next: boolean = false;
 	private now: number = 0;
-	private keyStatus: any =
+	public keyStatus: keyInfo =
 	{
-		'a': false,
-		'd': false,
-		'w': false,
-		'e': false
+		a: false,
+		d: false,
+		w: false,
+		e: false
 	};
-	private observer: Observable;
 	// Constructor called once pet Canvas
-	constructor(private machine: StateMachine) {}
+	constructor(public machine: StateMachine) {}
 
 	enter() {
 		this.reset();
@@ -68,7 +71,7 @@ export class MovementState implements IState {
 		this.machine.loaded.turn.chooseWeapon(this.machine.loaded.weapons[0]);
 
 		// For inactive players, dont allow picking worms
-		if (!this.machine.isActiveUser() || !this.machine.turn || !this.machine.players)
+		if (!this.machine.isActiveUser() || !this.machine.loaded.turn)
 			return ;
 
 		// Allow registering of weapons for the active user
@@ -79,74 +82,104 @@ export class MovementState implements IState {
 			trigger: ActionManager.OnKeyDownTrigger,
 			parameter: "a"
 		}, () => {
-			this.keyStatus['a'] = true;
+			this.keyStatus.a = true;
 		}));
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: "a"
 		}, () => {
-			this.keyStatus['a'] = false;
+			this.keyStatus.a = false;
 		}));
 
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyDownTrigger,
 			parameter: "d"
 		}, () => {
-			this.keyStatus['d'] = true;
+			this.keyStatus.d = true;
 		}));
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: "d"
 		}, () => {
-			this.keyStatus['d'] = false;
+			this.keyStatus.d = false;
 		}));
 
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyDownTrigger,
 			parameter: "e"
 		}, () => {
-			this.keyStatus['e'] = true;
+			this.keyStatus.e = true;
 		}));
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: "e"
 		}, () => {
-			this.keyStatus['e'] = false;
+			this.keyStatus.e = false;
 		}));
 
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyDownTrigger,
 			parameter: "w"
 		}, () => {
-			this.keyStatus['w'] = true;
+			this.keyStatus.w = true;
 		}));
 		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: "w"
 		}, () => {
-			this.keyStatus['w'] = false;
+			this.keyStatus.w = false;
 		}));
 
 
 		// Confirm movement to be done
-		(new ExecuteCodeAction({
+		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: " "
 		}, () => {
 			this.next = true;
 		}));
+
 	}
 
 	tick() {
-		
+		if (!this.machine.loaded)
+			return ;
+		const turn = this.machine.loaded.turn;
+
+		// Player wants to end their turn
+		if (this.next && this.machine.isActiveUser()) {
+			const minimialVelocity = 0.01
+
+			// Only end turn once pllayer is on ground and velocity is 0
+			if (turn.chosenWorm.onGround && turn.chosenWorm.aggregate.body.getLinearVelocity().length() < minimialVelocity) {
+				this.machine.guiHelper?.notifications.add("NOW on ground");
+				this.machine.sendRequestStatePacket(GameState.AIMING);
+				this.next = false;
+			}
+		}
+		if (turn.chosenWeapon) {
+			turn.chosenWeapon.mesh.position.x = turn.chosenWorm.collider.position.x;
+			turn.chosenWeapon.mesh.position.y = turn.chosenWorm.collider.position.y;
+		}
 	}
 
 	exit() {
-		this.machine.scene.onBeforePhysicsObservable.remove(this.observer);
+		if (this.machine.loaded) {
+			const worm = this.machine.loaded.turn.chosenWorm;
+			if (worm.airAnim?.isPlaying)
+				worm.airAnim.stop();
+			if (worm.walkAnim?.isPlaying)
+				worm.walkAnim.stop();
+			this.machine.loaded.turn.chosenWorm.idleAnim?.start();
+		}
 		this.reset()
 	}
 
 	reset(): void {
 		this.next = false;
+		this.keyStatus.a = false;
+		this.keyStatus.w = false;
+		this.keyStatus.d = false;
+		this.keyStatus.e = false;
 	}
 }

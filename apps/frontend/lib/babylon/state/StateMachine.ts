@@ -1,4 +1,4 @@
-import { IAction, Scene, ActionManager, AbstractMesh } from '@babylonjs/core';
+import { IAction, Scene, ActionManager, AbstractMesh, Observable, Observer, Nullable } from '@babylonjs/core';
 import { GameState } from '@/shared/state/GameState';
 import { CS_DEV_SetGameState, CS_RequestChangeGameState, CS_Type } from '@/shared/packets/ClientServerPackets';
 import { gameData } from '@/shared/packets/util';
@@ -24,6 +24,7 @@ import { MessageQueue } from '../MessageQueue';
 import { handlePacket } from '@/lib/packets/handlePacket';
 import { aimingMeshes } from './1_loading/loadGame';
 import { Achievements } from '../data/achievments';
+import { movementTick } from './6_movement/movementTick';
 
 // Stores the part of the statemachine that are created in the loading step
 export interface loaded {
@@ -41,6 +42,7 @@ export class StateMachine {
 	public msgToServer: msgToServerType;
 	public log: (data: string) => void;
 	public states: Map<GameState, IState> = new Map();
+	private movementPhysics: Observer<Scene>;
 	
 	public queue: MessageQueue | undefined;
 	public guiHelper: GuiHelper | undefined;
@@ -48,7 +50,6 @@ export class StateMachine {
 	public state: GameState | undefined;
 	public currentState: IState | undefined;
 	public activePlayerId: string;
-	public turn: Turn | undefined;
 	public achievements: Achievements;
 	private initialized: boolean = false;
 
@@ -59,16 +60,22 @@ export class StateMachine {
 		this.canvas = canvas;
 		this.msgToServer = msgToServer
 		this.log = log;
+		const movementState = new MovementState(this);
 		this.states.set(GameState.GAME_PENDING, new GamePendingState(this));
 		this.states.set(GameState.GAME_LOADING, new GameLoadingState(this));
 		this.states.set(GameState.GAME_START, new GameStartState(this));
 		this.states.set(GameState.ROUND_START, new RoundStartState(this));
 		this.states.set(GameState.TURN_START, new TurnStartState(this));
 		this.states.set(GameState.PICK_WORM, new PickWormState(this));
-		this.states.set(GameState.MOVEMENT, new MovementState(this));
+		this.states.set(GameState.MOVEMENT, movementState);
 		this.states.set(GameState.AIMING, new AimingState(this));
 		this.states.set(GameState.TURN_END, new TurnEndState(this));
 		this.states.set(GameState.GAME_END, new GameEndState(this));
+		this.movementPhysics = scene.onBeforePhysicsObservable.add(
+			() => {
+				movementTick(movementState)
+			}
+		);
 
 		// Set when game starts proper
 		
@@ -78,7 +85,6 @@ export class StateMachine {
 		this.guiHelper = undefined;
 		this.loaded = undefined;
 		this.activePlayerId = "";
-		this.turn = undefined;
 		this.achievements = new Achievements();
 	}
 
@@ -175,6 +181,7 @@ export class StateMachine {
 			this.loaded.aiming.direction.dispose();
 			this.loaded.aiming.tail.dispose();
 		}
+		this.scene.onBeforeRenderObservable.remove(this.movementPhysics);
 		this.loaded = undefined;
 		this.guiHelper?.dispose()
 		this.guiHelper = undefined;

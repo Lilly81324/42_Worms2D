@@ -1,7 +1,7 @@
 import { IState } from '../IState'
 import { StateMachine } from '../StateMachine';
 import { GameState } from '@/shared/state/GameState';
-import { ExecuteCodeAction, ActionManager, IAction } from '@babylonjs/core'
+import { ExecuteCodeAction, ActionManager } from '@babylonjs/core'
 
 export class GameLoadingState implements IState {
 	private next: boolean = false;
@@ -30,7 +30,7 @@ export class GameLoadingState implements IState {
 	}
 
 	exit() {
-		this.reset()
+		this.reset();
 	}
 
 	reset(): void {

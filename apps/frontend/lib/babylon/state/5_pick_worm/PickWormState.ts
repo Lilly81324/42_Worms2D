@@ -43,7 +43,11 @@ export class PickWormState implements IState {
 
 		// Allow worms to be chosen by clicking on their mesh
 		turn.activePlayer.wormsClickable(true, (worm: Worm) => {
+			console.log("Picking wory boy");
 			this.pickWorm(worm);
+			this.machine.msgToServer<CS_WormChosen>(CS_Type.CS_WormChosen, {
+				wormId: worm.id ?? 0,
+			})
 		});
 
 		// Set first worm as chosen (jsut goes back and forth for proper logic)
@@ -101,8 +105,8 @@ export class PickWormState implements IState {
 		turn.chosenWorm = newWorm;
 		if (!turn.chosenWeapon)
 			return ;
-		turn.chosenWeapon.mesh.position.x = turn.chosenWorm.mesh.position.x;
-		turn.chosenWeapon.mesh.position.y = turn.chosenWorm.mesh.position.y;
+		turn.chosenWeapon.mesh.position.x = turn.chosenWorm.collider.position.x;
+		turn.chosenWeapon.mesh.position.y = turn.chosenWorm.collider.position.y;
 
 	}
 

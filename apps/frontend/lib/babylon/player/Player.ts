@@ -56,9 +56,13 @@ export class Player {
 		return (this.worms[index]);
 	}
 
+	// ERROR
 	wormsClickable(yes: boolean, pickWorm: undefined | ((worm: Worm) => void)) {
 		if (yes && pickWorm != undefined) {
-			this.worms.forEach((worm) => {worm.makeClickable(pickWorm)});
+			this.worms.forEach((worm) => {
+				console.log("Making clickable: ", worm.name);
+				worm.makeClickable(pickWorm)
+			});
 		}
 		else
 			this.worms.forEach((worm) => {worm.removeClickable()});
