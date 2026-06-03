@@ -203,6 +203,18 @@ export class SocialController {
     return this.social.listBlocks(userId, principal);
   }
 
+  @Get('friends/me')
+  listMyFriends(@CurrentUser() principal: AuthPrincipal) {
+    const myUserId = principal.claims.sub;
+    return this.social.listFriends(myUserId, principal);
+  }
+
+  @Get('friend-requests/incoming/me')
+  listMyIncomingRequests(@CurrentUser() principal: AuthPrincipal) {
+    const myUserId = principal.claims.sub;
+    return this.social.listIncomingFriendRequests(myUserId, principal);
+  }
+
   @Post('blocks')
   createBlock(
     @Body() body: CreateBlockDto,
