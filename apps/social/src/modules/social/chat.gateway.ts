@@ -146,7 +146,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         senderUserId: principal.claims.sub,
       });
     } else {
-
       message = await this.social.sendMessage(
         payload.threadId,
         {
@@ -156,19 +155,36 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         principal,
       );
     }
+    console.log('=== BACKEND PRINCIPAL CLAIMS new===', principal.claims);
 
-    console.log('=== BACKEND PRINCIPAL CLAIMS ===', principal.claims);
+    let displayName: string | null = null;
+    try {
+      displayName = await this.social.getUserDisplayName(principal.claims.sub);
+    } catch (error) {
+      this.logger.error(
+        `Failed to resolve display name for ${principal.claims.sub}`,
+        error,
+      );
+    }
 
-    const displayName = await this.social.getUserDisplayName(
-      principal.claims.sub,
-    );
-
-    const resolvedUsername =
+    let resolvedUsername: string | null =
+      displayName ||
       (principal.claims as any).username ||
       (principal.claims as any).name ||
-      displayName ||
-      'A Worm';
+      principal.claims.email ||
+      null;
+    console.log('resolvedUsername:', resolvedUsername);
 
+    if (resolvedUsername) {
+      if (resolvedUsername.includes('@')) {
+        resolvedUsername = resolvedUsername.split('@')[0];
+      }
+      resolvedUsername = resolvedUsername.charAt(0).toUpperCase() + resolvedUsername.slice(1);
+    } else {
+      resolvedUsername = 'A Worm';
+    }
+
+    console.log('Final resolvedUsername sent to frontend:', resolvedUsername);
     this.server.to(`thread:${payload.threadId}`).emit('message.created', {
       ...message,
       username: resolvedUsername,
