@@ -74,4 +74,53 @@ export class StatsService {
 	});
 	}
 
+  // create a stats user
+  async createStatsUser(body: any, context: { authorization?: string }){
+    return this.callStatsService({
+      method:'POST',
+      path: '/internal/stats/user',
+      data: body,
+      context
+    })
+  }
+
+  // PUT /api/stats/user/:id
+  async UpdateStatsUser(id : string, body : any, context : {authorization ?: string}){
+    return this.callStatsService({
+      method : 'PUT',
+      path: `/internal/stats/user/${id}`,
+      data: body, 
+      context
+    })
+  }
+
+  // create a match
+  async CreateMatch(body: any, context : {authorization?: string}){
+    return this.callStatsService({
+      method: 'POST',
+      path: '/internal/stats/match',
+      data: body,
+      context
+    })
+  }
+
+  // create achivement
+  async CreateAchievementUser(body: any, context : {authorization?: string}){
+    return this.callStatsService({
+      method: 'POST',
+      path: '/internal/stats/achievements',
+      data: body,
+      context
+    })
+  }
+
+  async UpsertAcheivement(body: any, context : {authorization?: string}){
+    return this.callStatsService({
+      method: 'POST',
+      path: '/internal/stats/achievements/upsert',
+      data: body,
+      context
+    })
+  }
+
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, Param, Query, Req } from '@nestjs/common';
+import { Controller, Get, Headers, Param, Query, Req, Post, Body, Put } from '@nestjs/common';
 import type { Request } from 'express';
 import { StatsService } from './stats.service';
 import { PlayerStatsSchema, type PlayerStats } from './contracts/player-stats.schema';
@@ -48,5 +48,53 @@ export class StatsController {
 	) {
 	return this.service.fetchMatchMembers(matchId, { authorization });
 	}
+
+
+  /* ADDDED HERE THE */
+  // POST /api/stats/user
+  @Post('user')
+  async createStatsForPlayer(
+    @Body() body: any,
+    @Headers('authorization') authorization?: string,
+  ) {
+    return this.service.createStatsUser(body, { authorization });
+  }
+
+  // PUT /api/stats/user/:id
+  @Put('user/:id')
+  async updateStatsForPlayer(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Headers('authorization') authorization?: string,
+  ) {
+    return this.service.UpdateStatsUser(id, body, { authorization });
+  }
+
+  // POST /api/stats/match
+  @Post('match')
+  async createMatch(
+    @Body() body: any,
+    @Headers('authorization') authorization?: string,
+  ) {
+    return this.service.CreateMatch(body, { authorization });
+  }
+
+  // POST /api/stats/achievements
+  @Post('achievements')
+  async createAchievement(
+    @Body() body: any,
+    @Headers('authorization') authorization?: string,
+  ) {
+    return this.service.CreateAchievementUser(body, { authorization });
+  }
+
+  // POST /api/stats/achievements/upsert => update
+  @Post('achievements/upsert')
+  async upsertAchievement(
+    @Body() body: any,
+    @Headers('authorization') authorization?: string,
+  ) {
+    return this.service.UpsertAcheivement(body, { authorization });
+  }
 
 }

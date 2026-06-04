@@ -1,6 +1,12 @@
 "use client";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export default function Stats() {
+  const token = sessionStorage.getItem("auth.accessToken");
+  const headers: HeadersInit = {
+				"Content-Type": "application/json",
+				...(token ? { Authorization: `Bearer ${token}` } : {}),
+			};
   // -----------------------------
   // 1. CREATE PLAYER STATS
   // -----------------------------
@@ -16,12 +22,9 @@ export default function Stats() {
     };
 
     try {
-      const res = await fetch("http://localhost:3004/internal/stats/user", {
+      const res = await fetch(`${API_BASE}/stats/user/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-service-name": "frontend",
-        },
+        headers: headers,
         body: JSON.stringify(payload),
       });
 
@@ -47,13 +50,10 @@ export default function Stats() {
 
     try {
       const res = await fetch(
-        "http://localhost:3004/internal/stats/user/99173503-c17e-4b8c-9ec8-207157f0afbc",
+        `${API_BASE}/stats/user/99173503-c17e-4b8c-9ec8-207157f0afbc`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "x-service-name": "frontend",
-          },
+          headers:  headers,
           body: JSON.stringify(payload),
         }
       );
@@ -98,12 +98,9 @@ export default function Stats() {
     };
 
     try {
-      const res = await fetch("http://localhost:3004/internal/stats/match", {
+      const res = await fetch(`${API_BASE}/stats/match/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-service-name": "frontend",
-        },
+        headers:  headers,
         body: JSON.stringify(payload),
       });
 
@@ -119,8 +116,8 @@ export default function Stats() {
   // -----------------------------
   const handleCreateAchievement = async () => {
     const payload = {
-      userId: "99173503-c17e-4b8c-9ec8-207157f0afbc",
-      type: "sharp_shooter4",
+      userId: "417bafc1-5f9e-4045-a23c-168b7c0c5d0c",
+      type: "sharp_shooter 3",
       name: "Sharp Shooter",
       description: "Hit 10 accurate shots",
       icon: "🎯",
@@ -133,12 +130,9 @@ export default function Stats() {
     };
 
     try {
-      const res = await fetch("http://localhost:3004/internal/stats/achievements", {
+      const res = await fetch(`${API_BASE}/stats/achievements`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-service-name": "frontend",
-        },
+        headers:  headers,
         body: JSON.stringify(payload),
       });
 
@@ -164,13 +158,10 @@ export default function Stats() {
 
     try {
       const res = await fetch(
-        "http://localhost:3004/internal/stats/achievements/upsert",
+        `${API_BASE}/stats/achievements/upsert`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-service-name": "frontend",
-          },
+          headers:  headers,
           body: JSON.stringify(payload),
         }
       );
