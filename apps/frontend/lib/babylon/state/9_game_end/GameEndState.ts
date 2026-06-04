@@ -31,7 +31,10 @@ export class GameEndState implements IState {
 	tick() {
 		if (this.then + WAIT_DURATION > Date.now()) {
 			// After this was responded to, the game gets hidden again, and should
-			this.machine.msgToServer<CS_DEV_StartEndscreen>(CS_Type.CS_DEV_StartEndscreen, {});
+			this.machine.msgToServer<CS_DEV_StartEndscreen>(CS_Type.CS_DEV_StartEndscreen, {
+				won: false,
+				winnerId: "",
+			});
 		}
 	}
 

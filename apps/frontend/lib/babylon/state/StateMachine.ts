@@ -1,4 +1,4 @@
-import { IAction, Scene, ActionManager, AbstractMesh, Observable, Observer, Nullable } from '@babylonjs/core';
+import { Scene, Observer } from '@babylonjs/core';
 import { GameState } from '@/shared/state/GameState';
 import { CS_DEV_SetGameState, CS_RequestChangeGameState, CS_Type } from '@/shared/packets/ClientServerPackets';
 import { endOfTurnData, gameData } from '@/shared/packets/util';
@@ -43,7 +43,7 @@ export class StateMachine {
 	public msgToServer: msgToServerType;
 	public log: (data: string) => void;
 	public states: Map<GameState, IState> = new Map();
-	private movementPhysics: Observer<Scene>;
+	private movementPhysics: undefined | Observer<Scene>;
 	private movementStateRef: MovementState;
 	public gameOver: boolean;
 	public explosionEffect: ExplosionParticles;
@@ -78,6 +78,7 @@ export class StateMachine {
 		this.states.set(GameState.GAME_END, new GameEndState(this));
 		this.gameOver = false;
 		this.explosionEffect = new ExplosionParticles(scene);
+		this.movementPhysics = undefined;
 
 		// Set when game starts proper
 		
@@ -102,7 +103,7 @@ export class StateMachine {
 			this.handlePackets();
 			this.currentState?.tick?.();
 		})
-		this.scene.onBeforePhysicsObservable.add(()=> {
+		this.movementPhysics = this.scene.onBeforePhysicsObservable.add(()=> {
 			movementTick(this.movementStateRef);
 		})
 	}
@@ -189,7 +190,8 @@ export class StateMachine {
 			this.loaded.aiming.direction.dispose();
 			this.loaded.aiming.tail.dispose();
 		}
-		this.scene.onBeforeRenderObservable.remove(this.movementPhysics);
+		if (this.movementPhysics)
+			this.scene.onBeforeRenderObservable.remove(this.movementPhysics);
 		this.loaded = undefined;
 		this.guiHelper?.dispose()
 		this.guiHelper = undefined;

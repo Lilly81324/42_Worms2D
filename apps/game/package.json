@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@babylonjs/core": "^8.55.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
@@ -31,7 +32,6 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "@babylonjs/core": "^8.55.1",
     "@babylonjs/inspector": "^8.55.1",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",

@@ -71,7 +71,7 @@ export default function LobbyPageController() {
 
   /** Ids of the players that won */
   // Needs ref, because we read it in effect
-  const [winner, setWinner] = useState<string>([]);
+  const [winner, setWinner] = useState<string>("");
 
   /** Used during failed loading and connecting */
   const [errorMsg, setErrorMsg] = useState("");
