@@ -389,6 +389,7 @@ export class SocialService {
   ) {
     const fromUserId = principal.claims.sub;
     const toUserId = input.toUserId;
+
     if (fromUserId === toUserId) {
       throw new BadRequestException('Cannot add yourself as a friend');
     }
@@ -397,9 +398,11 @@ export class SocialService {
       this.ensureProfile(fromUserId),
       this.ensureProfile(toUserId),
     ]);
+
     if (await this.isBlockedEitherWay(fromUserId, toUserId)) {
       throw new ForbiddenException('Friend request blocked');
     }
+
     if (await this.areFriends(fromUserId, toUserId)) {
       throw new ConflictException('Users are already friends');
     }
@@ -414,7 +417,7 @@ export class SocialService {
       },
     });
     if (pending) {
-      throw new ConflictException('A pending friend request already exists');
+      return pending;
     }
 
     const request = await this.prisma.friendRequest.create({
@@ -422,6 +425,7 @@ export class SocialService {
         fromUserId,
         toUserId,
         message: input.message,
+        status: RequestStatus.PENDING,
       },
     });
     this.events.publish('friend.request.created', {
@@ -434,12 +438,55 @@ export class SocialService {
 
   async listIncomingFriendRequests(userId: string, principal: AuthPrincipal) {
     this.assertSelfOrAdmin(userId, principal);
-    return {
-      items: await this.prisma.friendRequest.findMany({
-        where: { toUserId: userId, status: RequestStatus.PENDING },
-        orderBy: { createdAt: 'desc' },
-      }),
-    };
+
+    const requests = await this.prisma.friendRequest.findMany({
+      where: {
+        toUserId: userId,
+        status: RequestStatus.PENDING,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (requests.length === 0) {
+      return { items: [] };
+    }
+
+    const uniqueSenderIds = Array.from(
+      new Set(requests.map((r) => r.fromUserId)),
+    );
+
+    const profiles = await this.prisma.userProfile.findMany({
+      where: {
+        userId: {
+          in: uniqueSenderIds,
+        },
+      },
+      select: {
+        userId: true,
+        displayName: true,
+      },
+    });
+
+    const profileMap = new Map<string, string>();
+    profiles.forEach((p) => {
+      if (p.displayName) {
+        profileMap.set(p.userId, p.displayName);
+      }
+    });
+
+    const items = requests.map((req) => {
+      const displayName = profileMap.get(req.fromUserId) || 'Unknown Recruiter';
+      return {
+        ...req,
+        fromUser: {
+          displayName,
+        },
+      };
+    });
+
+    return { items };
   }
 
   async listOutgoingFriendRequests(userId: string, principal: AuthPrincipal) {

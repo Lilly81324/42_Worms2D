@@ -140,6 +140,10 @@ export class SocialController {
     @Body() body: CreateFriendRequestDto,
     @CurrentUser() principal: AuthPrincipal,
   ) {
+    console.log(
+      '>>> [SocialController] HIT createFriendRequest! Target user:',
+      body,
+    );
     return this.social.createFriendRequest(body, principal);
   }
 
@@ -206,12 +210,20 @@ export class SocialController {
   @Get('friends/me')
   listMyFriends(@CurrentUser() principal: AuthPrincipal) {
     const myUserId = principal.claims.sub;
+    console.log(
+      '>>> [SocialController] HIT listMyFriends for user UUID:',
+      myUserId,
+    );
     return this.social.listFriends(myUserId, principal);
   }
 
   @Get('friend-requests/incoming/me')
   listMyIncomingRequests(@CurrentUser() principal: AuthPrincipal) {
     const myUserId = principal.claims.sub;
+    console.log(
+      '>>> [SocialController] HIT listMyIncomingRequests for user UUID:',
+      myUserId,
+    );
     return this.social.listIncomingFriendRequests(myUserId, principal);
   }
 

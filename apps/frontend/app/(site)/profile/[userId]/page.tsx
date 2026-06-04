@@ -139,6 +139,7 @@ export default function ProfilePage() {
     const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [requestPendingMap, setRequestPendingMap] = useState<Record<string, boolean>>({});
+    const [outgoingRequests, setOutgoingRequests] = useState<any[]>([]);
     const searchRequestRef = useRef(0);
 
     // Compute displayName, avatarUrl, bio early so useEffect can access them
@@ -188,22 +189,25 @@ export default function ProfilePage() {
             const headers = getAuthHeaders();
 
             const [friendsRes, requestsRes, clansRes, invitesRes, statsRes] = await Promise.all([
-                fetch(`${API_BASE}/friends/me`, { headers }),
-                fetch(`${API_BASE}/friend-requests/incoming/me`, { headers }),
+                fetch(`${API_BASE}/friends/`, { headers }),
+                fetch(`${API_BASE}/friends/requests/incoming`, { headers }),
+                fetch(`${API_BASE}/friends/requests/outgoing`, { headers }),
                 fetch(`${API_BASE}/clans/me`, { headers }),
                 fetch(`${API_BASE}/clans/me/invites`, { headers }),
-                resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
+                resolvedUser?.id ? fetch(`${API_BASE}/stats/users/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
 				// add
-
             ]);
 
-			const safeJson = async (r: Response | null) => {
-				if (r && r.ok) {
-					const json = await r.json();
-					return Array.isArray(json) ? json : [];
-				}
-				return [];
-			};
+            const safeJson = async (r: Response | null) => {
+                if (r && r.ok) {
+                    const json = await r.json();
+                    if (json && typeof json === 'object' && 'items' in json) {
+                        return Array.isArray(json.items) ? json.items : [];
+                    }
+                    return Array.isArray(json) ? json : [];
+                }
+                return [];
+            };
 
             const safeObject = async <T,>(r: Response | null): Promise<T | null> => {
                 if (r && r.ok) {
@@ -214,6 +218,7 @@ export default function ProfilePage() {
 
             setFriends(await safeJson(friendsRes));
             setIncomingRequests(await safeJson(requestsRes));
+            console.log("Incoming raw list payload tracking:", incomingRequests);
             setClans(await safeJson(clansRes));
             setInvites(await safeJson(invitesRes));
 
@@ -221,16 +226,14 @@ export default function ProfilePage() {
             if (!statsObj) {
                 setStats(null);
                 setMatchHistory([]);
-                return;
             }
-            setStats(statsObj);
             //const participant = await fetch(`${API_BASE}/match/${statsObj.matchHistory[0].matchId}/members`
-            //	);
+            //  );
 
-            //	const data = await participant.json();
-            //	console.log("participants:", data);
+            //  const data = await participant.json();
+            //  console.log("participants:", data);
 
-            const matchHistoryArray = statsObj.matchHistory ?? [];
+            const matchHistoryArray = statsObj?.matchHistory ?? [];
 
             const matchId = matchHistoryArray.length > 0
                 ? (matchHistoryArray[0] as any)?.matchId
@@ -283,36 +286,36 @@ export default function ProfilePage() {
 
                     const player: MatchHistoryParticipant = playerSnapshot
                         ? {
-                              userId: playerSnapshot.userId ?? resolvedUser?.id ?? 'unknown',
-                              displayName: playerSnapshot.displayName ?? (playerSnapshot.userId === resolvedUser?.id ? 'You' : null),
-                              avatarUrl: playerSnapshot.avatarUrl ?? null,
-                              isWinner: playerSnapshot.isWinner ?? false,
-                              kills: playerSnapshot.kills ?? 0,
-                              deaths: playerSnapshot.deaths ?? 0,
-                          }
+                            userId: playerSnapshot.userId ?? resolvedUser?.id ?? 'unknown',
+                            displayName: playerSnapshot.displayName ?? (playerSnapshot.userId === resolvedUser?.id ? 'You' : null),
+                            avatarUrl: playerSnapshot.avatarUrl ?? null,
+                            isWinner: playerSnapshot.isWinner ?? false,
+                            kills: playerSnapshot.kills ?? 0,
+                            deaths: playerSnapshot.deaths ?? 0,
+                        }
                         : {
-                              userId: resolvedUser?.id ?? 'unknown',
-                              displayName: 'You',
-                              avatarUrl: null,
-                              isWinner: false,
-                              kills: 0,
-                              deaths: 0,
-                          };
+                            userId: resolvedUser?.id ?? 'unknown',
+                            displayName: 'You',
+                            avatarUrl: null,
+                            isWinner: false,
+                            kills: 0,
+                            deaths: 0,
+                        };
 
                     const mergedParticipants = participants.length
                         ? participants
                         : playerSnapshot
-                        ? [
-                              {
-                                  userId: playerSnapshot.userId ?? resolvedUser?.id ?? 'unknown',
-                                  displayName: playerSnapshot.displayName ?? null,
-                                  avatarUrl: playerSnapshot.avatarUrl ?? null, //
-                                  isWinner: playerSnapshot.isWinner ?? false,
-                                  kills: playerSnapshot.kills ?? 0,
-                                  deaths: playerSnapshot.deaths ?? 0,
-                              },
-                          ]
-                        : [];
+                            ? [
+                                {
+                                    userId: playerSnapshot.userId ?? resolvedUser?.id ?? 'unknown',
+                                    displayName: playerSnapshot.displayName ?? null,
+                                    avatarUrl: playerSnapshot.avatarUrl ?? null, //
+                                    isWinner: playerSnapshot.isWinner ?? false,
+                                    kills: playerSnapshot.kills ?? 0,
+                                    deaths: playerSnapshot.deaths ?? 0,
+                                },
+                            ]
+                            : [];
 
                     return {
                         id: match.id,
@@ -348,6 +351,14 @@ export default function ProfilePage() {
         void loadProfileData();
     }, [loadProfileData]);
 
+    useEffect(() => {
+        const initialMap: Record<string, boolean> = {};
+        outgoingRequests.forEach(req => {
+            if (req.toUserId) initialMap[req.toUserId] = true;
+        });
+        setRequestPendingMap(initialMap);
+    }, [outgoingRequests]);
+
     const handleSearch = async (val: string) => {
         console.log("FRONTEND TRIGGERED: Searching for ->", val);
         setSearchQuery(val);
@@ -365,8 +376,11 @@ export default function ProfilePage() {
             });
             if (res.ok) {
                 const data = await res.json();
+                console.log(">>> [FRONTEND SEARCH RESULT PAYLOAD]:", data);
 
-                const usersList = Array.isArray(data) ? data : (data.items || []);
+                const usersList = data && typeof data === 'object' && 'items' in data
+                    ? (Array.isArray(data.items) ? data.items : [])
+                    : (Array.isArray(data) ? data : []);
 
                 if (requestId !== searchRequestRef.current) return;
 
@@ -384,24 +398,32 @@ export default function ProfilePage() {
     };
 
     const handleSendFriendRequest = async (targetUserId: string) => {
+        setRequestPendingMap(prev => ({ ...prev, [targetUserId]: true }));
         try {
-            const res = await fetch(`${API_BASE}/friend-requests`, {
+            const res = await fetch(`${API_BASE}/friends/requests`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ toUserId: targetUserId })
             });
             if (res.ok) {
-                setRequestPendingMap(prev => ({ ...prev, [targetUserId]: true }));
                 await loadProfileData();
+            } else {
+                const errorData = await res.json().catch(() => ({}));
+                if (errorData?.statusCode === 409 || errorData?.statusCode === 400) {
+                    console.log("Request already accounted for on server tier.");
+                } else {
+                    setRequestPendingMap(prev => ({ ...prev, [targetUserId]: false }));
+                }
             }
         } catch (err) {
             console.error("Failed to transmit friend request", err);
+            setRequestPendingMap(prev => ({ ...prev, [targetUserId]: false }));
         }
     };
 
     const handleRequestAction = async (requestId: string, action: 'accept' | 'decline') => {
         try {
-            const res = await fetch(`${API_BASE}/friend-requests/${requestId}/${action}`, {
+            const res = await fetch(`${API_BASE}/friends/requests/${requestId}/${action}`, {
                 method: 'POST',
                 headers: getAuthHeaders()
             });
@@ -613,18 +635,23 @@ export default function ProfilePage() {
                                                 ) : (
                                                     searchResults.map((searchUser) => (
                                                         <div key={searchUser.userId} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-zinc-900 shadow-sm border border-foreground/5 text-sm">
-                                <span className="font-medium text-zinc-800 dark:text-zinc-200">
-                                    {searchUser.displayName || "Unknown Recruit"}
-                                </span>
+        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+            {searchUser.displayName || "Unknown Recruit"}
+        </span>
 
                                                             {requestPendingMap[searchUser.userId] ? (
                                                                 <span className="text-xs font-semibold text-zinc-400 italic bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-md">
-                                        Sent!
-                                    </span>
+                Sent!
+            </span>
                                                             ) : (
                                                                 <button
+                                                                    disabled={requestPendingMap[searchUser.userId]} // <-- Natively locks the browser frame action link
                                                                     onClick={() => handleSendFriendRequest(searchUser.userId)}
-                                                                    className="text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition"
+                                                                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition ${
+                                                                        requestPendingMap[searchUser.userId]
+                                                                            ? "bg-zinc-300 dark:bg-zinc-700 text-zinc-500 cursor-not-allowed"
+                                                                            : "bg-blue-600 hover:bg-blue-500 text-white"
+                                                                    }`}
                                                                 >
                                                                     Add Friend
                                                                 </button>
