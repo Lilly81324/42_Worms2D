@@ -3,7 +3,6 @@ import { keyInfo, MovementState } from "./MovementState";
 import { Worm } from "../../player/Worm";
 import { Achievements } from "../../data/achievments";
 import { GameState } from "@/shared/state/GameState";
-import { IState } from '../IState';
 import { CS_WormPosition, CS_Type } from '@/shared/packets/ClientServerPackets';
 
 function forChosenWorm(
@@ -96,7 +95,7 @@ function forAllWorms(
 
 export function movementTick(state: MovementState) {
 	const machine = state.machine
-	if (!machine.loaded || machine.loaded.players.length == 0)
+	if (machine.gameOver || !machine.loaded || machine.loaded.players.length == 0)
 		return ;
 
 	machine.loaded.players.forEach((player) => {

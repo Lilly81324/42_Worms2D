@@ -32,8 +32,8 @@ export class AirStrike extends GenericWeapon implements IWeapon {
 	public spread = 0.2;
 	public damage = 3;
 	public explosion: Explosion = {
-		size: 0.2,
-		damage: 5,
+		size: 10,
+		damage: 209,
 		affectTerrain: true
 	};
 	public mesh: Mesh;

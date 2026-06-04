@@ -71,7 +71,7 @@ export default function LobbyPageController() {
 
   /** Ids of the players that won */
   // Needs ref, because we read it in effect
-  const [winners, setWinners] = useState<Array<string>>([]);
+  const [winner, setWinner] = useState<string>([]);
 
   /** Used during failed loading and connecting */
   const [errorMsg, setErrorMsg] = useState("");
@@ -207,8 +207,8 @@ export default function LobbyPageController() {
         updateState("ENDSCREEN");
       else if (packet.type == SC_Type.SC_DEV_StartConnecting)
         updateState("CONNECTING");
-      else if (packet.type == SC_Type.SC_PlayersWon)
-        setWinners(packet.winnerIds);
+      else if (packet.type == SC_Type.SC_WinningPlayer)
+        setWinner(packet.winnerId);
       else
         packetHandled = false;
 
@@ -262,7 +262,7 @@ export default function LobbyPageController() {
             `Unnamed Player ${user?.id.substring(0, 6)}` :
             "",
       errorMsg,
-      winners,
+      winner,
     }}>
       <div className="min-h-screen bg-slate-800 flex flex-col items-center justify-center"> 
         <SocketStatus isConnected={isConnected}/>

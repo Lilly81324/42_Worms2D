@@ -13,7 +13,8 @@ export interface pointData {
  */
 export interface wormData {
 	id: number,
-	pos: pointData
+	pos: pointData,
+	health: number,
 }
 
 /**
@@ -58,4 +59,20 @@ export enum aimStateId {
 	PianoPickPosition =	1,
 	PickPosition = 2,
 	SwitchTargetAngle = 3,
+}
+
+// For representing an explosion that happens
+export interface explosionData {
+	position: pointData,
+	radius: number,
+	damage: number,
+}
+
+// Sent when a Turn is over
+export interface endOfTurnData {
+  players: Array<playerData>;
+  gameOver: boolean;
+  deathMsgs: Array<string>;
+  winners: Array<string>;
+  explo: Array<explosionData>
 }

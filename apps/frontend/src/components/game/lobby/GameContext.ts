@@ -18,8 +18,7 @@ export interface GameContextType {
 	userId: string;
 	userName: string;
 	errorMsg: string;
-	winners: Array<string>;
-
+	winner: string;
 }
 
 export const GameContext = createContext<GameContextType | null>(null);

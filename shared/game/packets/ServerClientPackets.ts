@@ -10,7 +10,7 @@
  * 3) Add the interface name into the union type at the end
 */
 
-import { aimStateId, gameData, pointData } from './util';
+import { aimStateId, endOfTurnData, explosionData, gameData, pointData } from './util';
 import { Client } from './Client';
 
 export enum SC_Type {
@@ -42,8 +42,10 @@ export enum SC_Type {
 	SC_SwitchAimState =			"SC_SwitchAimState",
 	SC_AimTargetAngle =			"SC_AimTargetAngle",
 	SC_CancelAiming =			"SC_CancelAiming",
-	SC_PlayersWon =				"SC_PlayersWon",
+	SC_TurnEnds =				"SC_TurnEnds",
 	SC_WormPosition =			"SC_WormPosition",
+	SC_DEV_KillRandomWorm =		"SC_DEV_KillRandomWorm",
+	SC_WinningPlayer =			"SC_WinningPlayer",
 }
 
 // Packets that should definitely not show up in logging
@@ -65,6 +67,8 @@ export const frontendServerPackets: Array<SC_Type> = [
 	SC_Type.SC_ReadyChange,
 	SC_Type.SC_StartLoading,
 	SC_Type.SC_StartGame,
+	SC_Type.SC_GameFinished,
+	SC_Type.SC_WinningPlayer,
 ]
 
 /**
@@ -343,9 +347,9 @@ export interface SC_GameData extends SC_Base {
  * Sent when players won the game
  * @param winnerIds Identifiers for the players who won the game
  */
-export interface SC_PlayersWon extends SC_Base {
-	type: SC_Type.SC_PlayersWon,
-	winnerIds: Array<string>,
+export interface SC_TurnEnds extends SC_Base {
+	type: SC_Type.SC_TurnEnds,
+	data: endOfTurnData,
 }
 
 /**
@@ -354,8 +358,7 @@ export interface SC_PlayersWon extends SC_Base {
  */
 export interface SC_ExplosionOccurs extends SC_Base {
 	type: SC_Type.SC_ExplosionOccurs,
-	point: pointData,
-	radius: number,
+	explo: Array<explosionData>,
 }
 
 /**
@@ -365,6 +368,23 @@ export interface SC_WormPosition extends SC_Base {
 	type: SC_Type.SC_WormPosition,
 	wormId: number,
 	pos: pointData,
+}
+
+/**
+ * Sent when Worm moves with significant speed
+ */
+export interface SC_WinningPlayer extends SC_Base {
+	type: SC_Type.SC_WinningPlayer,
+	winnerId: string,
+}
+
+/**
+ * Sent when Worm moves with significant speed
+ */
+export interface SC_DEV_KillRandomWorm extends SC_Base {
+	type: SC_Type.SC_DEV_KillRandomWorm,
+	wormId: number,
+	playerId: string,
 }
 
 
@@ -381,7 +401,8 @@ export type SC_GenericPacket =
 			SC_GameData | SC_ActivePlayerChanged | SC_WormChosen |
 			SC_ExplosionOccurs | SC_WeaponChosen | SC_AimAngle |
 			SC_AimMoveTarget | SC_SwitchAimState | SC_AimTargetAngle |
-			SC_CancelAiming | SC_PlayersWon | SC_WormPosition
+			SC_CancelAiming | SC_TurnEnds | SC_WormPosition |
+			SC_DEV_KillRandomWorm | SC_WinningPlayer
 			;
 
 export type SC_GenericStatePacket = SC_StartLobby | SC_StartLoading |

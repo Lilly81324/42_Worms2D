@@ -33,7 +33,7 @@ export class Meteor extends GenericWeapon implements IWeapon {
 	public damage = 10;
 	public explosion: Explosion = {
 		size: 10,
-		damage: 40,
+		damage: 1000,
 		affectTerrain: true
 	};
 	public mesh: Mesh;

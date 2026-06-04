@@ -1,6 +1,6 @@
 // import * from 'ClientServerPackets.ts';
 
-import { aimStateId, pointData } from "./util";
+import { aimStateId, explosionData, pointData } from "./util";
 
 
 /**
@@ -40,6 +40,8 @@ export enum CS_Type {
 	CS_DEV_GameWon =			"CS_DEV_GameWon",
 	CS_DEV_StaleMate =			"CS_DEV_StaleMate",
 	CS_WormPosition =			"CS_WormPosition",
+	CS_ClientFinishedTurn =		"CS_ClientFinishedTurn",
+	CS_IWIN =					"CS_IWIN",
 }
 
 // Packets that should definitely not show up in logging
@@ -255,24 +257,31 @@ export interface CS_EndAimState extends CS_Base {
 	position: pointData
 	targetAngle: number,
 	force: number,
+	explosions: Array<explosionData>,
+}
+
+/**
+ * Sent when Client has handled their stuff in hte end of their turn
+ */
+export interface CS_ClientFinishedTurn extends CS_Base {
+	type: CS_Type.CS_ClientFinishedTurn,
+}
+
+/**
+ * Sent when Client has handled their stuff in hte end of their turn
+ */
+export interface CS_IWIN extends CS_Base {
+	type: CS_Type.CS_IWIN,
 }
 
 // ENDSCREEN ==================================================================
-/**
- * WRONG WRONG WRONG
- * This is some dev bullshit, wherer the client tells the server who won,
- * which is wrong, the server should be teellling this to the client
- */
-export interface CS_DEV_GameWon extends CS_Base {
-	type: CS_Type.CS_DEV_GameWon,
-	winnerIds: Array<string>
-}
-
 /**
  * DEV MODE, delete later
  */
 export interface CS_DEV_StartEndscreen extends CS_Base {
 	type: CS_Type.CS_DEV_StartEndscreen,
+	won: boolean,
+	winnerId: string,
 }
 
 export type CS_GenericPacket = 
@@ -283,6 +292,6 @@ export type CS_GenericPacket =
 			CS_GetGameState | CS_DEV_SetGameState | CS_RequestChangeGameState |
 			CS_WormChosen | CS_EndAimState | CS_WeaponChosen |
 			CS_AimMoveTarget | CS_SwitchAimState | CS_AimTargetAngle |
-			CS_AimAngle | CS_CancelAiming | CS_DEV_GameWon |
-			CS_WormPosition
+			CS_AimAngle | CS_CancelAiming | CS_IWIN |
+			CS_WormPosition | CS_ClientFinishedTurn
 			;

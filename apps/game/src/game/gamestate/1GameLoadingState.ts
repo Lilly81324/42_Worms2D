@@ -2,6 +2,7 @@ import { IState } from './IState';
 import { Game } from '../Game';
 import { SC_Type } from '@/shared/packets/ServerClientPackets';
 import { generateGameData } from '../spawning/generateGameData';
+import { Player } from './Player';
 
 export class GameLoadingState implements IState {
   constructor(private game: Game) {}
@@ -19,6 +20,18 @@ export class GameLoadingState implements IState {
     const data = generateGameData(this.game.lobby.clientManager.clients);
     this.game.sendPacket(SC_Type.SC_GameData, {
       data,
+    });
+    data.players.forEach((player) => {
+      this.game.players.push(
+        new Player(
+          player.id,
+          player.name,
+          player.slot,
+          player.worms,
+          this.game.scene,
+          data.max_health,
+        ),
+      );
     });
     // Set last player as active, so first player starts, when on Turn Start we move to next player
     this.game.lobby.clientManager.restart();

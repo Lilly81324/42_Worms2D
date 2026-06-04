@@ -27,7 +27,7 @@ export async function createScene(
 			cleanup: () => {},
 		});
 	const socket: Socket = socketRef.current;
-	const camera = createCamera(scene, canvas, 0, 0, 62);
+	const camera = createCamera(scene, canvas, 0, 0, 80);
 	const light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
 	light.intensity = 0.7;
 

@@ -32,6 +32,7 @@ export interface Client {
   color: string;
   ready: boolean;
   loading: LoadingStatus;
+  finishedEndOfTurn: boolean;
 }
 
 export function newLoading() {
@@ -52,6 +53,7 @@ export function newClient(slot: number, color: string): Client {
 		color: color,
 		ready: false,
 		loading: newLoading(),
+		finishedEndOfTurn: false,
 	}
 	return (client)
 }
@@ -67,7 +69,8 @@ export function generateClient(id: string, name: string, slot: number, color: st
 		slot: slot,
 		color: color,
 		ready: false,
-		loading: newLoading()
+		loading: newLoading(),
+		finishedEndOfTurn: false,
 	}
 	return (new_client)
 }

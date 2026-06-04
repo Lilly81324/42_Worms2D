@@ -37,7 +37,15 @@ function sendAimingDone(machine: StateMachine) {
 		},
 		// Do this because BJs angles are counter clockwise, but ours are clockwise
 		targetAngle: (Math.PI * 2 - data.direction.rotation.y),
-		force: data.force
+		force: data.force,
+		explosions: [{
+			position: {
+				x: pos_x,
+				y: pos_y,
+			},
+			radius: machine.loaded.turn.chosenWeapon?.explosion?.size ?? 0,
+			damage: machine.loaded.turn.chosenWeapon?.explosion?.damage ?? 0,
+		}]
 	});
 }
 

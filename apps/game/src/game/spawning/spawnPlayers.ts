@@ -1,5 +1,5 @@
 import { gameData, playerData, wormData } from '@/shared/packets/util';
-import { Vector2, Scalar } from 'babylonjs';
+import { Vector2, Scalar } from '@babylonjs/core';
 import { generateSpawnAreas } from './vectorData';
 import { WORMS_PER_PLAYER } from './generateGameData';
 import { Client } from '@/shared/packets/Client';
@@ -7,10 +7,12 @@ import { Client } from '@/shared/packets/Client';
 class WormSpawner {
   private points: Array<Array<Vector2>>;
   private idCounter: number;
-  constructor(points: Array<Array<Vector2>>) {
+  private maxHealth: number;
+  constructor(points: Array<Array<Vector2>>, maxHealth: number) {
     console.log('New Worm Spawner created');
     this.points = points;
     this.idCounter = 0;
+    this.maxHealth = maxHealth;
   }
 
   // Choose random spawning area
@@ -28,6 +30,7 @@ class WormSpawner {
       const pos = Math.floor(Scalar.RandomRange(0, this.points[num].length));
       result = {
         id: this.idCounter,
+        health: this.maxHealth,
         pos: { x: this.points[num][pos].x, y: this.points[num][pos].y },
       };
       this.idCounter++;
@@ -45,7 +48,7 @@ class WormSpawner {
 
 export function spawnPlayers(data: gameData, clients: Array<Client>) {
   console.log(`Generating Players for ${clients.length} clients`);
-  const spawner = new WormSpawner(generateSpawnAreas());
+  const spawner = new WormSpawner(generateSpawnAreas(), data.max_health);
   for (let i = 0; i < clients.length; i++) {
     const new_player: playerData = {
       id: clients[i].id,
