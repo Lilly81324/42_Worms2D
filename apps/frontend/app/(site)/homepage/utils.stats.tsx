@@ -50,7 +50,7 @@ export default function Stats() {
 
     try {
       const res = await fetch(
-        `${API_BASE}/stats/user/99173503-c17e-4b8c-9ec8-207157f0afbc`,
+        `${API_BASE}/stats/user/417bafc1-5f9e-4045-a23c-168b7c0c5d0c`,
         {
           method: "PUT",
           headers:  headers,
@@ -175,11 +175,11 @@ export default function Stats() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 h-[calc(100vh-80px)] flex flex-col gap-6">
-      <button onClick={handleCreateAchievement}>Create Achievement</button>
-      <button onClick={handleCreatePlayerStats}>Create Player Stats</button>
-      <button onClick={handleUpdatePlayerStats}>Update Player Stats</button>
-      <button onClick={handleCreateMatch}>Create Match</button>
-      <button onClick={handleUpdateAchievement}>Upsert Achievement</button>
+      <button className = "py-2 px-4 cursor-pointer text-gray-700 font-black" onClick={handleCreateAchievement}>Create Achievement</button>
+      <button className = "py-2 px-4 cursor-pointer text-gray-700 font-black" onClick={handleCreatePlayerStats}>Create Player Stats</button>
+      <button className = "py-2 px-4 cursor-pointer text-gray-700 font-black" onClick={handleUpdatePlayerStats}>Update Player Stats</button>
+      <button className = "py-2 px-4 cursor-pointer text-gray-700 font-black" onClick={handleCreateMatch}>Create Match</button>
+      <button className = "py-2 px-4 cursor-pointer text-gray-700 font-black" onClick={handleUpdateAchievement}>Upsert Achievement</button>
     </div>
   );
 }
