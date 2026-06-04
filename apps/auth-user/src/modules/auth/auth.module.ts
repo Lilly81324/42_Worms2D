@@ -13,6 +13,7 @@ import { AuthVerifyService } from './services/auth-verify.service';
 import { AuthLoginService } from './services/auth-login.service';
 import { AuthGoogleExchangeService } from './services/auth-google-exchange.service';
 import { AuthAdminService } from './services/auth-admin.service';
+import { AuthDirectoryService } from './services/auth-directory.service';
 import { AuthRateLimitService } from './shared/auth-rate-limit.service';
 import { AuthTokenIssueService } from './shared/auth-token-issue.service';
 import { AuthSessionCacheService } from './shared/auth-session-cache.service';
@@ -36,6 +37,7 @@ import { RolesGuard } from './security/guards/roles.guard';
     AuthLoginService,
     AuthGoogleExchangeService,
     AuthAdminService,
+    AuthDirectoryService,
     AuthService,
   ],
   exports: [
@@ -54,6 +56,7 @@ import { RolesGuard } from './security/guards/roles.guard';
     AuthLoginService,
     AuthGoogleExchangeService,
     AuthAdminService,
+    AuthDirectoryService,
   ],
 })
 export class AuthModule {}

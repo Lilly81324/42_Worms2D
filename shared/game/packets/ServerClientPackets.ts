@@ -10,7 +10,7 @@
  * 3) Add the interface name into the union type at the end
 */
 
-import { gameData, pointData } from './util';
+import { aimStateId, gameData, pointData } from './util';
 import { Client } from './Client';
 
 export enum SC_Type {
@@ -35,8 +35,33 @@ export enum SC_Type {
 	SC_DEV_GameState =			"SC_DEV_GameState",
 	SC_ActivePlayerChanged =	"SC_ActivePlayerChanged",
 	SC_WormChosen =				"SC_WormChosen",
+	SC_WeaponChosen =			"SC_WeaponChosen",
+	SC_AimAngle =				"SC_AimAngle",
+	SC_AimMoveTarget =			"SC_AimMoveTarget",
 	SC_ExplosionOccurs =		"SC_ExplosionOccurs",
+	SC_SwitchAimState =			"SC_SwitchAimState",
+	SC_AimTargetAngle =			"SC_AimTargetAngle",
+	SC_CancelAiming =			"SC_CancelAiming",
 }
+
+// Packets that should definitely not show up in logging
+// (likely because they are sent every tick)
+export const hideServerPackets: Array<SC_Type> = [
+	SC_Type.SC_AimAngle,
+	SC_Type.SC_AimMoveTarget
+]
+
+// Packets that should be considered "handled" by BabylonJs
+export const frontendServerPackets: Array<SC_Type> = [
+	SC_Type.SC_DEV_StartConnecting,
+	SC_Type.SC_InvalidState,
+	SC_Type.SC_StartLobby,
+	SC_Type.SC_ConnectFail,
+	SC_Type.SC_ConnectSuccess,
+	SC_Type.SC_ReadyChange,
+	SC_Type.SC_StartLoading,
+	SC_Type.SC_StartGame,
+]
 
 /**
  * Fields used in ALL packets:
@@ -247,6 +272,61 @@ export interface SC_WormChosen extends SC_Base {
 }
 
 /**
+ * Sent to inform frontend of client choosing a weapon
+ * @param id identifier for the chosen weapon
+ */
+export interface SC_WeaponChosen extends SC_Base {
+	type: SC_Type.SC_WeaponChosen,
+	id: number,
+}
+
+/**
+ * Sent to inform frontend of client aiming weapon in a different direction
+ * @param angle new angle for worms weapon in bjs units
+ */
+export interface SC_AimAngle extends SC_Base {
+	type: SC_Type.SC_AimAngle,
+	angle: number,
+}
+
+/**
+ * Sent to inform frontend of client aiming target in a different direction
+ * @param angle new angle for target Direction in bjs units
+ */
+export interface SC_AimTargetAngle extends SC_Base {
+	type: SC_Type.SC_AimTargetAngle,
+	angle: number,
+}
+
+
+/**
+ * Sent when clients should move aiming target marker to another position
+ * @param point coordinates of new point
+ */
+export interface SC_AimMoveTarget extends SC_Base {
+	type: SC_Type.SC_AimMoveTarget,
+	point: pointData,
+}
+
+/**
+ * Sent when server needs client to change aim state
+ * @param entering wether we are entering or exiting the aim state
+ * @param stateId identifier for the state we are talking about
+ */
+export interface SC_SwitchAimState extends SC_Base {
+	type: SC_Type.SC_SwitchAimState,
+	entering: boolean,
+	stateId: aimStateId,
+}
+
+/**
+ * Sent when server telsl client to reset the aiming state
+ */
+export interface SC_CancelAiming extends SC_Base {
+	type: SC_Type.SC_CancelAiming,
+}
+
+/**
  * Sent when game is started or loaded so Clients can display game
  * @param data Data that is needed for game to be loaded
  */
@@ -266,7 +346,6 @@ export interface SC_ExplosionOccurs extends SC_Base {
 }
 
 
-
 // ENDSCREEN ==================================================================
 
 
@@ -278,7 +357,9 @@ export type SC_GenericPacket =
 			SC_LoadingProgress | SC_StartGame | SC_GameFinished |
 			SC_DEV_ButtonPress | SC_DEV_Periodic | SC_DEV_GameState |
 			SC_GameData | SC_ActivePlayerChanged | SC_WormChosen |
-			SC_ExplosionOccurs
+			SC_ExplosionOccurs | SC_WeaponChosen | SC_AimAngle |
+			SC_AimMoveTarget | SC_SwitchAimState | SC_AimTargetAngle |
+			SC_CancelAiming
 			;
 
 export type SC_GenericStatePacket = SC_StartLobby | SC_StartLoading |

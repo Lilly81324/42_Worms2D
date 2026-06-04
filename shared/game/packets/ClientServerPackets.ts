@@ -1,6 +1,6 @@
 // import * from 'ClientServerPackets.ts';
 
-import { pointData } from "./util";
+import { aimStateId, pointData } from "./util";
 
 
 /**
@@ -30,8 +30,21 @@ export enum CS_Type {
 	CS_JoinLobby =				"CS_JoinLobby",
 	CS_RequestChangeGameState =	"CS_RequestChangeGameState",
 	CS_WormChosen =				"CS_WormChosen",
-	CS_AimingDone =				"CS_AimingDone",
+	CS_WeaponChosen =			"CS_WeaponChosen",
+	CS_AimAngle =				"CS_AimAngle",
+	CS_AimMoveTarget =			"CS_AimMoveTarget",
+	CS_EndAimState =			"CS_EndAimState",
+	CS_SwitchAimState =			"CS_SwitchAimState",
+	CS_AimTargetAngle =			"CS_AimTargetAngle",
+	CS_CancelAiming =			"CS_CancelAiming",
 }
+
+// Packets that should definitely not show up in logging
+// (likely because they are sent every tick)
+export const hideClientPackets: Array<CS_Type> = [
+	CS_Type.CS_AimAngle,
+	CS_Type.CS_AimMoveTarget
+]
 
 /**
  * Fields used in ALL packets:
@@ -169,10 +182,65 @@ export interface CS_WormChosen extends CS_Base {
 	wormId: number,
 }
 
-export interface CS_AimingDone extends CS_Base {
-	type: CS_Type.CS_AimingDone,
+/**
+ * Sent to inform server that a player has chosen a weapon
+ * @param id Identifier of that weapon (seee shared/weapons/weaponIds)
+ */
+export interface CS_WeaponChosen extends CS_Base {
+	type: CS_Type.CS_WeaponChosen,
+	id: number,
+}
+
+/**
+ * Sent to inform server that a player has chosen a worm
+ * @param angle the angle to aim at (bjs angle)
+ */
+export interface CS_AimAngle extends CS_Base {
+	type: CS_Type.CS_AimAngle,
 	angle: number,
-	position: pointData,
+}
+
+/**
+ * Sent to inform server that a player has chosen a worm
+ * @param angle new angle for target Direction in bjs units
+ */
+export interface CS_AimTargetAngle extends CS_Base {
+	type: CS_Type.CS_AimTargetAngle,
+	angle: number,
+}
+
+/**
+ * Sent when client moves target to another position
+ * @param point coordinates of new point
+ */
+export interface CS_AimMoveTarget extends CS_Base {
+	type: CS_Type.CS_AimMoveTarget,
+	point: pointData,
+}
+
+/**
+ * Sent when server needs client to change aim state
+ * @param entering wether we are entering or exiting the aim state
+ * @param stateId identifier for the state we are talking about
+ */
+export interface CS_SwitchAimState extends CS_Base {
+	type: CS_Type.CS_SwitchAimState,
+	entering: boolean,
+	stateId: aimStateId,
+}
+
+/**
+ * Sent when client wants to tell server to reset their aiming back to the first state
+ */
+export interface CS_CancelAiming extends CS_Base {
+	type: CS_Type.CS_CancelAiming,
+}
+
+export interface CS_EndAimState extends CS_Base {
+	type: CS_Type.CS_EndAimState,
+	wormAngle: number,
+	position: pointData
+	targetAngle: number,
 	force: number,
 }
 
@@ -191,5 +259,7 @@ export type CS_GenericPacket =
 			CS_FinishedLoading | CS_FailedLoading | CS_DEV_StartLoading |
 			CS_DEV_ButtonPress | CS_DEV_StartGame | CS_DEV_StartEndscreen |
 			CS_GetGameState | CS_DEV_SetGameState | CS_RequestChangeGameState |
-			CS_WormChosen | CS_AimingDone
+			CS_WormChosen | CS_EndAimState | CS_WeaponChosen |
+			CS_AimMoveTarget | CS_SwitchAimState | CS_AimTargetAngle |
+			CS_AimAngle | CS_CancelAiming
 			;

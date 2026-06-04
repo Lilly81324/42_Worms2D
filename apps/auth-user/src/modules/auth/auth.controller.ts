@@ -25,6 +25,8 @@ import { AuthService } from './services/auth.service';
 import { LoginRequestDto } from './contracts/dto/login-request.dto';
 import { AuditQueryDto } from './contracts/dto/audit-query.dto';
 import { AuditListResponseDto } from './contracts/dto/audit-list-response.dto';
+import { UserSearchQueryDto } from './contracts/dto/user-search-query.dto';
+import { UserSearchResponseDto } from './contracts/dto/user-search-response.dto';
 import { GoogleExchangeRequestDto } from './contracts/dto/google-exchange-request.dto';
 import { type LoginContext } from './services/auth-login.service';
 import { type LogoutContext } from './services/auth-logout.service';
@@ -108,6 +110,15 @@ export class AuthController {
       token,
       audience: query.audience,
     });
+  }
+
+  @Get('users/search')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(BearerAuthGuard)
+  searchDirectoryUsers(
+    @Query() query: UserSearchQueryDto,
+  ): Promise<UserSearchResponseDto> {
+    return this.authService.searchDirectoryUsers(query);
   }
 
   @Post('login')

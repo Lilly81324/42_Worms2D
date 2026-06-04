@@ -7,27 +7,26 @@ export class RoundStartState implements IState {
 	private next: boolean = false;
 	constructor(private machine: StateMachine) {}
 
-	enter() : Array<IAction> {
+	enter() {
 		console.log('Entered Round Start State');
 		this.reset()
+		if (!this.machine.loaded)
+			return ;
 
 		// Setup
-		this.machine.turn?.chosenWeapon?.show(false)
+		this.machine.loaded?.turn.chosenWeapon?.show(false)
 		this.machine.guiHelper?.notifications.add("A new Round has started")
 
-		this.machine.activePlayerId = this.machine.players[0].id;
+		this.machine.activePlayerId = this.machine.loaded.players[0].id;
 
 		// Actions
-		const actions: Array<IAction> = [];
-
-		// DEV TOOL skip to next state manually by pressing Space
-		actions.push(new ExecuteCodeAction({
+		const action = this.machine.scene.actionManager;
+		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: " "
 		}, () => {
 			this.next = true;
 		}));
-		return(actions);
 	}
 
 	tick() {

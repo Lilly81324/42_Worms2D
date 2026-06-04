@@ -25,6 +25,10 @@ import { RabbitmqEventService } from '../events/rabbitmq-event.service';
 import { SocialConfigService } from '../config/social-config.service';
 import type { AuthPrincipal } from '../auth/auth-principal';
 import { isAdmin } from '../auth/auth-principal';
+import {
+  AuthDirectoryService,
+  type AuthDirectoryUser,
+} from '../auth/auth-directory.service';
 import type {
   CreateBlockDto,
   CreateClanDto,
@@ -60,6 +64,7 @@ export class SocialService {
     private readonly redis: SocialRedisService,
     private readonly events: RabbitmqEventService,
     private readonly config: SocialConfigService,
+    private readonly authDirectory: AuthDirectoryService,
   ) {}
 
   async getProfile(userId: string, principal: AuthPrincipal) {
@@ -115,20 +120,15 @@ export class SocialService {
 
   async searchUsers(query: ListQueryDto, principal: AuthPrincipal) {
     const limit = query.limit ?? 25;
+    const identities = await this.searchAuthDirectory(query, principal);
+    const authUserIds = Array.from(identities.keys());
+
+    if (authUserIds.length > 0) {
+      await Promise.all(authUserIds.map((id) => this.ensureProfile(id)));
+    }
+
     const items = await this.prisma.userProfile.findMany({
-      where: query.query
-        ? {
-            OR: [
-              {
-                displayName: {
-                  contains: query.query,
-                  mode: 'insensitive',
-                },
-              },
-              { userId: query.query },
-            ],
-          }
-        : undefined,
+      where: this.buildUserSearchWhere(query.query, authUserIds),
       orderBy: [{ displayName: 'asc' }, { userId: 'asc' }],
       take: limit + 1,
       ...(query.cursor ? { cursor: { userId: query.cursor }, skip: 1 } : {}),
@@ -145,7 +145,12 @@ export class SocialService {
         )
       ) {
         visible.push(
-          await this.toProfileView(profile, principal.claims.sub, principal),
+          await this.toProfileSearchView(
+            profile,
+            principal.claims.sub,
+            principal,
+            identities.get(profile.userId),
+          ),
         );
       }
     }
@@ -1356,6 +1361,80 @@ export class SocialService {
     });
   }
 
+  private async searchAuthDirectory(
+    query: ListQueryDto,
+    principal: AuthPrincipal,
+  ): Promise<Map<string, AuthDirectoryUser>> {
+    const search = query.query?.trim();
+    if (!search) {
+      return new Map();
+    }
+
+    const authLimit = Math.min(Math.max((query.limit ?? 25) * 4, 25), 100);
+    const response = await this.authDirectory.searchUsers(
+      {
+        query: search,
+        limit: authLimit,
+      },
+      principal.token,
+    );
+
+    return new Map(
+      (response.items ?? []).map((user) => [user.id, user] as const),
+    );
+  }
+
+  private buildUserSearchWhere(
+    query?: string,
+    authUserIds: string[] = [],
+  ): Prisma.UserProfileWhereInput | undefined {
+    const search = query?.trim();
+    const filters: Prisma.UserProfileWhereInput[] = [];
+
+    if (search) {
+      filters.push({
+        displayName: {
+          contains: search,
+          mode: 'insensitive',
+        },
+      });
+
+      if (this.isUuid(search)) {
+        filters.push({ userId: search });
+      }
+    }
+
+    if (authUserIds.length > 0) {
+      filters.push({ userId: { in: authUserIds } });
+    }
+
+    return filters.length > 0 ? { OR: filters } : undefined;
+  }
+
+  private async toProfileSearchView(
+    profile: Prisma.UserProfileGetPayload<{
+      include: ReturnType<SocialService['profileInclude']>;
+    }>,
+    viewerId: string,
+    principal: AuthPrincipal,
+    identity?: AuthDirectoryUser,
+  ) {
+    const view = await this.toProfileView(profile, viewerId, principal);
+
+    if (!identity) {
+      return view;
+    }
+
+    return {
+      ...view,
+      identity: {
+        userId: identity.id,
+        email: identity.email,
+        username: identity.username ?? null,
+      },
+    };
+  }
+
   private async toProfileView(
     profile: Prisma.UserProfileGetPayload<{
       include: ReturnType<SocialService['profileInclude']>;
@@ -1509,6 +1588,12 @@ export class SocialService {
         (visibility === 'FRIENDS' && friend) ||
         visibility === 'PRIVATE') &&
       visibility !== 'PRIVATE'
+    );
+  }
+
+  private isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(
+      value,
     );
   }
 

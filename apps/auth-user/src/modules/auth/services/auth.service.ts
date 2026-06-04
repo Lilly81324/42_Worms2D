@@ -42,6 +42,7 @@ import {
   AuthAdminService,
   type DisableUserContext,
 } from './auth-admin.service';
+import { AuthDirectoryService } from './auth-directory.service';
 
 @Injectable()
 export class AuthService {
@@ -53,6 +54,7 @@ export class AuthService {
     private readonly authLoginService: AuthLoginService,
     private readonly authGoogleExchangeService: AuthGoogleExchangeService,
     private readonly authAdminService: AuthAdminService,
+    private readonly authDirectoryService: AuthDirectoryService,
   ) {}
 
   login(
@@ -115,6 +117,12 @@ export class AuthService {
     context: DisableUserContext,
   ): Promise<UserSearchResponseDto> {
     return this.authAdminService.searchUsers(input, context);
+  }
+
+  searchDirectoryUsers(
+    input: UserSearchQueryDto,
+  ): Promise<UserSearchResponseDto> {
+    return this.authDirectoryService.searchUsers(input);
   }
 
   getUser(

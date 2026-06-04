@@ -32,7 +32,7 @@ paths:
 
   /internal/users/search:
     get:
-      summary: Search users
+      summary: Search visible user profiles by display name, username, email, or id
       responses:
         "200": { description: OK }
 
