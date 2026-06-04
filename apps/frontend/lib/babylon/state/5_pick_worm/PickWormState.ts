@@ -4,6 +4,7 @@ import { GameState } from '@/shared/state/GameState';
 import { ExecuteCodeAction, ActionManager, IAction } from '@babylonjs/core'
 import { WormPointer } from './WormPointer';
 import { CS_Type, CS_WormChosen } from '@/shared/packets/ClientServerPackets';
+import { Worm } from '../../player/Worm';
 
 /**
  * Uses Notification system to display custom message based on if this client is active
@@ -22,26 +23,39 @@ export class PickWormState implements IState {
 	private pointer: WormPointer | undefined = undefined;
 	constructor(private machine: StateMachine) {}
 
-	enter() : Array<IAction> {
+	enter() {
 		this.reset()
+		if (!this.machine.loaded)
+			return ;
 
 		// Setup
 		turnMessage(this.machine);
-		this.pointer = new WormPointer(this.machine.scene, this.machine.turn?.chosenWorm.mesh);
-		this.pointer.target = (this.machine.turn) ? this.machine.turn.chosenWorm.mesh : undefined;
+		const turn = this.machine.loaded.turn;
+		this.pointer = new WormPointer(this.machine.scene, turn.chosenWorm.collider);
+		this.pointer.target = (turn) ? turn.chosenWorm.collider : undefined;
 		
 		// Actions
-		const actions: Array<IAction> = [];
-
+		const action = this.machine.scene.actionManager;
+		
 		// For inactive players, dont allow picking worms
 		if (!this.machine.isActiveUser())
-			return (actions)
+			return ;
 
 		// Allow worms to be chosen by clicking on their mesh
-		this.machine.turn?.activePlayer.wormsClickable(true);
+		turn.activePlayer.wormsClickable(true, (worm: Worm) => {
+			console.log("Picking wory boy");
+			this.pickWorm(worm);
+			this.machine.msgToServer<CS_WormChosen>(CS_Type.CS_WormChosen, {
+				wormId: worm.id ?? 0,
+			})
+		});
+
+		// Set first worm as chosen (jsut goes back and forth for proper logic)
+		this.getNextWorm(true);
+		this.getNextWorm(false);
 
 		// Confirming chosen Worm
-		actions.push(new ExecuteCodeAction({
+		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: " "
 		}, () => {
@@ -49,26 +63,24 @@ export class PickWormState implements IState {
 		}));
 
 		// Picking next Worm from list
-		actions.push(new ExecuteCodeAction({
+		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: "d"
 		}, () => {
 			this.getNextWorm(true);
 			this.machine.msgToServer<CS_WormChosen>(CS_Type.CS_WormChosen, {
-				wormId: this.machine.turn?.chosenWorm.id ?? 0,
+				wormId: turn.chosenWorm.id ?? 0,
 			})
 		}));
-		actions.push(new ExecuteCodeAction({
+		action.registerAction(new ExecuteCodeAction({
 			trigger: ActionManager.OnKeyUpTrigger,
 			parameter: "a"
 		}, () => {
 			this.getNextWorm(false);
 			this.machine.msgToServer<CS_WormChosen>(CS_Type.CS_WormChosen, {
-				wormId: this.machine.turn?.chosenWorm.id ?? 0,
+				wormId: turn.chosenWorm.id ?? 0,
 			})
 		}));
-
-		return (actions);
 	}
 
 	/**
@@ -76,15 +88,34 @@ export class PickWormState implements IState {
 	 * @returns 
 	 */
 	private getNextWorm(forward: boolean) {
-		if (!this.machine.turn)
+		if (!this.machine.loaded)
 			return ;
-		const next_worm = this.machine.turn.activePlayer.getNextWorm(forward, this.machine.turn.chosenWorm);
-		this.machine.turn.chosenWorm = next_worm;
+		const next_worm = this.machine.loaded.turn.activePlayer.getNextWorm(forward, this.machine.loaded.turn.chosenWorm);
+		this.pickWorm(next_worm);
+	}
+
+	/**
+	 * Chooses a new worm and places the chosen weapon on them, if possible
+	 * @param newWorm New worm to choose
+	 */
+	private pickWorm(newWorm: Worm) {
+		if (!this.machine.loaded)
+			return ;
+		const turn = this.machine.loaded.turn;
+		turn.chosenWorm = newWorm;
+		if (!turn.chosenWeapon)
+			return ;
+		turn.chosenWeapon.mesh.position.x = turn.chosenWorm.collider.position.x;
+		turn.chosenWeapon.mesh.position.y = turn.chosenWorm.collider.position.y;
+
 	}
 
 	tick() {
-		if (this.pointer && this.machine.turn && this.pointer.target != this.machine.turn.chosenWorm.mesh)
-			this.pointer.target = this.machine.turn.chosenWorm.mesh;
+		if (!this.machine.loaded)
+			return ;
+		const turn = this.machine.loaded.turn;
+		if (this.pointer && turn && this.pointer.target != turn.chosenWorm.collider)
+			this.pointer.target = turn.chosenWorm.collider;
 		if (this.next && this.machine.isActiveUser()) {
 			this.machine.sendRequestStatePacket(GameState.MOVEMENT);
 			this.next = false;
@@ -92,7 +123,7 @@ export class PickWormState implements IState {
 	}
 
 	exit() {
-		this.machine.turn?.activePlayer.wormsClickable(false);
+		this.machine.loaded?.turn.activePlayer.wormsClickable(false, undefined);
 		this.pointer?.dispose();
 		this.pointer = undefined;
 		this.reset()

@@ -1,6 +1,7 @@
 import { ExecuteCodeAction, ActionManager, Scene } from '@babylonjs/core';
 import { Worm } from './Worm';
 import { playerData, wormData } from '@/shared/packets/util';
+import { wormModelData } from './loadWormModels';
 
 /**
  * @brief Class representing a Player
@@ -12,17 +13,18 @@ import { playerData, wormData } from '@/shared/packets/util';
  * @function removeWorm Removes worm from Players control
  * @function dispose Cleans up object
  */
+
 export class Player {
 	public readonly id: string;
 	public readonly name: string;
 	public worms: Array<Worm>;
 	private clickableAction: ExecuteCodeAction;
-	constructor(scene: Scene, data: playerData) {
+	constructor(scene: Scene, data: playerData, modelData: wormModelData) {
 		this.id = data.id;
 		this.name = data.name;
 		this.worms = [];
 		data.worms.forEach((worm: wormData) => {
-			this.worms.push(new Worm(scene, worm, data.slot));
+			this.worms.push(new Worm(scene, worm, data.slot, modelData));
 		});
 		this.clickableAction = new ExecuteCodeAction(ActionManager.OnPickUpTrigger, () => {});
 	}
@@ -34,6 +36,7 @@ export class Player {
 	 * @returns the next worm
 	 * @note This could be reworked to move through the worms based on their x position
 	 */
+
 	getNextWorm(forward: boolean, oldWorm: Worm) {
 		let index = this.worms.findIndex((worm) => worm.id == oldWorm.id);
 
@@ -53,15 +56,14 @@ export class Player {
 		return (this.worms[index]);
 	}
 
-	initPickWorm(setChosen: (chosen: Worm) => void) {
-		this.worms.forEach((worm) => {
-			worm.initClickable(setChosen);
-		})
-	}
-
-	wormsClickable(yes: boolean) {
-		if (yes)
-			this.worms.forEach((worm) => {worm.makeClickable()});
+	// ERROR
+	wormsClickable(yes: boolean, pickWorm: undefined | ((worm: Worm) => void)) {
+		if (yes && pickWorm != undefined) {
+			this.worms.forEach((worm) => {
+				console.log("Making clickable: ", worm.name);
+				worm.makeClickable(pickWorm)
+			});
+		}
 		else
 			this.worms.forEach((worm) => {worm.removeClickable()});
 	}

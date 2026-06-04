@@ -9,8 +9,13 @@ import {
   SC_Type,
   SC_WormChosen,
   SC_ExplosionOccurs,
+  SC_WeaponChosen,
+  SC_AimAngle,
+  SC_AimMoveTarget,
+  SC_SwitchAimState,
+  SC_AimTargetAngle,
+  SC_CancelAiming,
 } from '@/shared/packets/ServerClientPackets';
-import { pointData } from '@/shared/packets/util';
 import { GameState } from '@/shared/state/GameState';
 
 function requestChangeState(
@@ -77,18 +82,66 @@ export function handleGamePackets(lobby: Lobby, data: CS_GenericPacket) {
       break;
     }
 
+    // When switching weapons
+    case CS_Type.CS_WeaponChosen: {
+      lobby.msgToClient<SC_WeaponChosen>(SC_Type.SC_WeaponChosen, {
+        id: data.id,
+      });
+      break;
+    }
+
+    // When changing worms weapons angle
+    case CS_Type.CS_AimAngle: {
+      lobby.msgToClient<SC_AimAngle>(SC_Type.SC_AimAngle, {
+        angle: data.angle,
+      });
+      break;
+    }
+
+    // When changing worms target angle
+    case CS_Type.CS_AimTargetAngle: {
+      lobby.msgToClient<SC_AimTargetAngle>(SC_Type.SC_AimTargetAngle, {
+        angle: data.angle,
+      });
+      break;
+    }
+
+    // When changing targets position
+    case CS_Type.CS_AimMoveTarget: {
+      lobby.msgToClient<SC_AimMoveTarget>(SC_Type.SC_AimMoveTarget, {
+        point: data.point,
+      });
+      break;
+    }
+
+    // When Client cancels the aiming to go back to first state
+    case CS_Type.CS_CancelAiming: {
+      lobby.msgToClient<SC_CancelAiming>(SC_Type.SC_CancelAiming, {});
+      break;
+    }
+
+    // When the aiming state needs to be switched
+    case CS_Type.CS_SwitchAimState: {
+      lobby.msgToClient<SC_SwitchAimState>(SC_Type.SC_SwitchAimState, {
+        entering: data.entering,
+        stateId: data.stateId,
+      });
+      break;
+    }
+
     // When aiming is locked in
-    case CS_Type.CS_AimingDone: {
+    case CS_Type.CS_EndAimState: {
       // Do not allow non-active user to submit data
       if (lobby.clientManager.getActive().id != data.userId) return;
       const target = lobby.game.aimingData;
-      target.position = data.position as pointData;
-      target.angle = data.angle as number;
-      target.force = data.force as number;
+      target.wormAngle = data.wormAngle;
+      target.position = data.position;
+      target.targetAngle = data.targetAngle;
+      target.force = data.force;
       requestChangeState(lobby, data.userId, GameState.TURN_END);
       // Placeholder logic for projectile handling: Worm fucking explodes
       lobby.msgToClient<SC_ExplosionOccurs>(SC_Type.SC_ExplosionOccurs, {
-        point: data.position as pointData,
+        point: target.position,
         radius: 3,
       });
       break;

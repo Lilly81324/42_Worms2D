@@ -1,4 +1,4 @@
-import { MeshBuilder, Mesh, Scene, Nullable, Observer } from '@babylonjs/core';
+import { MeshBuilder, Mesh, Scene, Nullable, Observer, AbstractMesh } from '@babylonjs/core';
 
 /**
  * Creates simple mesh for pointing at a worm by merging simple shapes
@@ -31,14 +31,14 @@ function createMesh(scene: Scene): Mesh {
 export class WormPointer {
 	private sceneRef: Scene;
 	private mesh: Mesh;
-	public target: Mesh | undefined;
+	public target: AbstractMesh | undefined = undefined;
 	public offset: number = 0.5;
 	public distance: number = 0.5;
 	public radiansPerFrame: number = 3 / 180 * Math.PI;
 	private progress: number = 0;
 	private progressPerFrame: number;
 	private animation: Nullable<Observer<Scene>>;
-	constructor (scene: Scene, target: Mesh | undefined = undefined) {
+	constructor (scene: Scene, target: AbstractMesh | undefined = undefined) {
 		this.sceneRef = scene;
 		this.target = target;
 

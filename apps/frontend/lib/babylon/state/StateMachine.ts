@@ -1,4 +1,4 @@
-import { IAction, Scene, ActionManager } from '@babylonjs/core';
+import { IAction, Scene, ActionManager, AbstractMesh, Observable, Observer, Nullable } from '@babylonjs/core';
 import { GameState } from '@/shared/state/GameState';
 import { CS_DEV_SetGameState, CS_RequestChangeGameState, CS_Type } from '@/shared/packets/ClientServerPackets';
 import { gameData } from '@/shared/packets/util';
@@ -22,6 +22,18 @@ import { TurnEndState }			from './8_turn_end/TurnEndState';
 import { GameEndState }			from './9_game_end/GameEndState';
 import { MessageQueue } from '../MessageQueue';
 import { handlePacket } from '@/lib/packets/handlePacket';
+import { aimingMeshes } from './1_loading/loadGame';
+import { Achievements } from '../data/achievments';
+import { movementTick } from './6_movement/movementTick';
+
+// Stores the part of the statemachine that are created in the loading step
+export interface loaded {
+	ground: Ground,
+	weapons: Array<IWeapon>,
+	players: Array<Player>,
+	turn: Turn,
+	aiming: aimingMeshes,
+}
 
 export class StateMachine {
 	public userId: string;
@@ -30,16 +42,15 @@ export class StateMachine {
 	public msgToServer: msgToServerType;
 	public log: (data: string) => void;
 	public states: Map<GameState, IState> = new Map();
+	private movementPhysics: Observer<Scene>;
 	
 	public queue: MessageQueue | undefined;
 	public guiHelper: GuiHelper | undefined;
-	public ground: Ground | undefined;
+	public loaded: loaded | undefined;
 	public state: GameState | undefined;
 	public currentState: IState | undefined;
-	public players: Array<Player>;
-	public weapons: Array<IWeapon>;
 	public activePlayerId: string;
-	public turn: Turn | undefined;
+	public achievements: Achievements;
 	private initialized: boolean = false;
 
 	constructor(canvas: HTMLCanvasElement, scene: Scene, msgToServer: msgToServerType, userId: string, log: (data: string) => void) {
@@ -49,28 +60,32 @@ export class StateMachine {
 		this.canvas = canvas;
 		this.msgToServer = msgToServer
 		this.log = log;
+		const movementState = new MovementState(this);
 		this.states.set(GameState.GAME_PENDING, new GamePendingState(this));
 		this.states.set(GameState.GAME_LOADING, new GameLoadingState(this));
 		this.states.set(GameState.GAME_START, new GameStartState(this));
 		this.states.set(GameState.ROUND_START, new RoundStartState(this));
 		this.states.set(GameState.TURN_START, new TurnStartState(this));
 		this.states.set(GameState.PICK_WORM, new PickWormState(this));
-		this.states.set(GameState.MOVEMENT, new MovementState(this));
+		this.states.set(GameState.MOVEMENT, movementState);
 		this.states.set(GameState.AIMING, new AimingState(this));
 		this.states.set(GameState.TURN_END, new TurnEndState(this));
 		this.states.set(GameState.GAME_END, new GameEndState(this));
+		this.movementPhysics = scene.onBeforePhysicsObservable.add(
+			() => {
+				movementTick(movementState)
+			}
+		);
 
 		// Set when game starts proper
 		
 		// Set on Loading
-		this.weapons = [];
-		this.players = [];
 		this.state = undefined;
 		this.currentState = undefined;
 		this.guiHelper = undefined;
-		this.ground = undefined;
+		this.loaded = undefined;
 		this.activePlayerId = "";
-		this.turn = undefined;
+		this.achievements = new Achievements();
 	}
 
 	// Called only once per canvas, when sockets have been set up
@@ -92,21 +107,29 @@ export class StateMachine {
 	 * @param state new state to set it to 
 	 */
 	setState(state: GameState) {
+		// Exit Old State
 		this.log(`Old state: ${this.state} New State: ${state}`);
 		if (this.state == state) {
 			this.log("Setting to same state, no effects triggered");
 			return ;
 		}
 		this.currentState?.exit();
+
+		// Delete Actions from old state
+		this.scene.actionManager.actions = [];
+
+		// Enter new State
 		this.state = state;
 		let newState: IState | undefined = this.states.get(state)
 		if (newState)
 			this.currentState = newState;
 		else
 			newState = new GamePendingState(this);
-		const actions = this.currentState?.enter();
-		if (actions)
-			this.registerNewActions(actions);
+		this.currentState?.enter();
+
+		// Register Actions that always need to exist
+		if (this.guiHelper)
+			this.scene.actionManager.registerAction(this.guiHelper?.notifications.action)
 	}
 
 	load(data: gameData) {
@@ -130,27 +153,6 @@ export class StateMachine {
 	}
 
 	/**
-	 * Resets the actions that a scene has
-	 * @param actions state-specific list of Actions to add to scene
-	 */
-	registerNewActions(actions: Array<IAction>) {
-		// Clear old actions
-		if (!this.scene.actionManager) {
-			this.scene.actionManager = new ActionManager(this.scene);
-		}
-		this.scene.actionManager.actions = [];
-		
-		// Add actions that always need to exist
-		if (this.guiHelper)
-			this.scene.actionManager.registerAction(this.guiHelper?.notifications.action)
-
-		// Register new ones
-		if (!actions)
-			return ;
-		actions.forEach(action => this.scene.actionManager.registerAction(action));
-	}
-
-	/**
 	 * Gets packets from queue and handles them in order, before tick is executed
 	 */
 	handlePackets() {
@@ -169,16 +171,20 @@ export class StateMachine {
 	 */
 	clearGame() {
 		// Clean Players and their worms
-		this.weapons.forEach(w => w.dispose());
-		this.weapons = [];
-		this.players.forEach(p => p.dispose());
-		this.players = [];
-		this.turn?.dispose()
-		this.turn = undefined;
+		if (this.loaded) {
+			this.loaded.weapons.forEach(w => w.dispose());
+			this.loaded.players.forEach(p => p.dispose());
+			this.loaded.turn.dispose();
+			this.loaded.ground.dispose();
+			this.loaded.aiming.target.dispose();
+			this.loaded.aiming.plane.dispose();
+			this.loaded.aiming.direction.dispose();
+			this.loaded.aiming.tail.dispose();
+		}
+		this.scene.onBeforeRenderObservable.remove(this.movementPhysics);
+		this.loaded = undefined;
 		this.guiHelper?.dispose()
 		this.guiHelper = undefined;
-		this.ground?.dispose();
-		this.ground = undefined;
 	}
 
 	/**
@@ -202,13 +208,25 @@ export class StateMachine {
 	 * @returns bool wether current player is the active player this turn
 	 */
 	isActiveUser() : boolean {
-		if (this.turn && this.turn.activePlayerId == this.userId) 
+		if (this.loaded && this.loaded.turn.activePlayerId == this.userId) 
 			return true;
 		return false;
 	}
 
 	getActiveUser() {
-		return (this.players.find((player) => player.id == this.activePlayerId) ?? this.players[0]);
+		if (!this.loaded)
+			throw new Error("Cannot get active user, when game isnt loaded");
+		return (this.loaded.players.find((player) => player.id == this.activePlayerId) ?? this.loaded.players[0]);
+	}
+
+	/**
+	 * Displays a message on the HUD, but only if this is the active Client
+	 * @param msg Message to display
+	 */
+	msgForActive(msg: string) {
+		if (this.guiHelper == undefined || !this.isActiveUser())
+			return ;
+		this.guiHelper.notifications.add(msg);
 	}
 
 	dispose() {
