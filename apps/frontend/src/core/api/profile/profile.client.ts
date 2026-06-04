@@ -1,4 +1,6 @@
 import { authClient } from "@/src/core/api/auth/auth.client";
+import { MatchMemberAvatar, UserPublicProfile } from "@/src/types/profileTypes";
+import { RandomBlock } from "@babylonjs/core";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
@@ -21,7 +23,6 @@ async function request<T>(url: string, options: RequestInit = {}, hasRetried = f
 
     if (token) {
         headers.set("Authorization", `Bearer ${token}`);
-        
     } else {
         console.log("[profile.client] NO token in sessionStorage!", { url, method: options.method });
     }
@@ -115,3 +116,67 @@ export async function saveMyProfile(input: UpdateMyProfileInput & { avatar?: Blo
 
     return profileResult;
 }
+
+export async function getMatchMembers(matchId: string) {
+  return request(`${BASE_URL}/stats/match/${matchId}/members`);
+}
+
+// for one user
+async function getUserProfile(userId: string) {
+  return request<UserPublicProfile>(`${BASE_URL}/users/${userId}/profile`);
+}
+
+
+// get all profile from for matchmebers
+export async function getAvatarsForMatchMembers(
+  matchId: string
+): Promise<ApiResult<MatchMemberAvatar[]>> {
+  // 1) Get match members from stats via BFF
+  const membersResult = await getMatchMembers(matchId);
+
+  if (!membersResult.ok) {
+    return {
+      ok: false,
+      error: membersResult.error,
+      status: membersResult.status,
+    };
+  }
+
+  const members = membersResult.data; // MatchMember[]
+
+  // 2) For each member, fetch its profile via BFF
+  const profilePromises = members.matchParticipants.map(async (m) => {
+    const profileResult = await getUserProfile(m.userId);
+
+    if (!profileResult.ok) {
+      // you can choose to return null or throw; here we just skip failed ones
+      return null;
+    }
+
+    const profile = profileResult.data;
+
+    const combined: MatchMemberAvatar = {
+      userId: m.userId,
+      avatarUrl: profile.avatarUrl ?? null,
+	  displayName: profile.displayName ?? m.userId.slice(5)
+    };
+
+    return combined;
+  });
+
+  // 3) Wait for all profile requests
+  const resolved = await Promise.all(profilePromises);
+
+  // 4) Filter out failed/null ones
+  const avatars = resolved.filter(
+    (item): item is MatchMemberAvatar => item !== null
+  );
+
+  return {
+    ok: true,
+    data: avatars,
+    status: 200,
+  };
+}
+
+

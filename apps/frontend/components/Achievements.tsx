@@ -112,7 +112,7 @@ export function Achievements({
     };
 
     return (
-        <div className={`mt-2 flex h-full min-h-0 flex-col rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 ${className} `} >
+        <div className={`mt-2 flex h-full min-h-0 flex-col rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 ${className}`} >
             <div className="mb-5 flex flex-col gap-3 border-b border-zinc-200 pb-4 sm:flex-row sm:items-end sm:justify-between ">
                 <div>
                     <h4 className="text-sm font-black uppercase tracking-[0.3em] text-zinc-500">Achievements</h4>

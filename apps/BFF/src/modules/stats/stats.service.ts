@@ -38,7 +38,6 @@ export class StatsService {
 
     try {
       const url = `${this.config.stats.serviceUrl}${input.path}`;
-      console.log('[BFF/stats] calling stats service', { method: input.method, url });
       const response = await axios.request<T>({
         method: input.method as any,
         //url: `${this.config.stats.serviceUrl}${input.path}`,
@@ -47,13 +46,11 @@ export class StatsService {
         data: input.data,
         params: input.context.params ?? input.params,
       });
-      console.log('[BFF/stats] response', { status: response.status, length: response.headers['content-length'] });
       // optional: if response.data has updatedAt, print it for quick verification
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const maybe = response.data as any;
         if (maybe && (maybe.updatedAt || maybe.updated_at)) {
-          console.log('[BFF/stats] response updatedAt', maybe.updatedAt ?? maybe.updated_at);
         }
       } catch (e) {
         /* ignore */
@@ -67,4 +64,14 @@ export class StatsService {
       throw new BadGatewayException({ code: 'stats_service_unreachable', message: 'Unable to reach stats service', details: error });
     }
   }
+
+  // fetch member of match:
+  async fetchMatchMembers(matchId: string, context: { authorization?: string }) {
+	return this.callStatsService({
+		method: 'GET',
+		path: `/internal/stats/match/${matchId}/members`,
+		context,
+	});
+	}
+
 }

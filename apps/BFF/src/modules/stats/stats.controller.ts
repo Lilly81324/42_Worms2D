@@ -40,4 +40,13 @@ export class StatsController {
     const derived = computeDerived(base as Record<string, unknown>);
     return { ...base, derived };
   }
+
+  @Get('match/:matchId/members')
+	async getMatchMembers(
+	@Param('matchId') matchId: string,
+	@Headers('authorization') authorization?: string,
+	) {
+	return this.service.fetchMatchMembers(matchId, { authorization });
+	}
+
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import EditProfileModal from "@/components/EditProfile";
 import { useAuth } from "@/components/Providers";
 import { authClient } from "@/src/core/api/auth/auth.client";
-import { getMyProfile } from "@/src/core/api/profile/profile.client";
 import { Pencil, UserCheck, UserX, Trash2 } from "lucide-react";
+import { getAvatarsForMatchMembers, getMatchMembers, getMyProfile} from "@/src/core/api/profile/profile.client";
 import { Achievements } from "@/components/Achievements";
 import MatchHistory from "@/components/MatchHistory";
 import { FaCrown, FaMedal, FaTrophy } from "react-icons/fa";
@@ -82,7 +82,38 @@ type FriendRequestItem = {
     };
 };
 
+type SearchUser = {
+    userId: string;
+    displayName?: string | null;
+    email?: string;
+};
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
+
+export type MatchMember = {
+  id: string;
+  matchId: string;
+  userId: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  isWinner: boolean;
+  kills: number;
+  deaths: number;
+  player: {
+    id: string;
+    userId: string;
+    xp: number;
+    level: number;
+    wins: number;
+    losses: number;
+    kills: number;
+    deaths: number;
+    damageDealt: number;
+    damageTaken: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+};
 
 export default function ProfilePage() {
     // Log when component mounts (after first render)
@@ -101,18 +132,36 @@ export default function ProfilePage() {
     const [invites, setInvites] = useState<unknown[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [dataError, setDataError] = useState<string | null>(null);
+    const [members, setMembers] = useState<MatchMember[]>([]);
 
     // search related states
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [requestPendingMap, setRequestPendingMap] = useState<Record<string, boolean>>({});
+    const searchRequestRef = useRef(0);
 
     // Compute displayName, avatarUrl, bio early so useEffect can access them
     const displayName = profile?.displayName || user?.displayName || user?.username || user?.email || "Unknown User";
     const avatarUrl = profile?.avatarUrl;
     const bio = profile?.bio;
     const level = stats?.level ?? 1;
+
+	// Extract avatarUrl
+    const fetchAvatarsMap = async (userIds: string[]) => {
+        if (!userIds.length) return {};
+
+        const res = await fetch(
+            `${API_BASE}/users/profiles/avatars?userIds=${userIds.join(",")}`,
+            {
+                headers: getAuthHeaders(),
+            }
+        );
+
+        if (!res.ok) return {};
+
+        return (await res.json()) as Record<string, string | null>;
+    };
 
     // Helper to extract common authorization headers
     const getAuthHeaders = useCallback(() => {
@@ -129,6 +178,7 @@ export default function ProfilePage() {
         try {
             const socialProfile = await getMyProfile();
             if (socialProfile.ok) setProfile(socialProfile.data);
+
             const me = await authClient.getMe();
             if (!me.ok) {
                 setDataError(typeof me.error === "string" ? me.error : "Unable to load current user.");
@@ -143,15 +193,17 @@ export default function ProfilePage() {
                 fetch(`${API_BASE}/clans/me`, { headers }),
                 fetch(`${API_BASE}/clans/me/invites`, { headers }),
                 resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
+				// add
+
             ]);
 
-            const safeJson = async (r: Response | null) => {
-                if (r && r.ok) {
-                    const json = await r.json();
-                    return Array.isArray(json) ? json : [];
-                }
-                return [];
-            };
+			const safeJson = async (r: Response | null) => {
+				if (r && r.ok) {
+					const json = await r.json();
+					return Array.isArray(json) ? json : [];
+				}
+				return [];
+			};
 
             const safeObject = async <T,>(r: Response | null): Promise<T | null> => {
                 if (r && r.ok) {
@@ -166,6 +218,33 @@ export default function ProfilePage() {
             setInvites(await safeJson(invitesRes));
 
             const statsObj = await safeObject<PlayerStats>(statsRes);
+            if (!statsObj) {
+                setStats(null);
+                setMatchHistory([]);
+                return;
+            }
+            setStats(statsObj);
+            //const participant = await fetch(`${API_BASE}/match/${statsObj.matchHistory[0].matchId}/members`
+            //	);
+
+            //	const data = await participant.json();
+            //	console.log("participants:", data);
+
+            const matchHistoryArray = statsObj.matchHistory ?? [];
+
+            const matchId = matchHistoryArray.length > 0
+                ? (matchHistoryArray[0] as any)?.matchId
+                : null;
+
+            if (matchId) {
+                const avatarsResult = await getAvatarsForMatchMembers(matchId);
+
+                if (avatarsResult.ok) {
+                    setMembers(avatarsResult.data);
+                } else {
+                    console.error("failed to load avatars:", avatarsResult.error);
+                }
+            }
             if (statsObj) {
                 setStats(statsObj);
 
@@ -183,12 +262,23 @@ export default function ProfilePage() {
                         deaths: p.deaths ?? 0,
                     }));
 
-                    // Try to locate the current user's participant snapshot, or fallback to first participant
+                    // The /stats/user/:id response stores current user's stats on the entry root.
+                    const entryRootSnapshot = {
+                        userId: entry.userId,
+                        displayName: entry.displayName,
+                        avatarUrl: entry.avatarUrl,
+                        isWinner: entry.isWinner,
+                        kills: entry.kills,
+                        deaths: entry.deaths,
+                    };
+
                     let playerSnapshot: any = null;
-                    if ((entry as any).player) {
+                    if (entryRootSnapshot.userId) {
+                        playerSnapshot = entryRootSnapshot;
+                    } else if ((entry as any).player) {
                         playerSnapshot = (entry as any).player;
                     } else {
-                        playerSnapshot = participants.find((p) => p.userId === (resolvedUser?.id)) ?? participants[0] ?? null;
+                        playerSnapshot = participants.find((p) => p.userId === resolvedUser?.id) ?? participants[0] ?? null;
                     }
 
                     const player: MatchHistoryParticipant = playerSnapshot
@@ -209,6 +299,21 @@ export default function ProfilePage() {
                               deaths: 0,
                           };
 
+                    const mergedParticipants = participants.length
+                        ? participants
+                        : playerSnapshot
+                        ? [
+                              {
+                                  userId: playerSnapshot.userId ?? resolvedUser?.id ?? 'unknown',
+                                  displayName: playerSnapshot.displayName ?? null,
+                                  avatarUrl: playerSnapshot.avatarUrl ?? null, //
+                                  isWinner: playerSnapshot.isWinner ?? false,
+                                  kills: playerSnapshot.kills ?? 0,
+                                  deaths: playerSnapshot.deaths ?? 0,
+                              },
+                          ]
+                        : [];
+
                     return {
                         id: match.id,
                         status: match.status,
@@ -220,7 +325,7 @@ export default function ProfilePage() {
                         score: match.score ?? null,
                         summary: match.summary ?? null,
                         player,
-                        participants,
+                        participants: mergedParticipants,
                     } as MatchHistoryEntry;
                 });
 
@@ -236,6 +341,8 @@ export default function ProfilePage() {
         }
     }, [getAuthHeaders]);
 
+    //resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
+            // here can be added the list avatarUrl = stats?.matchHistory.map((obj.id)=>{fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null)}) ?
     console.log("stats: ", stats);
     useEffect(() => {
         void loadProfileData();
@@ -244,6 +351,8 @@ export default function ProfilePage() {
     const handleSearch = async (val: string) => {
         console.log("FRONTEND TRIGGERED: Searching for ->", val);
         setSearchQuery(val);
+        const requestId = ++searchRequestRef.current;
+
         if (!val.trim()) {
             setSearchResults([]);
             return;
@@ -259,12 +368,18 @@ export default function ProfilePage() {
 
                 const usersList = Array.isArray(data) ? data : (data.items || []);
 
-                setSearchResults(usersList.filter((u: any) => u.userId !== user?.id));
+                if (requestId !== searchRequestRef.current) return;
+
+                setSearchResults(
+                    usersList.filter((u: SearchUser) => u.userId !== user?.id)
+                );
             }
         } catch (err) {
             console.error("Failed fetching users graph", err);
         } finally {
-            setIsSearching(false);
+            if (requestId === searchRequestRef.current) {
+                setIsSearching(false);
+            }
         }
     };
 
@@ -612,6 +727,7 @@ export default function ProfilePage() {
 
                             {activeTab === 'Match History' && (
                                 <MatchHistory
+                                    members= {members}
                                     matches={matchHistory}
                                     currentUserId={user?.id ?? undefined}
                                     emptyTitle="No battles recorded yet."

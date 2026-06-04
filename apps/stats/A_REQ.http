@@ -64,7 +64,7 @@ Content-Type: application/json
 GET http://localhost:3004/internal/stats/user
 
 ### get by id=> full player profile view/Admin dashboard	
-GET http://localhost:3004/internal/stats/user/f413ec97-376c-4e09-92cb-a743f765c603
+GET http://localhost:3004/internal/stats/user/0c5a51c6-95d9-45f0-9b65-4fba8f8d1ed8
 
 ### GET    /internal/stats/user/:userId/matches (match history)
 GET http://localhost:3004/internal/stats/user/d200724c-2856-4319-aefa-b41a73a0a0eb/matches
@@ -94,7 +94,7 @@ Content-Type: application/json
       "userId"  :"2c412fa9-d2d5-420d-a5cc-12c78e9ba20b",
       "displayName": "You",
       "avatarUrl": null,
-      "isWinner" : true,
+      "isWinner" : true, // is winer why in UI is signed as defeat? 
       "kills"    : 5,
       "deaths"   : 1
     },
@@ -120,7 +120,7 @@ GET  http://localhost:3004/internal/stats/match
 GET    http://localhost:3004/internal/stats/match/5fc6115f-38a1-4aec-a510-11fb5da6a575
 
 ### Get all particicpnats of a match/matchId/{participants : true}
-GET http://localhost:3004/internal/stats/match/6c585020-b190-4f85-a1a2-e3358715d10e/members
+GET http://localhost:3004/internal/stats/match/91117ea7-dc26-4eab-920f-145909e226ba/members
 
 ### Get user match history (this is what the frontend profile tab consumes)
 GET http://localhost:3004/internal/stats/user/0c5a51c6-95d9-45f0-9b65-4fba8f8d1ed8/matches
@@ -196,9 +196,9 @@ POST http://localhost:3004/internal/stats/achievements/upsert
 Content-Type: application/json
 
 {
-  "userId": "d200724c-2856-4319-aefa-b41a73a0a0eb",
-  "type": "sharp_shooter",
-  "name": "Sharp Shooter",
+  "userId": "2c412fa9-d2d5-420d-a5cc-12c78e9ba20b",
+  "type": "sharp_shooter 2334",
+  "name": "Sharp Shooter 234",
   "progress": 12,
   "progressTarget": 10,
   "achieved": true
