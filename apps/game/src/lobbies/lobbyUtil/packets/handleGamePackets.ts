@@ -19,6 +19,7 @@ import {
   SC_WinningPlayer,
 } from '@/shared/packets/ServerClientPackets';
 import { GameState } from '@/shared/state/GameState';
+import { createAchievement } from '@/shared/packets/stats-client';
 import { explosionData } from '@/shared/packets/util';
 
 function requestChangeState(
@@ -70,9 +71,11 @@ export function handleGamePackets(lobby: Lobby, data: CS_GenericPacket) {
       break;
     }
 
+   
     // DEV mode, should be removed late, Client commands state to be set to Lobby after game ends
     case CS_Type.CS_DEV_StartEndscreen: {
       lobby.setState(LobbyStateEnum.EndScreen);
+      createAchievement(data.payload);
       break;
     }
 

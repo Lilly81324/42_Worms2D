@@ -7,6 +7,10 @@ import type { msgToServerType } from '@/lib/packets/msgToServerType';
 import { stateUi } from '../state/state_ui/stateUi';
 import { GameNotifications } from "../gui/GameNotifications";
 import { SocketStatus } from "./SocketStatus";
+import { StateMachine } from "../state/StateMachine";
+import { Achievement } from "next-auth/providers/42-school";
+import { Achievements } from "../data/achievments";
+import { distance } from "framer-motion";
 
 export class GuiHelper {
 	public socketStatus: SocketStatus;
@@ -15,12 +19,13 @@ export class GuiHelper {
 	public notifications: GameNotifications;
 	private resizeFunctions: Array<() => void> = [];
 	constructor(
+		machine: StateMachine,
 		scene: Scene, 
 		canvas: HTMLCanvasElement,
 		clientId: string,
 		msgToServer: msgToServerType
 	) {
-		const count = 0;
+		let count = 0;
 		// Text hitboxes may overlap with buttons and take over control
 
 		// GUI for non-interactable text
@@ -47,6 +52,16 @@ export class GuiHelper {
 			msgToServer<CS_DEV_StartEndscreen>(CS_Type.CS_DEV_StartEndscreen, {
 				won: false,
 				winnerId: clientId,
+				payload: {
+					userId: machine.userId,
+					type: "marathon-mayem" + counter++,
+					name: "Marathon Mayem INCOMPLETE",
+					description: "Travel 30000 meters total",
+					achieved: machine.achievements.achievements["marathon-mayem"],
+					progress: 10,
+					progressTarget: 50,
+					meta: { distance: 8 }
+				},
 			});
 		});
 		this.resizeFunctions.push(() => {
