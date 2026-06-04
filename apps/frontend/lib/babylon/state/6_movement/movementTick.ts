@@ -3,6 +3,8 @@ import { keyInfo, MovementState } from "./MovementState";
 import { Worm } from "../../player/Worm";
 import { Achievements } from "../../data/achievments";
 import { GameState } from "@/shared/state/GameState";
+import { IState } from '../IState';
+import { CS_WormPosition, CS_Type } from '@/shared/packets/ClientServerPackets';
 
 function forChosenWorm(
 	isMovementState: boolean,
@@ -51,18 +53,24 @@ function forChosenWorm(
 
 }
 
-function forAllWorms(worm: Worm, scene: Scene) {
+function forAllWorms(
+	worm: Worm, 
+	scene: Scene,
+	isActive: boolean,
+	isMovement: boolean,
+	broadcastPosition: (wormId: number, x: number, y: number) => void
+) {
 	// Create Vectors for ray cast
 	const rayStart = worm.collider.getAbsolutePosition();
 	const rayEnd = rayStart.add(new Vector3(0, -1.3, 0));
 	const rayRes = (scene.getPhysicsEngine()!).raycast(rayStart, rayEnd);
 
 	// Check with raycast if worm on ground
-	if (rayRes.hasHit){
+	if (rayRes.hasHit) {
 		worm.onGround = true;
 		worm.airAnim?.stop();
 	}
-	else{
+	else {
 		worm.onGround = false;
 		worm.canJump = false;
 		// This does not work, and idk why but people are impatient and want this merged
@@ -79,6 +87,11 @@ function forAllWorms(worm: Worm, scene: Scene) {
 		worm.aggregate.body.setGravityFactor(0);
 	else
 		worm.aggregate.body.setGravityFactor(1);
+
+	// When player is moving, send packet to update clients and server with that players position
+	if (isActive && isMovement && worm.aggregate.body.getLinearVelocity().length() > 0.01) {
+		broadcastPosition(worm.id, worm.collider.position.x, worm.collider.position.y);
+	}
 }
 
 export function movementTick(state: MovementState) {
@@ -88,7 +101,16 @@ export function movementTick(state: MovementState) {
 
 	machine.loaded.players.forEach((player) => {
 		player.worms.forEach((worm) => {
-			forAllWorms(worm, machine.scene)
+			forAllWorms(
+				worm, 
+				machine.scene,
+				state.machine.isActiveUser(),
+				(state.machine.state == GameState.MOVEMENT),
+				(wormId: number, x: number, y: number) => {state.machine.msgToServer<CS_WormPosition>(CS_Type.CS_WormPosition, {
+					wormId,
+					pos: {x, y,}
+				})}
+			)
 		})
 	})
 	forChosenWorm(

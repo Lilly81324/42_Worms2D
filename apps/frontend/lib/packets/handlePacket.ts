@@ -202,6 +202,20 @@ export function handlePacket(data: SC_GenericPacket, state: StateMachine) {
 			state.loaded.turn.cancelAiming = true;
 			break ;
 		}
+		// Move players for non-active users
+		case SC_Type.SC_WormPosition : {
+			if (!state.loaded || state.isActiveUser())
+				return ;
+			state.loaded.players.forEach((player) => {
+				const found = player.worms.find((worm) => worm.id == data.wormId);
+				if (found) {
+					found.collider.position.x = data.pos.x;
+					found.collider.position.y = data.pos.y;
+					return ;
+				}
+			})
+			break ;
+		}
 		case SC_Type.SC_ExplosionOccurs: {
 			console.log("Handling Explosion");
 			if (state.state != GameState.TURN_END)

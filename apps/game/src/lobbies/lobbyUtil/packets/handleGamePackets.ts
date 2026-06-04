@@ -16,6 +16,7 @@ import {
   SC_AimTargetAngle,
   SC_CancelAiming,
   SC_PlayersWon,
+  SC_WormPosition,
 } from '@/shared/packets/ServerClientPackets';
 import { GameState } from '@/shared/state/GameState';
 
@@ -144,6 +145,15 @@ export function handleGamePackets(lobby: Lobby, data: CS_GenericPacket) {
       lobby.msgToClient<SC_ExplosionOccurs>(SC_Type.SC_ExplosionOccurs, {
         point: target.position,
         radius: 3,
+      });
+      break;
+    }
+
+    // Comunicate worm movement to non-active players
+    case CS_Type.CS_WormPosition: {
+      lobby.msgToClient<SC_WormPosition>(SC_Type.SC_WormPosition, {
+        wormId: data.wormId,
+        pos: data.pos,
       });
       break;
     }

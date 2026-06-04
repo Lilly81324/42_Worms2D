@@ -43,13 +43,15 @@ export enum SC_Type {
 	SC_AimTargetAngle =			"SC_AimTargetAngle",
 	SC_CancelAiming =			"SC_CancelAiming",
 	SC_PlayersWon =				"SC_PlayersWon",
+	SC_WormPosition =			"SC_WormPosition",
 }
 
 // Packets that should definitely not show up in logging
 // (likely because they are sent every tick)
 export const hideServerPackets: Array<SC_Type> = [
 	SC_Type.SC_AimAngle,
-	SC_Type.SC_AimMoveTarget
+	SC_Type.SC_AimMoveTarget,
+	SC_Type.SC_WormPosition,
 ]
 
 // Packets that should be considered "handled" by BabylonJs
@@ -356,6 +358,15 @@ export interface SC_ExplosionOccurs extends SC_Base {
 	radius: number,
 }
 
+/**
+ * Sent when Worm moves with significant speed
+ */
+export interface SC_WormPosition extends SC_Base {
+	type: SC_Type.SC_WormPosition,
+	wormId: number,
+	pos: pointData,
+}
+
 
 // ENDSCREEN ==================================================================
 
@@ -370,7 +381,7 @@ export type SC_GenericPacket =
 			SC_GameData | SC_ActivePlayerChanged | SC_WormChosen |
 			SC_ExplosionOccurs | SC_WeaponChosen | SC_AimAngle |
 			SC_AimMoveTarget | SC_SwitchAimState | SC_AimTargetAngle |
-			SC_CancelAiming | SC_PlayersWon
+			SC_CancelAiming | SC_PlayersWon | SC_WormPosition
 			;
 
 export type SC_GenericStatePacket = SC_StartLobby | SC_StartLoading |

@@ -39,13 +39,15 @@ export enum CS_Type {
 	CS_CancelAiming =			"CS_CancelAiming",
 	CS_DEV_GameWon =			"CS_DEV_GameWon",
 	CS_DEV_StaleMate =			"CS_DEV_StaleMate",
+	CS_WormPosition =			"CS_WormPosition",
 }
 
 // Packets that should definitely not show up in logging
 // (likely because they are sent every tick)
 export const hideClientPackets: Array<CS_Type> = [
 	CS_Type.CS_AimAngle,
-	CS_Type.CS_AimMoveTarget
+	CS_Type.CS_AimMoveTarget,
+	CS_Type.CS_WormPosition,
 ]
 
 /**
@@ -238,6 +240,15 @@ export interface CS_CancelAiming extends CS_Base {
 	type: CS_Type.CS_CancelAiming,
 }
 
+/**
+ * Sent when Worm moves with significant speed
+ */
+export interface CS_WormPosition extends CS_Base {
+	type: CS_Type.CS_WormPosition,
+	wormId: number,
+	pos: pointData,
+}
+
 export interface CS_EndAimState extends CS_Base {
 	type: CS_Type.CS_EndAimState,
 	wormAngle: number,
@@ -272,5 +283,6 @@ export type CS_GenericPacket =
 			CS_GetGameState | CS_DEV_SetGameState | CS_RequestChangeGameState |
 			CS_WormChosen | CS_EndAimState | CS_WeaponChosen |
 			CS_AimMoveTarget | CS_SwitchAimState | CS_AimTargetAngle |
-			CS_AimAngle | CS_CancelAiming | CS_DEV_GameWon
+			CS_AimAngle | CS_CancelAiming | CS_DEV_GameWon |
+			CS_WormPosition
 			;
