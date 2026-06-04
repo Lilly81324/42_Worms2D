@@ -123,7 +123,7 @@ export default function ProfilePage() {
         };
     }, []);
 
-    // ✅ Define it at component level
+    // Define it at component level
     const loadProfileData = useCallback(async () => {
         setIsLoadingData(true);
         try {
@@ -238,11 +238,11 @@ export default function ProfilePage() {
 
     console.log("stats: ", stats);
     useEffect(() => {
-        // ✅ Now useEffect just calls it
         void loadProfileData();
     }, [loadProfileData]);
 
     const handleSearch = async (val: string) => {
+        console.log("FRONTEND TRIGGERED: Searching for ->", val);
         setSearchQuery(val);
         if (!val.trim()) {
             setSearchResults([]);
@@ -256,7 +256,10 @@ export default function ProfilePage() {
             });
             if (res.ok) {
                 const data = await res.json();
-                setSearchResults(data.filter((u: any) => u.userId !== user?.id));
+
+                const usersList = Array.isArray(data) ? data : (data.items || []);
+
+                setSearchResults(usersList.filter((u: any) => u.userId !== user?.id));
             }
         } catch (err) {
             console.error("Failed fetching users graph", err);
@@ -288,7 +291,6 @@ export default function ProfilePage() {
                 headers: getAuthHeaders()
             });
             if (res.ok) {
-                // Refresh records seamlessly
                 await loadProfileData();
             }
         } catch (err) {
