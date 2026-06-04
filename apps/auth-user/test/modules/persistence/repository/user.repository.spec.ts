@@ -131,6 +131,46 @@ describe('UserRepository', () => {
     );
   });
 
+  it('searchActiveUsers limits directory lookup to active enabled users', async () => {
+    await repository.searchActiveUsers({
+      query: 'Stefan',
+      cursor: 'd200724c-2856-4319-aefa-b41a73a0a0eb',
+      take: 10,
+    });
+
+    expect(prisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [
+            {
+              status: 'ACTIVE',
+              disabledAt: null,
+            },
+            {
+              OR: [
+                {
+                  email: {
+                    contains: 'Stefan',
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  username: {
+                    contains: 'Stefan',
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        cursor: { id: 'd200724c-2856-4319-aefa-b41a73a0a0eb' },
+        skip: 1,
+        take: 10,
+      }),
+    );
+  });
+
   it('createLocalUser stores password hash', async () => {
     await repository.createLocalUser({
       email: 'local@example.com',

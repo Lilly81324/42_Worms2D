@@ -6,6 +6,7 @@ import { AuthVerifyService } from '../../../src/modules/auth/services/auth-verif
 import { AuthLoginService } from '../../../src/modules/auth/services/auth-login.service';
 import { AuthGoogleExchangeService } from '../../../src/modules/auth/services/auth-google-exchange.service';
 import { AuthAdminService } from '../../../src/modules/auth/services/auth-admin.service';
+import { AuthDirectoryService } from '../../../src/modules/auth/services/auth-directory.service';
 import { AuthService } from '../../../src/modules/auth/services/auth.service';
 import { UsersAuthService } from '../../../src/modules/users-auth/users-auth.service';
 import { PasswordHashService } from '../../../src/modules/auth/hashing/password-hash.service';
@@ -61,6 +62,12 @@ describe('AuthService', () => {
           provide: AuthAdminService,
           useValue: {
             disableUser: jest.fn(),
+          },
+        },
+        {
+          provide: AuthDirectoryService,
+          useValue: {
+            searchUsers: jest.fn(),
           },
         },
         {
@@ -156,6 +163,12 @@ describe('AuthService', () => {
           provide: AuthAdminService,
           useValue: {
             disableUser: jest.fn(),
+          },
+        },
+        {
+          provide: AuthDirectoryService,
+          useValue: {
+            searchUsers: jest.fn(),
           },
         },
         {
@@ -260,6 +273,12 @@ describe('AuthService', () => {
           },
         },
         {
+          provide: AuthDirectoryService,
+          useValue: {
+            searchUsers: jest.fn(),
+          },
+        },
+        {
           provide: UsersAuthService,
           useValue: {
             findByEmail: jest.fn(),
@@ -354,6 +373,12 @@ describe('AuthService', () => {
           provide: AuthAdminService,
           useValue: {
             disableUser,
+          },
+        },
+        {
+          provide: AuthDirectoryService,
+          useValue: {
+            searchUsers: jest.fn(),
           },
         },
         {
@@ -461,6 +486,12 @@ describe('AuthService', () => {
           useValue: {
             disableUser: jest.fn(),
             setUserRoles,
+          },
+        },
+        {
+          provide: AuthDirectoryService,
+          useValue: {
+            searchUsers: jest.fn(),
           },
         },
         {
@@ -591,6 +622,12 @@ describe('AuthService', () => {
           },
         },
         {
+          provide: AuthDirectoryService,
+          useValue: {
+            searchUsers: jest.fn(),
+          },
+        },
+        {
           provide: UsersAuthService,
           useValue: {
             findByEmail: jest.fn(),
@@ -632,5 +669,83 @@ describe('AuthService', () => {
     await authService.googleExchange(input, { requestId: 'req-google' });
 
     expect(exchange).toHaveBeenCalledWith(input, { requestId: 'req-google' });
+  });
+
+  it('delegates searchDirectoryUsers to AuthDirectoryService', async () => {
+    const searchUsers = jest.fn().mockResolvedValue({
+      items: [],
+      pageInfo: {
+        nextCursor: null,
+        hasNextPage: false,
+      },
+    });
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        {
+          provide: AuthRegisterService,
+          useValue: {
+            register: jest.fn(),
+          },
+        },
+        {
+          provide: AuthRefreshService,
+          useValue: {
+            refresh: jest.fn(),
+          },
+        },
+        {
+          provide: AuthLogoutService,
+          useValue: {
+            logout: jest.fn(),
+          },
+        },
+        {
+          provide: AuthVerifyService,
+          useValue: {
+            verify: jest.fn(),
+          },
+        },
+        {
+          provide: AuthLoginService,
+          useValue: {
+            login: jest.fn(),
+          },
+        },
+        {
+          provide: AuthGoogleExchangeService,
+          useValue: {
+            exchange: jest.fn(),
+          },
+        },
+        {
+          provide: AuthAdminService,
+          useValue: {
+            searchUsers: jest.fn(),
+          },
+        },
+        {
+          provide: AuthDirectoryService,
+          useValue: {
+            searchUsers,
+          },
+        },
+      ],
+    }).compile();
+
+    const authService = moduleRef.get(AuthService);
+
+    await expect(
+      authService.searchDirectoryUsers({ query: 'stefan', limit: 10 }),
+    ).resolves.toEqual({
+      items: [],
+      pageInfo: {
+        nextCursor: null,
+        hasNextPage: false,
+      },
+    });
+
+    expect(searchUsers).toHaveBeenCalledWith({ query: 'stefan', limit: 10 });
   });
 });

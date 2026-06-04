@@ -185,7 +185,7 @@ paths:
   /users/search:
     get:
       tags: [User]
-      summary: Search users
+      summary: Search users for friend lookup by username, email, display name, or id
       responses:
         "200": { description: OK }
 

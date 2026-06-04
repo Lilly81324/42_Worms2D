@@ -126,6 +126,46 @@ export class UserRepository {
     });
   }
 
+  searchActiveUsers(
+    input: {
+      query?: string;
+      cursor?: string;
+      take: number;
+    },
+    db?: DbClient,
+  ): Promise<UserWithAdminRelations[]> {
+    const query = input.query?.trim();
+    const activeWhere = {
+      status: 'ACTIVE',
+      disabledAt: null,
+    } satisfies Prisma.UserWhereInput;
+    const where = query
+      ? ({
+          AND: [activeWhere, this.buildSearchWhere(query)],
+        } satisfies Prisma.UserWhereInput)
+      : activeWhere;
+
+    return this.db(db).user.findMany({
+      where,
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+        authProviders: true,
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+      take: input.take,
+      ...(input.cursor
+        ? {
+            cursor: { id: input.cursor },
+            skip: 1,
+          }
+        : {}),
+    });
+  }
+
   findByIdWithAuthProviders(
     userId: string,
     db?: DbClient,

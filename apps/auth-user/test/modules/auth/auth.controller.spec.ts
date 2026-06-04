@@ -324,6 +324,43 @@ describe('AuthController.audit', () => {
   });
 });
 
+describe('AuthController.searchDirectoryUsers', () => {
+  const authService = {
+    register: jest.fn(),
+    refresh: jest.fn(),
+    logout: jest.fn(),
+    verify: jest.fn(),
+    googleExchange: jest.fn(),
+    listAuditLogs: jest.fn(),
+    searchDirectoryUsers: jest.fn(),
+  } as unknown as AuthService;
+
+  const controller = new AuthController(authService);
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    authService.searchDirectoryUsers = jest.fn().mockResolvedValue({
+      items: [],
+      pageInfo: {
+        nextCursor: null,
+        hasNextPage: false,
+      },
+    });
+  });
+
+  it('delegates authenticated directory search', async () => {
+    await controller.searchDirectoryUsers({
+      query: 'stefan',
+      limit: 10,
+    });
+
+    expect(authService.searchDirectoryUsers).toHaveBeenCalledWith({
+      query: 'stefan',
+      limit: 10,
+    });
+  });
+});
+
 describe('AuthController.googleExchange', () => {
   const authService = {
     register: jest.fn(),
