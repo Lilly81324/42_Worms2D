@@ -2,6 +2,7 @@
 
 import BattleArena from "@/components/BattleArena";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Stats from "./utils.stats";
 
 export default function HomePage() {
     return (
@@ -19,7 +20,8 @@ export default function HomePage() {
             </div>
 
             {/* Main Content , big game button*/}
-            <div className="flex flex-col lg:flex-row gap-6 grow overflow-hidden">
+            <div className="flex flex-col lg:flex-row gap-6 grow overflow-hidden ">
+                <Stats/>
 				<BattleArena className="bg-zinc-100 dark:bg-zinc-900" border={true} dashed={true}/>
 
                 {/* Chat Window Component*/}
