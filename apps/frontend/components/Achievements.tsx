@@ -94,7 +94,7 @@ export function Achievements({
     const totalCount = achievementCards.length;
     const pendingCount = totalCount - completedCount;
 
-    console.log("ACIEVEMENTS: ", achievements)
+    // console.log("ACIEVEMENTS: ", achievements)
     const cardGridClassName =
         achievementCards.length === 0
             ? "grid-cols-1"
@@ -139,10 +139,15 @@ export function Achievements({
                     <p className="mt-2 text-sm text-zinc-500">{emptyDescription}</p>
                 </div>
             ) : (
-                <div className="overflow-y-auto pr-2 max-h-[380px]">
+                <div className="overflow-y-auto pr-2 max-h-[380px] ">
                     <div className="flex flex-col gap-5">
-                        {achievementCards.sort((a, b) => new Date(b.achievedAt) - new Date(a.achievedAt))
-                        .slice(0, 2)
+                        {achievementCards
+                        .sort((a, b) => {
+                            const aTime = a.achievedAt ? new Date(a.achievedAt).getTime() : 0;
+                            const bTime = b.achievedAt ? new Date(b.achievedAt).getTime() : 0;
+                            return bTime - aTime;
+                        })
+                        .slice(0, 5)
                         .map((badge) => {
                         const progressPercent =
                             badge.progressTarget && badge.progressTarget > 0 && badge.progressValue !== null

@@ -117,8 +117,8 @@ export default function Stats() {
   const handleCreateAchievement = async () => {
     const payload = {
       userId: "417bafc1-5f9e-4045-a23c-168b7c0c5d0c",
-      type: "sharp_shooter 3",
-      name: "Sharp Shooter",
+      type: "sharp_shooter 50",
+      name: "Sharp Shooterrrrr",
       description: "Hit 10 accurate shots",
       icon: "🎯",
       xpReward: 100,
