@@ -10,6 +10,7 @@ import { getAvatarsForMatchMembers, getMatchMembers, getMyProfile} from "@/src/c
 import { Achievements } from "@/components/Achievements";
 import MatchHistory from "@/components/MatchHistory";
 import { FaCrown, FaMedal, FaTrophy } from "react-icons/fa";
+import {useRouter} from "next/navigation";
 
 type TabType = 'Info' | 'Friends' | 'Clan' | 'Invitations' | 'Achievements' | 'Match History';
 
@@ -117,7 +118,7 @@ export type MatchMember = {
 
 export default function ProfilePage() {
     // Log when component mounts (after first render)
-
+    const router = useRouter();
     const { user, setUser } = useAuth();
     const [activeTab, setActiveTab] = useState<TabType>('Info');
     const [isEditOpen, setIsEditOpen] = useState(false);
@@ -555,6 +556,16 @@ export default function ProfilePage() {
                                 {tab.name}
                             </button>
                         ))}
+                        <div className="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                            <button
+                                type="button"
+                                onClick={() => router.push('/homepage')}
+                                className="w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all bg-zinc-100 dark:bg-zinc-900 hover:bg-red-500/10 hover:text-red-500 text-zinc-500 dark:text-zinc-400"
+                            >
+                                <span>💬</span>
+                                Chat
+                            </button>
+                        </div>
                     </div>
 
                     {/* RIGHT: Content Display Area */}
