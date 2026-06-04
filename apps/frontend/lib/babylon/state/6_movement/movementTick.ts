@@ -83,8 +83,13 @@ function forAllWorms(
 
 	// Remove gravity if on ground
 	if (worm.onGround)
+	{
+		// console.log("My Gravity is 0!");
 		worm.aggregate.body.setGravityFactor(0);
+	}
 	else
+	{
+		// console.log("My Gravity is 1!");
 		worm.aggregate.body.setGravityFactor(1);
 
 	// When player is moving, send packet to update clients and server with that players position
