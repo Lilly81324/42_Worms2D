@@ -17,7 +17,9 @@ export function createCamera(scene: Scene, canvas: HTMLCanvasElement, pos_x: num
 
 	camera.lowerRadiusLimit = 2;				// Minimum Distance of Camera to target
 	camera.upperRadiusLimit = max_distance;		// Maximum Distance of Camera to target
-	
+
+	camera.panningSensibility = 150;
+
 	camera.angularSensibilityX = 999999;		// No rotating Camera
 	camera.angularSensibilityY = 999999;
 	

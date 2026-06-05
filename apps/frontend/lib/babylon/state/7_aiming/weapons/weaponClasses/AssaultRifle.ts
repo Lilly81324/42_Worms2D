@@ -28,8 +28,8 @@ export class AssaultRifle extends GenericWeapon implements IWeapon {
 	public spread = 0;
 	public damage = 10;
 	public explosion: Explosion = {
-		size: 0.2,
-		damage: 1, 
+		size: 10,
+		damage: 25, 
 		affectTerrain: true
 	};
 	public mesh: Mesh;

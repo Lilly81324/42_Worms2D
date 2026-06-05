@@ -13,7 +13,8 @@ export interface pointData {
  */
 export interface wormData {
 	id: number,
-	pos: pointData
+	pos: pointData,
+	health: number,
 }
 
 /**
@@ -40,8 +41,9 @@ export interface mapData {
  * @param turnOrder order based on slot numbers (0-3)
  */
 export interface gameData {
-	players: Array<playerData>
-	map: mapData;
+	players: Array<playerData>,
+	map: mapData,
+	max_health: number,
 }
 
 // For checking if the packet contains data that lobby frontend should take care of
@@ -57,4 +59,20 @@ export enum aimStateId {
 	PianoPickPosition =	1,
 	PickPosition = 2,
 	SwitchTargetAngle = 3,
+}
+
+// For representing an explosion that happens
+export interface explosionData {
+	position: pointData,
+	radius: number,
+	damage: number,
+}
+
+// Sent when a Turn is over
+export interface endOfTurnData {
+  players: Array<playerData>;
+  gameOver: boolean;
+  deathMsgs: Array<string>;
+  winners: Array<string>;
+  explo: Array<explosionData>
 }

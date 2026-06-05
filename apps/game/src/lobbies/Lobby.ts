@@ -1,4 +1,4 @@
-import { NullEngine } from 'babylonjs';
+import { NullEngine } from '@babylonjs/core';
 import { CS_GenericPacket } from '@/shared/packets/ClientServerPackets';
 import {
   SC_Type,

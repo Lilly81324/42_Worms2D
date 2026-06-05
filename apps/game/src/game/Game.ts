@@ -1,4 +1,4 @@
-import { NullEngine, Scene, ArcRotateCamera, Vector3 } from 'babylonjs';
+import { NullEngine, Scene, ArcRotateCamera, Vector3 } from '@babylonjs/core';
 import { GameState } from '@/shared/state/GameState';
 import { IState } from './gamestate/IState';
 import { GamePendingState } from './gamestate/0GamePendingState';
@@ -13,13 +13,15 @@ import { TurnEndState } from './gamestate/8TurnEndState';
 import { GameEndState } from './gamestate/9GameEndState';
 import { msgToClientType } from '../lobbies/lobbyUtil/msgToClientType';
 import { Lobby } from 'src/lobbies/Lobby';
-import { pointData } from '@/shared/packets/util';
+import { explosionData, pointData } from '@/shared/packets/util';
+import { Player } from './gamestate/Player';
 
 interface aimingData {
   wormAngle: number;
   position: pointData;
   targetAngle: number;
   force: number;
+  explosions: Array<explosionData>;
 }
 
 export class Game {
@@ -35,6 +37,7 @@ export class Game {
   public lobby: Lobby;
   public turnOrder: Array<number>;
   public aimingData: aimingData;
+  public players: Array<Player>;
 
   // Constructor
   constructor(lobby: Lobby) {
@@ -78,7 +81,9 @@ export class Game {
       wormAngle: 0,
       targetAngle: 0,
       force: 0,
+      explosions: [],
     };
+    this.players = [];
   }
 
   // Setter

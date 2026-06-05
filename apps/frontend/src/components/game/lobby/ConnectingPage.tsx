@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { CS_JoinLobby, CS_Type } from '@/shared/packets/ClientServerPackets';
+import { CLIENT_GENERAL_OUTPUT } from '@/shared/packets/config';
 
 import { useGameContext } from './GameContext';
 
@@ -13,16 +14,16 @@ import { useGameContext } from './GameContext';
  * makes it so the function is only called initially and whenever one of the params changes
  */
 export default function ConnectingPage() {
-  const {msgToServer, isConnected, userId, userName, DEBUG, errorMsg} = useGameContext();
+  const {msgToServer, isConnected, userId, userName, errorMsg} = useGameContext();
   useEffect(() => {
     if (!isConnected || userId == "" || userName == "") {
       return ;
     }
-    if (DEBUG) console.log("Sending JoinLobby request for user:", userId);
+    if (CLIENT_GENERAL_OUTPUT) console.log("Sending JoinLobby request for user:", userId);
     msgToServer<CS_JoinLobby>(CS_Type.CS_JoinLobby, {
       userName: userName ?? ""
     });
-  }, [isConnected, msgToServer, userId, userName, DEBUG]);
+  }, [isConnected, msgToServer, userId, userName]);
   if (errorMsg != "") {
     return (
       <div>

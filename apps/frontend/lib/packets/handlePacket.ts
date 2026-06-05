@@ -1,4 +1,4 @@
-import { SC_Type, SC_GenericPacket, frontendServerPackets } from "@/shared/packets/ServerClientPackets"
+import { SC_Type, SC_GenericPacket, frontendServerPackets, SC_ExplosionOccurs } from "@/shared/packets/ServerClientPackets"
 import { StateMachine } from '../babylon/state/StateMachine';
 import { GameState } from '@/shared/state/GameState';
 import { Nullable } from "@babylonjs/core";
@@ -15,6 +15,8 @@ function findWormById(players: Array<Player>, wormId: number): Worm | undefined 
 	}
 	return (undefined)
 }
+
+
 
 export function handlePacket(data: SC_GenericPacket, state: StateMachine) {
 	// Ignore Frontend Packets
@@ -106,11 +108,39 @@ export function handlePacket(data: SC_GenericPacket, state: StateMachine) {
 			state.loaded.turn.cancelAiming = true;
 			break ;
 		}
+		// Move players for non-active users
+		case SC_Type.SC_WormPosition : {
+			if (!state.loaded || state.isActiveUser())
+				return ;
+			state.loaded.players.forEach((player) => {
+				const found = player.worms.find((worm) => worm.id == data.wormId);
+				if (found) {
+					found.collider.position.x = data.pos.x;
+					found.collider.position.y = data.pos.y;
+					return ;
+				}
+			})
+			break ;
+		}
+		case SC_Type.SC_TurnEnds: {
+			if (!state.loaded)
+				return ;
+			console.log("Handling End of Turn");
+			if (state.state != GameState.TURN_END)
+				break ;
+			// This is like sooooo illegal
+			state.endOfTurnData = data.data;
+			break ;
+		}
 		case SC_Type.SC_ExplosionOccurs: {
 			console.log("Handling Explosion");
 			if (state.state != GameState.TURN_END)
 				break ;
-			state.loaded?.ground?.affectTerrain(data.point.x, data.point.y, data.radius);
+			break ;
+		}
+		case SC_Type.SC_WinningPlayer: {
+			console.log("Player won!");
+			state.guiHelper?.notifications.add(`${state.loaded?.players.find((player) => player.id == data.winnerId)?.name} has won the game`);
 			break ;
 		}
 		default : {

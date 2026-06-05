@@ -4,7 +4,6 @@ import { ExecuteCodeAction, ActionManager } from '@babylonjs/core'
 import { aimingHelper } from '../4_turn_start/Turn';
 import { IWeapon } from './weapons/IWeapon';
 import { CS_CancelAiming, CS_EndAimState, CS_Type } from '@/shared/packets/ClientServerPackets';
-import { SC_CancelAiming, SC_Type } from '@/shared/packets/ServerClientPackets';
 
 /**
  * Uses Notification system to display custom message based on if this client is active
@@ -25,11 +24,11 @@ function sendAimingDone(machine: StateMachine) {
 	const pos_x = data.seperatedTarget ? 
 		data.target.mesh.position.x :
 		(machine.loaded.turn.chosenWeapon?.getProjectileSpawnPos()?.x ??
-		machine.loaded.turn.chosenWorm.mesh.position.x);
+		machine.loaded.turn.chosenWorm.collider.position.x);
 	const pos_y = data.seperatedTarget ? 
 		data.target.mesh.position.y : 
 		(machine.loaded.turn.chosenWeapon?.getProjectileSpawnPos()?.y ??
-		machine.loaded.turn.chosenWorm.mesh.position.x);
+		machine.loaded.turn.chosenWorm.collider.position.y);
 	machine.msgToServer<CS_EndAimState>(CS_Type.CS_EndAimState, {
 		wormAngle: data.wormAngle,
 		position: {
@@ -38,7 +37,15 @@ function sendAimingDone(machine: StateMachine) {
 		},
 		// Do this because BJs angles are counter clockwise, but ours are clockwise
 		targetAngle: (Math.PI * 2 - data.direction.rotation.y),
-		force: data.force
+		force: data.force,
+		explosions: [{
+			position: {
+				x: pos_x,
+				y: pos_y,
+			},
+			radius: machine.loaded.turn.chosenWeapon?.explosion?.size ?? 0,
+			damage: machine.loaded.turn.chosenWeapon?.explosion?.damage ?? 0,
+		}]
 	});
 }
 

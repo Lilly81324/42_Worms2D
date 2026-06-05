@@ -1,4 +1,4 @@
-import { Vector2 } from 'babylonjs';
+import { Vector2 } from '@babylonjs/core';
 
 // SPAWN AREAS
 export function generateSpawnAreas(): Vector2[][] {

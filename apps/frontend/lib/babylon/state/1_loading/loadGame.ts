@@ -104,7 +104,7 @@ export async function loadGame(machine: StateMachine, data: gameData) {
 	const players = new Array<Player>();
 	const wormModels: wormModelData = await loadWormModels(machine.scene);
 	data.players.forEach((player: playerData) => {
-		players.push(new Player(machine.scene, player, wormModels));
+		players.push(new Player(machine.scene, player, wormModels, data.max_health, machine.canvas));
 	});
 	wormModels.collider.dispose();
 	wormModels.model.dispose();
