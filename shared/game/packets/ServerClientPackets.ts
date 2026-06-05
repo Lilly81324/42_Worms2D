@@ -1,6 +1,5 @@
 // import * from 'ServerClientPackets.ts';
 
-
 /**
  * ADDING A NEW PACKET
  * 1) Create an enum in the SC_Type table
@@ -9,8 +8,10 @@
  * 	2] Should inherit from SC_Base
  * 	3] It should have a type parameter, which will be the enum from 1)
  * 3) Add the interface name into the union type at the end
- */
+*/
 
+import { aimStateId, endOfTurnData, explosionData, gameData, pointData } from './util';
+import { Client } from './Client';
 
 export enum SC_Type {
 	SC_DEV_StartConnecting =	"SC_DEV_StartConnecting",
@@ -27,10 +28,50 @@ export enum SC_Type {
 	SC_FailedLoading =			"SC_FailedLoading",
 	SC_LoadingProgress =		"SC_LoadingProgress",
 	SC_StartGame =				"SC_StartGame",
+	SC_GameData =				"SC_GameData",
 	SC_GameFinished =			"SC_GameFinished",
 	SC_DEV_ButtonPress =		"SC_DEV_ButtonPress",
 	SC_DEV_Periodic =			"SC_DEV_Periodic",
+	SC_DEV_GameState =			"SC_DEV_GameState",
+	SC_ActivePlayerChanged =	"SC_ActivePlayerChanged",
+	SC_WormChosen =				"SC_WormChosen",
+	SC_WeaponChosen =			"SC_WeaponChosen",
+	SC_AimAngle =				"SC_AimAngle",
+	SC_AimMoveTarget =			"SC_AimMoveTarget",
+	SC_ExplosionOccurs =		"SC_ExplosionOccurs",
+	SC_SwitchAimState =			"SC_SwitchAimState",
+	SC_AimTargetAngle =			"SC_AimTargetAngle",
+	SC_CancelAiming =			"SC_CancelAiming",
+	SC_TurnEnds =				"SC_TurnEnds",
+	SC_WormPosition =			"SC_WormPosition",
+	SC_DEV_KillRandomWorm =		"SC_DEV_KillRandomWorm",
+	SC_WinningPlayer =			"SC_WinningPlayer",
+	SC_LobbySettingsUpdate = "SC_LobbySettingsUpdate",
 }
+
+// Packets that should definitely not show up in logging
+// (likely because they are sent every tick)
+export const hideServerPackets: Array<SC_Type> = [
+	SC_Type.SC_AimAngle,
+	SC_Type.SC_AimMoveTarget,
+	SC_Type.SC_WormPosition,
+]
+
+// Packets that should be considered "handled" by BabylonJs
+export const frontendServerPackets: Array<SC_Type> = [
+	SC_Type.SC_ConnectSuccess,
+	SC_Type.SC_LobbyData,
+	SC_Type.SC_DEV_StartConnecting,
+	SC_Type.SC_InvalidState,
+	SC_Type.SC_StartLobby,
+	SC_Type.SC_ConnectFail,
+	SC_Type.SC_ReadyChange,
+	SC_Type.SC_StartLoading,
+	SC_Type.SC_StartGame,
+	SC_Type.SC_GameFinished,
+	SC_Type.SC_WinningPlayer,
+	SC_Type.SC_LobbySettingsUpdate,
+]
 
 /**
  * Fields used in ALL packets:
@@ -75,6 +116,7 @@ export interface SC_StartLobby extends SC_Base {
  */
 export interface SC_ConnectFail extends SC_Base {
 	type: SC_Type.SC_ConnectFail,
+	userId: string,
 	msg: string,
 }
 
@@ -89,7 +131,7 @@ export interface SC_ConnectSuccess extends SC_Base {
 }
 
 /**
- * Sent to all clients when a new player disconnects the lobby,
+ * Sent to all clients when a player disconnects the lobby,
  * to inform Client to un-render player
  * @param userId Id to identify the disconnecting player
  */
@@ -109,24 +151,7 @@ export interface SC_ClientDisconnect extends SC_Base {
  */
 export interface SC_ClientJoin extends SC_Base {
 	type: SC_Type.SC_ClientJoin,
-	userId: string,
-	userName: string,
-}
-
-/**
- * NOT A PACKET, just utility
- * Represents 1 filled player slot in the lobby
- * @param userId unique number to identify the user with
- * @param userName Name from the database
- * @param indexInLobby Position that this player occupies in the lobby
- * @param ready whether the player is ready or not
- */
-export interface PlayerInLobby {
-	userId: string,
-	userName: string,
-	indexInLobby: number,
-	ready: boolean,
-	seq: Array<number>,
+	clientData: Client;
 }
 
 /**
@@ -137,8 +162,7 @@ export interface PlayerInLobby {
  */
 export interface SC_LobbyData extends SC_Base {
 	type: SC_Type.SC_LobbyData,
-	userId: string,
-	lobbyData: Array<PlayerInLobby>,
+	lobbyData: Array<Client>,
 }
 
 /**
@@ -157,6 +181,15 @@ export interface SC_ReadyChange extends SC_Base {
  */
 export interface SC_StartLoading extends SC_Base {
 	type: SC_Type.SC_StartLoading,
+}
+
+/**
+ * Sent to all clients when the host updates the configuration parameters
+ */
+export interface SC_LobbySettingsUpdate extends SC_Base {
+	type: SC_Type.SC_LobbySettingsUpdate,
+	maxWormsPerPlayer: number | undefined,
+	selectedMap: string | undefined,
 }
 
 // LOADING ====================================================================
@@ -231,6 +264,141 @@ export interface SC_DEV_Periodic extends SC_Base {
 	msg: string,
 }
 
+/**
+ * DELETE ME DEBUG ONLY
+ */
+export interface SC_DEV_GameState extends SC_Base {
+	type: SC_Type.SC_DEV_GameState,
+	gameState: number,
+}
+
+/**
+ * Sent to inform frontend of possible change to active player
+ * @param activeId identifier of the now active player
+ */
+export interface SC_ActivePlayerChanged extends SC_Base {
+	type: SC_Type.SC_ActivePlayerChanged,
+	activeId: string,
+}
+
+/**
+ * Sent to inform frontend of client choosing a worm
+ * @param wormId identifier for the chosen worm
+ */
+export interface SC_WormChosen extends SC_Base {
+	type: SC_Type.SC_WormChosen,
+	wormId: number,
+}
+
+/**
+ * Sent to inform frontend of client choosing a weapon
+ * @param id identifier for the chosen weapon
+ */
+export interface SC_WeaponChosen extends SC_Base {
+	type: SC_Type.SC_WeaponChosen,
+	id: number,
+}
+
+/**
+ * Sent to inform frontend of client aiming weapon in a different direction
+ * @param angle new angle for worms weapon in bjs units
+ */
+export interface SC_AimAngle extends SC_Base {
+	type: SC_Type.SC_AimAngle,
+	angle: number,
+}
+
+/**
+ * Sent to inform frontend of client aiming target in a different direction
+ * @param angle new angle for target Direction in bjs units
+ */
+export interface SC_AimTargetAngle extends SC_Base {
+	type: SC_Type.SC_AimTargetAngle,
+	angle: number,
+}
+
+
+/**
+ * Sent when clients should move aiming target marker to another position
+ * @param point coordinates of new point
+ */
+export interface SC_AimMoveTarget extends SC_Base {
+	type: SC_Type.SC_AimMoveTarget,
+	point: pointData,
+}
+
+/**
+ * Sent when server needs client to change aim state
+ * @param entering wether we are entering or exiting the aim state
+ * @param stateId identifier for the state we are talking about
+ */
+export interface SC_SwitchAimState extends SC_Base {
+	type: SC_Type.SC_SwitchAimState,
+	entering: boolean,
+	stateId: aimStateId,
+}
+
+/**
+ * Sent when server telsl client to reset the aiming state
+ */
+export interface SC_CancelAiming extends SC_Base {
+	type: SC_Type.SC_CancelAiming,
+}
+
+/**
+ * Sent when game is started or loaded so Clients can display game
+ * @param data Data that is needed for game to be loaded
+ */
+export interface SC_GameData extends SC_Base {
+	type: SC_Type.SC_GameData,
+	data: gameData,
+}
+
+/**
+ * Sent when players won the game
+ * @param winnerIds Identifiers for the players who won the game
+ */
+export interface SC_TurnEnds extends SC_Base {
+	type: SC_Type.SC_TurnEnds,
+	data: endOfTurnData,
+}
+
+/**
+ * Sent when game is started or loaded so Clients can display game
+ * @param data Data that is needed for game to be loaded
+ */
+export interface SC_ExplosionOccurs extends SC_Base {
+	type: SC_Type.SC_ExplosionOccurs,
+	explo: Array<explosionData>,
+}
+
+/**
+ * Sent when Worm moves with significant speed
+ */
+export interface SC_WormPosition extends SC_Base {
+	type: SC_Type.SC_WormPosition,
+	wormId: number,
+	pos: pointData,
+}
+
+/**
+ * Sent when Worm moves with significant speed
+ */
+export interface SC_WinningPlayer extends SC_Base {
+	type: SC_Type.SC_WinningPlayer,
+	winnerId: string,
+}
+
+/**
+ * Sent when Worm moves with significant speed
+ */
+export interface SC_DEV_KillRandomWorm extends SC_Base {
+	type: SC_Type.SC_DEV_KillRandomWorm,
+	wormId: number,
+	playerId: string,
+}
+
+
 // ENDSCREEN ==================================================================
 
 
@@ -240,7 +408,14 @@ export type SC_GenericPacket =
 			SC_ClientJoin | SC_LobbyData | SC_ReadyChange | 
 			SC_StartLoading | SC_FinishedLoading | SC_FailedLoading | 
 			SC_LoadingProgress | SC_StartGame | SC_GameFinished |
-			SC_DEV_ButtonPress | SC_DEV_Periodic
+			SC_DEV_ButtonPress | SC_DEV_Periodic | SC_DEV_GameState |
+			SC_GameData | SC_ActivePlayerChanged | SC_WormChosen |
+			SC_ExplosionOccurs | SC_WeaponChosen | SC_AimAngle |
+			SC_AimMoveTarget | SC_SwitchAimState | SC_AimTargetAngle |
+			SC_CancelAiming | SC_LobbySettingsUpdate |
+			SC_TurnEnds | SC_WormPosition |
+			SC_DEV_KillRandomWorm | SC_WinningPlayer
 			;
 
-export type SC_GenericStatePacket = SC_StartLobby | SC_StartLoading | SC_StartGame | SC_InvalidState;
+export type SC_GenericStatePacket = SC_StartLobby | SC_StartLoading |
+	SC_StartGame | SC_GameFinished | SC_InvalidState;

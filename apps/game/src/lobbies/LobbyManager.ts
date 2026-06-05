@@ -2,9 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { Lobby } from './Lobby';
 import { EventEmitter } from 'stream';
 import { Logger } from '@nestjs/common';
-import { CS_GenericPacket } from '@/packets/ClientServerPackets';
+import {
+  CS_GenericPacket,
+  CS_Type,
+  hideClientPackets,
+} from '@/shared/packets/ClientServerPackets';
+import {
+  SERVER_LOG_CLIENT_PACKETS,
+  SERVER_LOG_SERVER_PACKETS,
+} from '@/shared/packets/config';
+import {
+  hideServerPackets,
+  SC_Type,
+} from '@/shared/packets/ServerClientPackets';
 
-const DEBUG: boolean = process.env.NODE_ENV == 'development';
+const DEBUG: boolean = true;
+//process.env.NODE_ENV == 'development';
 
 /**
  * Service that administrates multiple lobbies at the same time
@@ -23,7 +36,12 @@ export class LobbyManager extends EventEmitter {
       this.lobbies[i] = new Lobby(i, (payload: string) => {
         this.emit('dataToEmit', payload);
 
-        if (DEBUG) this.logger.log(`Server->Client: ${payload}`);
+        const obj = JSON.parse(payload);
+        const found = hideServerPackets.find(
+          (type: SC_Type) => type == obj.type,
+        );
+        if (!found && SERVER_LOG_SERVER_PACKETS)
+          this.logger.log(`Server->Client: ${payload}`);
       });
     }
   }
@@ -33,7 +51,7 @@ export class LobbyManager extends EventEmitter {
    * @param data_raw Raw string of packet, should be in json format
    */
   msgToServer(data_raw: string) {
-    const data: CS_GenericPacket = JSON.parse(data_raw);
+    const data: CS_GenericPacket = JSON.parse(data_raw) as CS_GenericPacket;
 
     // Check data.type
     if (data.type == undefined) {
@@ -55,8 +73,12 @@ export class LobbyManager extends EventEmitter {
       return;
     }
 
-    // Log
-    if (DEBUG) this.logger.log(`Client->Server: ${data_raw}`);
+    // Log C->S packets
+    const found: CS_Type | undefined = hideClientPackets.find(
+      (type: CS_Type) => type == (data.type as CS_Type),
+    );
+    if (!found && SERVER_LOG_CLIENT_PACKETS)
+      this.logger.log(`Client->Server: ${data_raw}`);
 
     // Let appropriate lobby handle package
     this.lobbies[data.lobbyId].msgToServer(data);
@@ -68,7 +90,9 @@ export class LobbyManager extends EventEmitter {
    */
   handleDisconnect(lobbyId: number, userId: string) {
     if (this.lobbies[lobbyId]) {
-      this.logger.log(`Directing cleanup: User ${userId} from Lobby ${lobbyId}`);
+      this.logger.log(
+        `Directing cleanup: User ${userId} from Lobby ${lobbyId}`,
+      );
 
       // Call the cleanup function inside the specific Lobby instance
       this.lobbies[lobbyId].handleDisconnect(userId);

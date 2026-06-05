@@ -15,12 +15,13 @@ SVC ?=
 CMD ?= sh
 
 .PHONY: help check-env up down down-base down-dev down-prod down-all \
-	ps logs health reset dev prod debug obs rebuild pull restart exec sh e2e-auth
+	ps logs health reset dev prod production debug obs rebuild pull restart exec sh e2e-auth
 
 help:
 	@echo "Targets:"
 	@echo "  make dev         - Start dev stack"
 	@echo "  make prod        - Start prod-like stack"
+	@echo "  make production  - Alias for prod-like stack"
 	@echo "  make debug       - Start dev stack with debug config"
 	@echo "  make obs         - Start infra + observability"
 	@echo "  make down        - Stop dev stack"
@@ -50,6 +51,8 @@ dev: check-env
 
 prod: check-env
 	$(DC_PROD) up -d --build
+
+production: prod
 
 debug: check-env
 	$(DC_DEV) up -d --build

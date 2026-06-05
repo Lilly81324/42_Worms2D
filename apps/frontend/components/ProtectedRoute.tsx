@@ -19,7 +19,6 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
         (user?.roles && allowedRoles.some(role => user.roles.includes(role)));
 
     useEffect(() => {
-        // Rule for guests
         if (!isLoading && !isAuthenticated) {
             const timer = setTimeout(() => {
                 const encodedPath = encodeURIComponent(pathname);

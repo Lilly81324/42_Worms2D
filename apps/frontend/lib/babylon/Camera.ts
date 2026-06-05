@@ -1,5 +1,4 @@
-// @ts-ignore
-import { Scene, Vector3, ArcRotateCamera } from "@babylonjs/core";
+import { Scene, Vector3, ArcRotateCamera, Ray } from "@babylonjs/core";
 
 export function createCamera(scene: Scene, canvas: HTMLCanvasElement, pos_x: number, pos_y: number, max_distance: number)
 {
@@ -18,7 +17,9 @@ export function createCamera(scene: Scene, canvas: HTMLCanvasElement, pos_x: num
 
 	camera.lowerRadiusLimit = 2;				// Minimum Distance of Camera to target
 	camera.upperRadiusLimit = max_distance;		// Maximum Distance of Camera to target
-	
+
+	camera.panningSensibility = 150;
+
 	camera.angularSensibilityX = 999999;		// No rotating Camera
 	camera.angularSensibilityY = 999999;
 	
@@ -39,6 +40,5 @@ export function createCamera(scene: Scene, canvas: HTMLCanvasElement, pos_x: num
 		else if (camera.target.x > xLimit)
 		camera.target.x = xLimit;
 	}
-
 	return (camera);
 }

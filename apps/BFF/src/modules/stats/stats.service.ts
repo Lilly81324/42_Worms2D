@@ -44,13 +44,23 @@ export class StatsService {
       headers.authorization = input.context.authorization;
 
     try {
+      const url = `${this.config.stats.serviceUrl}${input.path}`;
       const response = await axios.request<T>({
         method: input.method as any,
-        url: `${this.config.stats.serviceUrl}${input.path}`,
+		    url,
         headers,
         data: input.data,
         params: input.context.params ?? input.params,
       });
+      // optional: if response.data has updatedAt, print it for quick verification
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const maybe = response.data as any;
+        if (maybe && (maybe.updatedAt || maybe.updated_at)) {
+        }
+      } catch (e) {
+        /* ignore */
+      }
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -80,4 +90,63 @@ export class StatsService {
       data,
     });
   }
+
+  // fetch member of match:
+  async fetchMatchMembers(matchId: string, context: { authorization?: string }) {
+	return this.callStatsService({
+		method: 'GET',
+		path: `/internal/stats/match/${matchId}/members`,
+		context,
+	});
+	}
+
+  // create a stats user
+  async createStatsUser(body: any, context: { authorization?: string }){
+    return this.callStatsService({
+      method:'POST',
+      path: '/internal/stats/user',
+      data: body,
+      context
+    })
+  }
+
+  // PUT /api/stats/user/:id
+  async UpdateStatsUser(id : string, body : any, context : {authorization ?: string}){
+    return this.callStatsService({
+      method : 'PUT',
+      path: `/internal/stats/user/${id}`,
+      data: body,
+      context
+    })
+  }
+
+  // create a match
+  async CreateMatch(body: any, context : {authorization?: string}){
+    return this.callStatsService({
+      method: 'POST',
+      path: '/internal/stats/match',
+      data: body,
+      context
+    })
+  }
+
+  // create achivement
+  async CreateAchievementUser(body: any, context : {authorization?: string}){
+    return this.callStatsService({
+      method: 'POST',
+      path: '/internal/stats/achievements',
+      data: body,
+      context
+    })
+  }
+
+  async UpsertAcheivement(body: any, context : {authorization?: string}){
+    return this.callStatsService({
+      method: 'POST',
+      path: '/internal/stats/achievements/upsert',
+      data: body,
+      context
+    })
+  }
+
 }
