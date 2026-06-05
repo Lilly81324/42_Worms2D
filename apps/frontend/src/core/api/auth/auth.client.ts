@@ -14,7 +14,20 @@ import type
     SetPasswordResponse,
     PendingRequest,
     InternalRequestInit,
-    ApiError
+    ApiError,
+    UserSearchRequest,
+    UserSearchResponse,
+    UpdatePlayerStatsRequest,
+    UserDisabledRequest,
+    UserDisabledResponse,
+    UserEnabledRequest,
+    UserEnabledResponse,
+    SetUserRolesRequest,
+    UserRolesResponse,
+    UpdatePlayerStatsResponse,
+    PlayerStatsData,
+    RevokeSessionsResponse,
+    RevokeSessionsRequest,
 } from "@/src/core/api/auth/auth.types";
 
 
@@ -250,6 +263,61 @@ export const authClient = {
     async setPassword(data: SetPasswordRequest): Promise<ApiResult<SetPasswordResponse>> {
         return apiFetch<SetPasswordResponse>(`${BASE_URL}/auth/password/set`, {
             method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    // --- Admin Management ---
+
+    /**
+     * Search and list users with pagination
+     */
+    async searchUsers(params: UserSearchRequest): Promise<ApiResult<UserSearchResponse>> {
+        const queryParams = new URLSearchParams();
+        if (params.query) queryParams.append('query', params.query);
+        if (params.cursor) queryParams.append('cursor', params.cursor);
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+
+        return apiFetch<UserSearchResponse>(`${BASE_URL}/admin/users?${queryParams.toString()}`);
+    },
+
+    async disableUser(userId: string, data: UserDisabledRequest): Promise<ApiResult<UserDisabledResponse>> {
+        return apiFetch<UserDisabledResponse>(`${BASE_URL}/admin/users/${userId}/disable`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    async enableUser(userId: string, data: UserEnabledRequest = {}): Promise<ApiResult<UserEnabledResponse>> {
+        return apiFetch<UserEnabledResponse>(`${BASE_URL}/admin/users/${userId}/enable`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    async revokeUserSessions(userId: string, data: RevokeSessionsRequest = {}): Promise<ApiResult<RevokeSessionsResponse>> {
+        return apiFetch<RevokeSessionsResponse>(`${BASE_URL}/admin/users/${userId}/sessions/revoke`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    async setUserRoles(userId: string, data: SetUserRolesRequest): Promise<ApiResult<UserRolesResponse>> {
+        return apiFetch<UserRolesResponse>(`${BASE_URL}/admin/users/${userId}/role`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    async getPlayerStats(userId: string): Promise<ApiResult<PlayerStatsData>> {
+        return apiFetch<PlayerStatsData>(`${BASE_URL}/admin/users/${userId}/stats`, {
+            method: 'GET',
+        });
+    },
+
+    async updatePlayerStats(userId: string, data: UpdatePlayerStatsRequest): Promise<ApiResult<UpdatePlayerStatsResponse>> {
+        return apiFetch<UpdatePlayerStatsResponse>(`${BASE_URL}/admin/users/${userId}/stats`, {
+            method: 'PUT',
             body: JSON.stringify(data),
         });
     },

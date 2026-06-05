@@ -40,6 +40,11 @@ type MatchHistoryEntry = {
 };
 
 type PlayerStats = {
+    derived?: {
+        totalMatches?: number | string;
+        winRate?: number;
+        kd?: number;
+    };
     level?: number;
     wins?: number;
     losses?: number;
@@ -69,7 +74,6 @@ type SocialProfile = {
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
-
 
 export default function ProfilePage() {
     // Log when component mounts (after first render)
@@ -131,11 +135,11 @@ export default function ProfilePage() {
                 fetch(`${API_BASE}/clans/me`, { headers }),
                 fetch(`${API_BASE}/clans/me/invites`, { headers }),
                 resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
-				// add 
-				
+				// add
+
             ]);
 
-			
+
 
             setFriends(await safeJson(friendsRes));
             setClans(await safeJson(clansRes));
@@ -211,7 +215,7 @@ export default function ProfilePage() {
                 }
 
 
-                
+
                 const normalized = rawMatches.map((entry: any) => {
                     const match = entry.match ?? entry;
                     const rawParticipants = match.matchParticipants ?? [];
@@ -268,7 +272,7 @@ export default function ProfilePage() {
                               {
                                   userId: playerSnapshot.userId ?? resolvedUser?.id ?? 'unknown',
                                   displayName: playerSnapshot.displayName ?? null,
-                                  avatarUrl: playerSnapshot.avatarUrl ?? null, // 
+                                  avatarUrl: playerSnapshot.avatarUrl ?? null, //
                                   isWinner: playerSnapshot.isWinner ?? false,
                                   kills: playerSnapshot.kills ?? 0,
                                   deaths: playerSnapshot.deaths ?? 0,
@@ -303,7 +307,7 @@ export default function ProfilePage() {
 
 
 	//resolvedUser?.id ? fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null),
-	// here can be added the list avatarUrl = stats?.matchHistory.map((obj.id)=>{fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null)}) ? 
+	// here can be added the list avatarUrl = stats?.matchHistory.map((obj.id)=>{fetch(`${API_BASE}/stats/user/${resolvedUser.id}`, { headers }) : Promise.resolve(null)}) ?
 	// ✅ Now useEffect just calls it
 	useEffect(() => {
 		void loadProfileData();
@@ -340,6 +344,40 @@ export default function ProfilePage() {
         {name: 'Match History', icon: '📜'},
     ];
 
+	// [TEST CONSOLE LOG: ]
+	//console.log("BASE URL: ", process.env.NEXT_PUBLIC_API_URL+ "/stats/users");
+    const statsData = [
+        {
+            label: "Matches",
+            value: stats?.derived?.totalMatches !== undefined ? String(stats.derived.totalMatches) : "—",
+            color: "text-blue-500"
+        },
+        {
+            label: "Win Rate",
+            value: stats?.derived?.winRate != null
+                ? `${stats.derived.winRate.toFixed(2)}%`
+                : "—",
+            color: "text-green-500"
+        },
+        {
+            label: "K/D Ratio",
+            value: stats?.derived?.kd != null
+                ? stats.derived.kd.toFixed(2)
+                : "—",
+            color: "text-red-500"
+        },
+        {
+            label: "Kills",
+            value: stats?.kills != null ? String(stats.kills) : "—",
+            color: "text-green-500"
+        },
+        {
+            label: "Deaths",
+            value: stats?.deaths != null ? String(stats.deaths) : "—",
+            color: "text-red-500"
+        },
+    ];
+	//console.log("USER STATS: ", stats);
     return (
         <ProtectedRoute>
         <EditProfileModal
@@ -424,7 +462,7 @@ export default function ProfilePage() {
                     <h3 className="text-2xl font-black mb-6 border-b pb-4 border-foreground/5">
                         {activeTab}
                     </h3>
-{/* hhhhhhh */}
+
                     <div className="min-h-0 flex-1 space-y-4 pr-1 overflow-hidden">
 
                         {activeTab === 'Info' && (

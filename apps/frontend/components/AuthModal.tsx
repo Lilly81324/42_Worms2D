@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation"; //used for placeholder
+import {useRouter, useSearchParams } from "next/navigation"; //used for placeholder
 import {useState} from "react";
 import {authClient} from "@/src/core/api/auth/auth.client";
 import {useAuth} from "@/components/Providers";
@@ -45,12 +45,15 @@ export default function AuthModal({
     setType: (type: 'Login' | 'Register') => void;
 }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const {setUser, isAuthenticated} = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [showOAuthHint, setShowOAuthHint] = useState(false);
     const [oauthRecoveryPassword, setOauthRecoveryPassword] = useState<string | null>(null);
     const [googleLoading, setGoogleLoading] = useState(false);
+    const [setIsBannedUser] = useState(false);
+
     if (!isOpen || isAuthenticated) return null;
 
     const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
@@ -82,7 +85,12 @@ export default function AuthModal({
                 : authClient.register({ email, password, displayName, username }));
 
             if (!result.ok) {
-                setErrorMessage(result.error.message);
+                const message = result.error?.message || "An error occurred.";
+                setErrorMessage(message);
+
+                if (type === 'Login' && /suspended|banned|disabled/i.test(message)) {
+                    return;
+                }
                 if (
                     type === 'Login' &&
                     /invalid credentials|invalid email or password/i.test(result.error.message)
@@ -97,7 +105,12 @@ export default function AuthModal({
             sessionStorage.setItem("auth.refreshToken", result.data.tokens.refreshToken);
             setUser(result.data.user);
             onClose();
-            router.push("/homepage");
+            const callbackUrl = searchParams.get("callbackUrl");
+            if (callbackUrl) {
+                router.push(decodeURIComponent(callbackUrl));
+            } else {
+                router.push("/homepage");
+            }
         } catch {
             setErrorMessage("Connection failed. Please check your internet.");
         } finally {

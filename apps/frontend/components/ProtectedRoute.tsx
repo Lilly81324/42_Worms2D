@@ -5,17 +5,32 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { authClient} from "@/src/core/api/auth/auth.client";
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated, isLoading } = useAuth();
+interface ProtectedRouteProps {
+    children: React.ReactNode;
+    allowedRoles?: string[];
+}
+
+export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+    const { isAuthenticated, isLoading, user } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
 
+    const hasRoleClearance = !allowedRoles ||
+        (user?.roles && allowedRoles.some(role => user.roles.includes(role)));
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
             const timer = setTimeout(() => {
-                router.push("/?showLogin=true");
-            }, 10000);
+                const encodedPath = encodeURIComponent(pathname);
+                router.push(`/?showLogin=true&callbackUrl=${encodedPath}`);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        if (isAuthenticated && !hasRoleClearance) {
+            const timer = setTimeout(() => {
+                router.push("/homepage");
+            }, 5000); //
             return () => clearTimeout(timer);
         }
 // Check for when url changes if user is authenticated
@@ -26,10 +41,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
             }
         };
 
-        if (!isLoading && isAuthenticated) {
+        if (isAuthenticated && hasRoleClearance) {
             void verifyOnNavigate();
         }
-    }, [isLoading, isAuthenticated, router, pathname]);
+    }, [isLoading, isAuthenticated, hasRoleClearance, router, pathname]);
 
     if (isLoading) {
         return (
@@ -42,7 +57,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         );
     }
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !hasRoleClearance) {
         return (
             <div className="flex flex-col gap-8 py-24 max-w-5xl mx-auto px-6 items-center text-center">
                 <div className="space-y-4">
@@ -58,7 +73,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
                 <div className="flex flex-wrap justify-center gap-4">
                     <div className="px-6 py-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 font-mono text-sm shadow-sm">
-                        STATUS: UNAUTHORIZED_ACCESS
+                        STATUS: {!isAuthenticated ? 'UNAUTHORIZED_ACCESS' : 'INSUFFICIENT_CLEARANCE'}
                     </div>
                 </div>
 

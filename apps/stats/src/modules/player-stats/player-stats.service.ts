@@ -30,9 +30,24 @@ export class PlayerStatsService {
 
   // update the stats of player
   async update(id: string, dto: UpdatePlayerDto) {
-    const updatd = await this.repo.updateStats(id, dto);
-    if (!updatd) throw new NotFoundException(`user with ${id} does not exit`);
-    return updatd;
+    const existing = await this.repo.getStatsById(id as any);
+
+    // If the user doesn't exist in the stats database yet, create them first
+    if (!existing) {
+      await this.repo.createStats({
+        userId: id,
+        xp: dto.xp ?? 0,
+        level: dto.level ?? 1,
+        wins: dto.wins ?? 0,
+        losses: dto.losses ?? 0,
+        kills: dto.kills ?? 0,
+        deaths: dto.deaths ?? 0,
+      });
+    }
+
+    const updated = await this.repo.updateStats(id, dto);
+
+    return updated;
   }
 
   /* get match history of a user */
