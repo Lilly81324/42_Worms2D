@@ -15,15 +15,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+function AuthProviderContent({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<UserAuthView | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
-    // Debug: show provider render and basic session presence (safe fields only)
-
     // useCallBack prevents rerun every react render
-    const logout = useCallback(async () => {
+    const logout = useCallback(async (shouldRedirect = true) => {
         const accessToken = sessionStorage.getItem("auth.accessToken");
         const refreshToken = sessionStorage.getItem("auth.refreshToken");
 
@@ -40,7 +38,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             sessionStorage.removeItem("auth.tokenType");
 
             setUser(null);
-            router.push("/");
+            if (shouldRedirect) {
+                router.push("/");
+            }
         }
     }, [router]);
 
@@ -76,7 +76,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     // auto cleanup when cookies expire
     useEffect(() => {
         const handleUnauthorized = () => {
-            void logout();
+            console.warn("Session expired or unauthorized. Performing cleanup...");
+            void logout(false);
         };
 
         window.addEventListener("auth-unauthorized", handleUnauthorized);
@@ -92,6 +93,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     );
 }
 
+export default function Providers({ children }: { children: React.ReactNode }) {
+    return (
+        <React.Suspense fallback={null}>
+            <AuthProviderContent>
+                {children}
+            </AuthProviderContent>
+        </React.Suspense>
+    );
+}
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) throw new Error("useAuth must be used within a Providers component");

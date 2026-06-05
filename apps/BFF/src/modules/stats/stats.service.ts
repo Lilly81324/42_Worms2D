@@ -3,7 +3,10 @@ import axios, { AxiosError } from 'axios';
 import { BffConfigService } from '../config/bff-config.service';
 import { PlayerStatsDto } from '../auth/contracts/dto/auth-contracts.dto';
 
-type RequestContext = { authorization?: string; params?: Record<string, unknown> };
+type RequestContext = {
+  authorization?: string;
+  params?: Record<string, unknown>;
+};
 
 @Injectable()
 export class StatsService {
@@ -18,12 +21,15 @@ export class StatsService {
 	 });
   }
 
-  async fetchUserById(userId: string, context: RequestContext): Promise<PlayerStatsDto> {
+  async fetchUserById(
+    userId: string,
+    context: RequestContext,
+  ): Promise<PlayerStatsDto> {
     return this.callStatsService<PlayerStatsDto>({
-		method: 'GET',
-		path: `/internal/stats/user/${encodeURIComponent(userId)}`,
-		context
-	});
+      method: 'GET',
+      path: `/internal/stats/user/${encodeURIComponent(userId)}`,
+      context,
+    });
   }
 
   private async callStatsService<T = PlayerStatsDto>(
@@ -31,17 +37,17 @@ export class StatsService {
 	path: string;
 	context: RequestContext;
 	data?: unknown;
-	params?: Record<string, unknown>; 
+	params?: Record<string, unknown>;
 	}): Promise<T> {
     const headers: Record<string, string> = { 'x-service-name': 'bff' };
-    if (input.context.authorization) headers.authorization = input.context.authorization;
+    if (input.context.authorization)
+      headers.authorization = input.context.authorization;
 
     try {
       const url = `${this.config.stats.serviceUrl}${input.path}`;
       const response = await axios.request<T>({
         method: input.method as any,
-        //url: `${this.config.stats.serviceUrl}${input.path}`,
-		url,
+		    url,
         headers,
         data: input.data,
         params: input.context.params ?? input.params,
@@ -59,10 +65,30 @@ export class StatsService {
     } catch (error) {
       if (error instanceof AxiosError) {
         const status = error.response?.status ?? 502;
-        throw new BadGatewayException({ code: `stats_service_${status}`, message: error.message, details: error.response?.data });
+        throw new BadGatewayException({
+          code: `stats_service_${status}`,
+          message: error.message,
+          details: error.response?.data,
+        });
       }
-      throw new BadGatewayException({ code: 'stats_service_unreachable', message: 'Unable to reach stats service', details: error });
+      throw new BadGatewayException({
+        code: 'stats_service_unreachable',
+        message: 'Unable to reach stats service',
+        details: error,
+      });
     }
+  }
+  async update(
+    userId: string,
+    data: any,
+    context: RequestContext,
+  ): Promise<PlayerStatsDto> {
+    return this.callStatsService<PlayerStatsDto>({
+      method: 'PATCH',
+      path: `/internal/stats/user/${encodeURIComponent(userId)}`,
+      context,
+      data,
+    });
   }
 
   // fetch member of match:
@@ -89,7 +115,7 @@ export class StatsService {
     return this.callStatsService({
       method : 'PUT',
       path: `/internal/stats/user/${id}`,
-      data: body, 
+      data: body,
       context
     })
   }
