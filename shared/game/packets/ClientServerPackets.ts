@@ -37,6 +37,7 @@ export enum CS_Type {
 	CS_SwitchAimState =			"CS_SwitchAimState",
 	CS_AimTargetAngle =			"CS_AimTargetAngle",
 	CS_CancelAiming =			"CS_CancelAiming",
+	CS_UpdateSettings = 		"CS_UpdateSettings",
 	CS_DEV_GameWon =			"CS_DEV_GameWon",
 	CS_DEV_StaleMate =			"CS_DEV_StaleMate",
 	CS_WormPosition =			"CS_WormPosition",
@@ -98,6 +99,17 @@ export interface CS_ReadyChange extends CS_Base {
  */
 export interface CS_DEV_StartLobby extends CS_Base {
 	type: CS_Type.CS_DEV_StartLobby,
+}
+
+/**
+ * Sent when a user changes the game settings in the lobby
+ * @param maxWorms amount of worms spawning
+ * @param map select map which we load
+ */
+export interface CS_UpdateSettings extends CS_Base {
+	type: CS_Type.CS_UpdateSettings;
+	maxWorms: number | undefined;
+	map: string | undefined;
 }
 
 // LOADING ====================================================================
@@ -286,7 +298,7 @@ export interface CS_DEV_StartEndscreen extends CS_Base {
 
 export type CS_GenericPacket = 
 			CS_ConnectAttempt | CS_JoinLobby | CS_ReadyChange |
-			CS_DEV_StartLobby | CS_LoadingProgress |
+			CS_DEV_StartLobby | CS_UpdateSettings | CS_LoadingProgress |
 			CS_FinishedLoading | CS_FailedLoading | CS_DEV_StartLoading |
 			CS_DEV_ButtonPress | CS_DEV_StartGame | CS_DEV_StartEndscreen |
 			CS_GetGameState | CS_DEV_SetGameState | CS_RequestChangeGameState |

@@ -21,7 +21,7 @@ function shuffle(array: Array<any>) {
   }
 }
 
-export function generateGameData(clients: Array<Client>) {
+export function generateGameData(clients: Array<Client>, wormsPerPlayer: number, mapName: string) {
   // Generate random turn order, by shuffling clients around
   shuffle(clients);
   const data: gameData = {
@@ -31,7 +31,7 @@ export function generateGameData(clients: Array<Client>) {
     },
     max_health: MAX_HEALTH,
   };
-  spawnPlayers(data, clients);
-  generateMapData(data);
+  spawnPlayers(data, clients, wormsPerPlayer);
+  generateMapData(data, mapName);
   return data;
 }

@@ -46,6 +46,7 @@ export enum SC_Type {
 	SC_WormPosition =			"SC_WormPosition",
 	SC_DEV_KillRandomWorm =		"SC_DEV_KillRandomWorm",
 	SC_WinningPlayer =			"SC_WinningPlayer",
+	SC_LobbySettingsUpdate = "SC_LobbySettingsUpdate",
 }
 
 // Packets that should definitely not show up in logging
@@ -69,6 +70,7 @@ export const frontendServerPackets: Array<SC_Type> = [
 	SC_Type.SC_StartGame,
 	SC_Type.SC_GameFinished,
 	SC_Type.SC_WinningPlayer,
+	SC_Type.SC_LobbySettingsUpdate,
 ]
 
 /**
@@ -179,6 +181,15 @@ export interface SC_ReadyChange extends SC_Base {
  */
 export interface SC_StartLoading extends SC_Base {
 	type: SC_Type.SC_StartLoading,
+}
+
+/**
+ * Sent to all clients when the host updates the configuration parameters
+ */
+export interface SC_LobbySettingsUpdate extends SC_Base {
+	type: SC_Type.SC_LobbySettingsUpdate,
+	maxWormsPerPlayer: number | undefined,
+	selectedMap: string | undefined,
 }
 
 // LOADING ====================================================================
@@ -401,7 +412,8 @@ export type SC_GenericPacket =
 			SC_GameData | SC_ActivePlayerChanged | SC_WormChosen |
 			SC_ExplosionOccurs | SC_WeaponChosen | SC_AimAngle |
 			SC_AimMoveTarget | SC_SwitchAimState | SC_AimTargetAngle |
-			SC_CancelAiming | SC_TurnEnds | SC_WormPosition |
+			SC_CancelAiming | SC_LobbySettingsUpdate |
+			SC_TurnEnds | SC_WormPosition |
 			SC_DEV_KillRandomWorm | SC_WinningPlayer
 			;
 

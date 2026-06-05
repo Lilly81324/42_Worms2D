@@ -13,14 +13,30 @@ import { Client } from '@/shared/packets/Client';
  * @param msgToServer function for sending packet to server
  */
 export default function LobbyPage() {
-  const { msgToServer, slots, userId } = useGameContext();
+  const { msgToServer, slots, userId, maxWorms, selectedMap } = useGameContext();
 
   const [feed, setFeed] = useState<{id: number, msg: string}[]>([]);
   const feedCounter = useRef(0);
+  const [isMapDropdownOpen, setIsMapDropdownOpen] = useState(false);
+
+  const [localWorms, setLocalWorms] = useState(maxWorms);
+  const [localMap, setLocalMap] = useState(selectedMap);
+
+
 
   const readyCount = slots.filter(p => p.ready).length;
   const allReady = readyCount === 4;
-  
+
+  const isHost = slots[0]?.id === userId;
+
+    useEffect(() => {
+        setLocalWorms(maxWorms);
+    }, [maxWorms]);
+
+    useEffect(() => {
+        setLocalMap(selectedMap);
+    }, [selectedMap]);
+
   const addFeedEvent = (msg: string) => {
     setFeed(prev => {
       if (prev.length > 0 && prev[prev.length - 1].msg === msg) return prev;
@@ -70,17 +86,31 @@ export default function LobbyPage() {
       prevPlayersRef.current = slots;
   }, [slots]);
 
-const togglePlayerReady = (player: Client) => {
-    if (!player.id || player.id !== userId) {
-        console.log("You can't toggle someone else's ready status!");
-        return;
-    }
+    const updateLobbySettings = (changes: { maxWorms?: number; map?: string }) => {
+        const nextWorms = changes.maxWorms ?? localWorms;
+        const nextMap = changes.map ?? localMap;
 
-    msgToServer(CS_Type.CS_ReadyChange, {
-        userId: userId,
-        ready: !player.ready
-    });
-};
+        if (changes.maxWorms !== undefined) setLocalWorms(changes.maxWorms);
+        if (changes.map !== undefined) setLocalMap(changes.map);
+
+        msgToServer(CS_Type.CS_UpdateSettings, {
+            userId: userId,
+            maxWorms: nextWorms,
+            map: nextMap,
+        });
+    };
+
+    const togglePlayerReady = (player: Client) => {
+        if (!player.id || player.id !== userId) {
+            console.log("You can't toggle someone else's ready status!");
+            return;
+        }
+
+        msgToServer(CS_Type.CS_ReadyChange, {
+            userId: userId,
+            ready: !player.ready
+        });
+    };
 
   return (
       <div className="flex flex-col min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-blue-100">
@@ -99,7 +129,70 @@ const togglePlayerReady = (player: Client) => {
                           Status: Awaiting Squad Confirmation
                       </p>
                   </div>
+                  {/* LOBBY CONFIGURATION Settings */}
+                  <div className="w-full sm:w-72 bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between gap-4">
+                      <div>
+                          <span className="text-[9px] font-mono text-zinc-400 font-black uppercase tracking-widest block mb-3">
+                            Lobby_Parameters {isHost ? "[HOST_ACCESS]" : "[READ_ONLY]"}
+                          </span>
 
+                          <div className="space-y-3">
+                              {/* Worm Count Input Field */}
+                              <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Worms per Player (1-10)</label>
+                                  <input
+                                      type="number"
+                                      min="1"
+                                      max="10"
+                                      value={localWorms}
+                                      disabled={!isHost}
+                                      onChange={(e) => updateLobbySettings({ maxWorms: parseInt(e.target.value) || 1 })}
+                                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-1.5 text-xs font-mono font-bold focus:outline-none focus:border-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                                  />
+                              </div>
+
+                              {/* Custom Map Selector Dropdown Menu */}
+                              <div className="flex flex-col gap-1 relative">
+                                  <label className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Operation Theatre</label>
+                                  <button
+                                      disabled={!isHost}
+                                      onClick={() => setIsMapDropdownOpen(!isMapDropdownOpen)}
+                                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs font-mono font-bold flex justify-between items-center text-left disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                      <span className="uppercase">{localMap}</span>
+                                      {isHost && <span className="text-[8px] text-zinc-400">▼</span>}
+                                  </button>
+
+                                  <AnimatePresence>
+                                      {isMapDropdownOpen && isHost && (
+                                          <>
+                                              <div className="fixed inset-0 z-40" onClick={() => setIsMapDropdownOpen(false)} />
+                                              <motion.div
+                                                  initial={{ opacity: 0, y: -5 }}
+                                                  animate={{ opacity: 1, y: 0 }}
+                                                  exit={{ opacity: 0, y: -5 }}
+                                                  className="absolute left-0 right-0 top-[105%] bg-white border border-zinc-200 rounded-xl shadow-xl z-50 overflow-hidden py-1"
+                                              >
+                                                  <button
+                                                      onClick={() => { updateLobbySettings({ map: 'map1' }); setIsMapDropdownOpen(false); }}
+                                                      className={`w-full px-3 py-2 text-left text-xs font-mono font-bold hover:bg-zinc-50 uppercase ${selectedMap === 'map1' ? 'text-blue-600 bg-blue-50/30' : 'text-zinc-700'}`}
+                                                  >
+                                                      Map Option 1
+                                                  </button>
+                                                  <button
+                                                      onClick={() => { updateLobbySettings({ map: 'map2' }); setIsMapDropdownOpen(false); }}
+                                                      className={`w-full px-3 py-2 text-left text-xs font-mono font-bold hover:bg-zinc-50 uppercase ${selectedMap === 'map2' ? 'text-blue-600 bg-blue-50/30' : 'text-zinc-700'}`}
+                                                  >
+                                                      Map Option 2
+                                                  </button>
+                                              </motion.div>
+                                          </>
+                                      )}
+                                  </AnimatePresence>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
                   {/* LIVE ACTIVITY FEED */}
                   <div
                       className="w-full md:w-96 min-h-[110px] overflow-hidden relative bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm">

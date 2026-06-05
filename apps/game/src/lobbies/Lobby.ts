@@ -24,6 +24,9 @@ function newGame(lobby: Lobby) {
   return new Game(lobby);
 }
 
+const DEFAULT_MAX_WORMS_PER_PLAYER = 3;
+const DEFAULT_SELECTED_MAP = 'map1';
+const DEFAULT_IS_LOCKED = false;
 /**
  * An Object representing one Lobby, which goes through different states,
  * as our game progresses
@@ -42,6 +45,8 @@ export class Lobby {
   private seqHandler: SeqHandler;
   public game: Game;
   public queue: MessageQueue;
+  public maxWormsPerPlayer: number = DEFAULT_MAX_WORMS_PER_PLAYER;
+  public selectedMap: string = DEFAULT_SELECTED_MAP;
 
   /**
    * On Lobby Creation, call the constructor,
@@ -190,6 +195,13 @@ export class Lobby {
       }
     }
   }
+
+  handleUpdateSettingsPacket(maxWorms: number | undefined, mapType: string | undefined) {
+    if (maxWorms)
+      this.maxWormsPerPlayer = maxWorms;
+    if (mapType)
+      this.selectedMap = mapType;
+  };
 
   dispose() {
     this.engine.dispose();

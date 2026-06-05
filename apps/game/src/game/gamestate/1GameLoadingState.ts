@@ -17,7 +17,7 @@ export class GameLoadingState implements IState {
     this.game.sendState();
 
     // Sends Information for each player to load the game
-    const data = generateGameData(this.game.lobby.clientManager.clients);
+    const data = generateGameData(this.game.lobby.clientManager.clients, this.game.lobby.maxWormsPerPlayer, this.game.lobby.selectedMap);
     this.game.sendPacket(SC_Type.SC_GameData, {
       data,
     });
