@@ -34,6 +34,16 @@ export class GameEndState implements IState {
 			this.machine.msgToServer<CS_DEV_StartEndscreen>(CS_Type.CS_DEV_StartEndscreen, {
 				won: false,
 				winnerId: "",
+				payload: {
+					userId: this.machine.userId,
+					type: "marathon-mayem" ,
+					name: "Marathon Mayem",
+					description: "Travel 20 meters total",
+					achieved: this.machine.achievements.achievements["marathon-mayem"],
+					progress: 10,
+					progressTarget: 50,
+					meta: { distance: 8 }
+				}
 			});
 		}
 	}

@@ -26,6 +26,7 @@ import { aimingMeshes } from './1_loading/loadGame';
 import { Achievements } from '../data/achievments';
 import { movementTick } from './6_movement/movementTick';
 import { ExplosionParticles } from './8_turn_end/ExplosionParticles';
+import { useDeprecatedInvertedScale } from 'framer-motion';
 
 // Stores the part of the statemachine that are created in the loading step
 export interface loaded {
@@ -154,11 +155,8 @@ export class StateMachine {
 		// Set up a fresh Game
 		this.log("Setting up new Game");
 
-<<<<<<< HEAD
-		this.guiHelper = new GuiHelper(this.scene, this.canvas, this.userId, this.msgToServer);
-=======
-		this.guiHelper = new GuiHelper(this, this.scene, this.canvas, this.msgToServer);
->>>>>>> ead4ef6 (added achievement system)
+
+		this.guiHelper = new GuiHelper(this, this.scene, this.canvas, this.userId, this.msgToServer);
 		// Need to prompt socket to update the UI if its connected
 		this.queue?.updateSocketUi();
 		//this.msgToServer<CS_GetGameState>(CS_Type.CS_GetGameState, {});

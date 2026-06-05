@@ -92,9 +92,10 @@ function forAllWorms(
 		// console.log("My Gravity is 1!");
 		worm.aggregate.body.setGravityFactor(1);
 
-	// When player is moving, send packet to update clients and server with that players position
-	if (isActive && isMovement && worm.aggregate.body.getLinearVelocity().length() > 0.01) {
-		broadcastPosition(worm.id, worm.collider.position.x, worm.collider.position.y);
+		// When player is moving, send packet to update clients and server with that players position
+		if (isActive && isMovement && worm.aggregate.body.getLinearVelocity().length() > 0.01) {
+			broadcastPosition(worm.id, worm.collider.position.x, worm.collider.position.y);
+		}
 	}
 }
 
