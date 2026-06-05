@@ -18,6 +18,8 @@ export interface GameContextType {
 	userId: string;
 	userName: string;
 	errorMsg: string;
+	maxWorms: number;
+	selectedMap: string;
 	winner: string;
 }
 

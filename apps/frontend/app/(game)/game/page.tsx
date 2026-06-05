@@ -87,10 +87,13 @@ export default function LobbyPageController() {
   const [isConnected, setIsConnected] = useState(false);
 
   const { user } = useAuth();
-  
+
   const [slots, setSlots] = useState<Client[]>(
     [0, 1, 2, 3].map(i => (newClient(i, COLORS[i])))
   );
+
+  const [maxWorms, setMaxWorms] = useState(3);
+  const [selectedMap, setSelectedMap] = useState("map1");
 
   const updateState = (newState: string) => {
     stateRef.current = newState;
@@ -140,12 +143,12 @@ export default function LobbyPageController() {
           setSlots(prev =>
             addPlayerToSlots(prev, p.clientData)
           );
-          if (CLIENT_LOG_SERVER_PACKETS) 
+          if (CLIENT_LOG_SERVER_PACKETS)
             console.log("Player joined:", p.clientData.id);
           break;
 
         case SC_Type.SC_ClientDisconnect:
-          if (CLIENT_LOG_SERVER_PACKETS) 
+          if (CLIENT_LOG_SERVER_PACKETS)
             console.log("Player left:", p.userId);
           setSlots(prev =>
             removePlayerFromSlots(prev, p.userId)
@@ -156,6 +159,14 @@ export default function LobbyPageController() {
           // If the server provides a lobbyId, sync it here
           if (p.lobbyId !== undefined) setLobbyId(p.lobbyId);
           setSlots(buildSlotsFromLobbyData(p.lobbyData));
+          break;
+        }
+
+        case SC_Type.SC_LobbySettingsUpdate: {
+          if (p.maxWormsPerPlayer)
+            setMaxWorms(p.maxWormsPerPlayer);
+          if (p.selectedMap)
+            setSelectedMap(p.selectedMap);
           break;
         }
         default : {
@@ -182,7 +193,7 @@ export default function LobbyPageController() {
       if (!(frontendServerPackets.includes(packet.type)))
         return ;
 
-      if (CLIENT_LOG_SERVER_PACKETS) 
+      if (CLIENT_LOG_SERVER_PACKETS)
         console.log("NEXT: Client received packet: ", packet);
 
       // Handle state Transitions
@@ -214,12 +225,13 @@ export default function LobbyPageController() {
 
       // We process if we are ALREADY in the lobby,
       // Or if we just received a packet that tells us we are NOW in the lobby
-      const isLobbyDataPacket = lobbyDataPackets.includes(packet.type);
+      const isLobbyDataPacket = lobbyDataPackets.includes(packet.type) || packet.type === SC_Type.SC_LobbySettingsUpdate;;
+
       if (stateRef.current === "LOBBY" && isLobbyDataPacket) {
         packetHandled = handleLobbyUpdates(packet);
 
       // Send Error, if packet was for frontend, but not handled anywhere
-      if (!packetHandled && CLIENT_LOG_SERVER_PACKETS) 
+      if (!packetHandled && CLIENT_LOG_SERVER_PACKETS)
         console.warn(`[Frontend Page] Ignored: ${packet.type} in state ${stateRef.current}`);
       }
     }
@@ -263,8 +275,10 @@ export default function LobbyPageController() {
             "",
       errorMsg,
       winner,
+      maxWorms,
+      selectedMap
     }}>
-      <div className="min-h-screen bg-slate-800 flex flex-col items-center justify-center"> 
+      <div className="min-h-screen bg-slate-800 flex flex-col items-center justify-center">
         <SocketStatus isConnected={isConnected}/>
         <SubPages/>
       </div>
