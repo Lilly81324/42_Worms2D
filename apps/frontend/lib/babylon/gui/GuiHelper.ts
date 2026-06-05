@@ -54,9 +54,9 @@ export class GuiHelper {
 				winnerId: clientId,
 				payload: {
 					userId: machine.userId,
-					type: "marathon-mayem" + counter++,
-					name: "Marathon Mayem INCOMPLETE",
-					description: "Travel 30000 meters total",
+					type: "marathon-mayem" ,
+					name: "Marathon Mayem",
+					description: "Travel 20 meters total",
 					achieved: machine.achievements.achievements["marathon-mayem"],
 					progress: 10,
 					progressTarget: 50,
