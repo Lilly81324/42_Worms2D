@@ -1,6 +1,6 @@
 // import * from 'ClientServerPackets.ts';
 
-import { aimStateId, pointData } from "./util";
+import { aimStateId, explosionData, pointData } from "./util";
 
 
 /**
@@ -37,13 +37,19 @@ export enum CS_Type {
 	CS_SwitchAimState =			"CS_SwitchAimState",
 	CS_AimTargetAngle =			"CS_AimTargetAngle",
 	CS_CancelAiming =			"CS_CancelAiming",
+	CS_DEV_GameWon =			"CS_DEV_GameWon",
+	CS_DEV_StaleMate =			"CS_DEV_StaleMate",
+	CS_WormPosition =			"CS_WormPosition",
+	CS_ClientFinishedTurn =		"CS_ClientFinishedTurn",
+	CS_IWIN =					"CS_IWIN",
 }
 
 // Packets that should definitely not show up in logging
 // (likely because they are sent every tick)
 export const hideClientPackets: Array<CS_Type> = [
 	CS_Type.CS_AimAngle,
-	CS_Type.CS_AimMoveTarget
+	CS_Type.CS_AimMoveTarget,
+	CS_Type.CS_WormPosition,
 ]
 
 /**
@@ -236,21 +242,46 @@ export interface CS_CancelAiming extends CS_Base {
 	type: CS_Type.CS_CancelAiming,
 }
 
+/**
+ * Sent when Worm moves with significant speed
+ */
+export interface CS_WormPosition extends CS_Base {
+	type: CS_Type.CS_WormPosition,
+	wormId: number,
+	pos: pointData,
+}
+
 export interface CS_EndAimState extends CS_Base {
 	type: CS_Type.CS_EndAimState,
 	wormAngle: number,
 	position: pointData
 	targetAngle: number,
 	force: number,
+	explosions: Array<explosionData>,
+}
+
+/**
+ * Sent when Client has handled their stuff in hte end of their turn
+ */
+export interface CS_ClientFinishedTurn extends CS_Base {
+	type: CS_Type.CS_ClientFinishedTurn,
+}
+
+/**
+ * Sent when Client has handled their stuff in hte end of their turn
+ */
+export interface CS_IWIN extends CS_Base {
+	type: CS_Type.CS_IWIN,
 }
 
 // ENDSCREEN ==================================================================
-
 /**
  * DEV MODE, delete later
  */
 export interface CS_DEV_StartEndscreen extends CS_Base {
 	type: CS_Type.CS_DEV_StartEndscreen,
+	won: boolean,
+	winnerId: string,
 }
 
 export type CS_GenericPacket = 
@@ -261,5 +292,6 @@ export type CS_GenericPacket =
 			CS_GetGameState | CS_DEV_SetGameState | CS_RequestChangeGameState |
 			CS_WormChosen | CS_EndAimState | CS_WeaponChosen |
 			CS_AimMoveTarget | CS_SwitchAimState | CS_AimTargetAngle |
-			CS_AimAngle | CS_CancelAiming
+			CS_AimAngle | CS_CancelAiming | CS_IWIN |
+			CS_WormPosition | CS_ClientFinishedTurn
 			;

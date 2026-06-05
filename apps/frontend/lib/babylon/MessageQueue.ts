@@ -126,7 +126,7 @@ export class MessageQueue {
 			const isHidden = hideServerPackets.find((type: SC_Type) => (type == packet.type));
 			const isHandled = frontendServerPackets.find((type: SC_Type) => (type == packet.type));
 			if (!isHidden && !isHandled) {
-				this.addNotif(`Message from server ${packet}`);
+				this.addNotif(`Message from server ${JSON.stringify(packet)}`);
 			}
 		})
 		this.queue = [];

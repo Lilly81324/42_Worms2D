@@ -45,3 +45,6 @@ export class SocketStatus {
 	}
 
 }
+
+// GUI: -width 0 width
+// Proj: 0 width with

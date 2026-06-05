@@ -2,6 +2,9 @@ import { Mesh, Scene, Vector3, Color3, MeshBuilder, StandardMaterial, ActionMana
 import { wormData } from '@/shared/packets/util';
 import { colors } from '../data/gameData';
 import { wormModelData } from "./loadWormModels";
+import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
+import { triggerAsyncId } from "async_hooks";
+import { WormGui } from "./WormGui";
 
 /**
  * Function to create the mesh of a worm
@@ -20,7 +23,6 @@ function createWorm(scene: Scene, position: Vector3, color: Color3) {
     return (player);
 }
 
-
 /**
  * Class that represents 1 Worm
  * @note Ownership of a Worm should be handled by a Player classmod
@@ -34,6 +36,9 @@ export class Worm {
     private initialised: boolean = false;
     private action: ExecuteCodeAction | undefined = undefined;
     private clickable: boolean;
+
+    // GUI + Health
+    public gui: WormGui;
     
     // Movement
     public playerSpeed: number;
@@ -70,7 +75,14 @@ export class Worm {
      * @param color Color for the worms mesh texture
      * @param name Display name of the worm
      */
-	constructor(scene: Scene, data: wormData, slot: number, modelData: wormModelData) {
+	constructor(
+        scene: Scene, 
+        data: wormData, 
+        slot: number, 
+        modelData: wormModelData,
+        maxHealth: number,
+        canvas: HTMLCanvasElement,
+    ) {
         // this.mesh = createWorm(scene, new Vector3(data.pos.x, data.pos.y, 0), colors[slot]);
         // this.mesh.actionManager = new ActionManager(scene);
         
@@ -137,6 +149,9 @@ export class Worm {
         this.previousPos = this.collider.position.clone();
 
 		this.aggregate.body.setGravityFactor(0);
+
+        // Stats
+        this.gui = new WormGui(scene, canvas, this.collider, maxHealth, colors[slot], this.name);
 	}
 
     /**
@@ -150,10 +165,8 @@ export class Worm {
             trigger: ActionManager.OnPickUpTrigger
         }, () => {
             pickWorm(this);
-            console.log("Picking new Wromy boy!");
         })
         if (this.collider.actionManager) {
-            console.log("Assiging Action AMangerger action")
             this.collider.actionManager.registerAction(this.action);
         }
     }
@@ -177,6 +190,7 @@ export class Worm {
      */
     dispose() {
         this.initialised = false;
+        this.gui.dispose();
         this.removeClickable();
         if (this.model) {
             this.model.dispose();

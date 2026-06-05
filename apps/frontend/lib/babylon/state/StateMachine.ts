@@ -1,7 +1,7 @@
-import { IAction, Scene, ActionManager, AbstractMesh, Observable, Observer, Nullable } from '@babylonjs/core';
+import { Scene, Observer } from '@babylonjs/core';
 import { GameState } from '@/shared/state/GameState';
 import { CS_DEV_SetGameState, CS_RequestChangeGameState, CS_Type } from '@/shared/packets/ClientServerPackets';
-import { gameData } from '@/shared/packets/util';
+import { endOfTurnData, gameData } from '@/shared/packets/util';
 import { Player } from '../player/Player';
 import { msgToServerType } from '@/lib/packets/msgToServerType';
 import { Ground } from './1_loading/Ground';
@@ -25,6 +25,7 @@ import { handlePacket } from '@/lib/packets/handlePacket';
 import { aimingMeshes } from './1_loading/loadGame';
 import { Achievements } from '../data/achievments';
 import { movementTick } from './6_movement/movementTick';
+import { ExplosionParticles } from './8_turn_end/ExplosionParticles';
 
 // Stores the part of the statemachine that are created in the loading step
 export interface loaded {
@@ -42,8 +43,12 @@ export class StateMachine {
 	public msgToServer: msgToServerType;
 	public log: (data: string) => void;
 	public states: Map<GameState, IState> = new Map();
-	private movementPhysics: Observer<Scene>;
+	private movementPhysics: undefined | Observer<Scene>;
+	private movementStateRef: MovementState;
+	public gameOver: boolean;
+	public explosionEffect: ExplosionParticles;
 	
+	public endOfTurnData: endOfTurnData | undefined;
 	public queue: MessageQueue | undefined;
 	public guiHelper: GuiHelper | undefined;
 	public loaded: loaded | undefined;
@@ -60,26 +65,25 @@ export class StateMachine {
 		this.canvas = canvas;
 		this.msgToServer = msgToServer
 		this.log = log;
-		const movementState = new MovementState(this);
+		this.movementStateRef = new MovementState(this);
 		this.states.set(GameState.GAME_PENDING, new GamePendingState(this));
 		this.states.set(GameState.GAME_LOADING, new GameLoadingState(this));
 		this.states.set(GameState.GAME_START, new GameStartState(this));
 		this.states.set(GameState.ROUND_START, new RoundStartState(this));
 		this.states.set(GameState.TURN_START, new TurnStartState(this));
 		this.states.set(GameState.PICK_WORM, new PickWormState(this));
-		this.states.set(GameState.MOVEMENT, movementState);
+		this.states.set(GameState.MOVEMENT, this.movementStateRef);
 		this.states.set(GameState.AIMING, new AimingState(this));
 		this.states.set(GameState.TURN_END, new TurnEndState(this));
 		this.states.set(GameState.GAME_END, new GameEndState(this));
-		this.movementPhysics = scene.onBeforePhysicsObservable.add(
-			() => {
-				movementTick(movementState)
-			}
-		);
+		this.gameOver = false;
+		this.explosionEffect = new ExplosionParticles(scene);
+		this.movementPhysics = undefined;
 
 		// Set when game starts proper
 		
 		// Set on Loading
+		this.endOfTurnData = undefined;
 		this.state = undefined;
 		this.currentState = undefined;
 		this.guiHelper = undefined;
@@ -98,6 +102,9 @@ export class StateMachine {
 		this.scene.onBeforeRenderObservable.add(() => {
 			this.handlePackets();
 			this.currentState?.tick?.();
+		})
+		this.movementPhysics = this.scene.onBeforePhysicsObservable.add(()=> {
+			movementTick(this.movementStateRef);
 		})
 	}
 
@@ -142,11 +149,12 @@ export class StateMachine {
 	setupGame() {
 		// Clear up remnants of old game
 		this.clearGame();
+		this.gameOver = false;
 		
 		// Set up a fresh Game
 		this.log("Setting up new Game");
 
-		this.guiHelper = new GuiHelper(this.scene, this.canvas, this.msgToServer);
+		this.guiHelper = new GuiHelper(this.scene, this.canvas, this.userId, this.msgToServer);
 		// Need to prompt socket to update the UI if its connected
 		this.queue?.updateSocketUi();
 		//this.msgToServer<CS_GetGameState>(CS_Type.CS_GetGameState, {});
@@ -171,6 +179,7 @@ export class StateMachine {
 	 */
 	clearGame() {
 		// Clean Players and their worms
+		this.gameOver = true;
 		if (this.loaded) {
 			this.loaded.weapons.forEach(w => w.dispose());
 			this.loaded.players.forEach(p => p.dispose());
@@ -181,7 +190,8 @@ export class StateMachine {
 			this.loaded.aiming.direction.dispose();
 			this.loaded.aiming.tail.dispose();
 		}
-		this.scene.onBeforeRenderObservable.remove(this.movementPhysics);
+		if (this.movementPhysics)
+			this.scene.onBeforeRenderObservable.remove(this.movementPhysics);
 		this.loaded = undefined;
 		this.guiHelper?.dispose()
 		this.guiHelper = undefined;

@@ -22,8 +22,8 @@ export class FallingPiano extends GenericWeapon implements IWeapon {
 	public spread = 0;
 	public damage = 25;
 	public explosion: Explosion = {
-		size: 0.3,
-		damage: 5,
+		size: 3,
+		damage: 50,
 		affectTerrain: true
 	};
 	public mesh: Mesh;

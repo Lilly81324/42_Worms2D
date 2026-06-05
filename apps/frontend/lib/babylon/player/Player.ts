@@ -19,12 +19,18 @@ export class Player {
 	public readonly name: string;
 	public worms: Array<Worm>;
 	private clickableAction: ExecuteCodeAction;
-	constructor(scene: Scene, data: playerData, modelData: wormModelData) {
+	constructor(
+		scene: Scene, 
+		data: playerData, 
+		modelData: wormModelData,
+		maxWormHealth: number,
+		canvas: HTMLCanvasElement,
+	) {
 		this.id = data.id;
 		this.name = data.name;
 		this.worms = [];
 		data.worms.forEach((worm: wormData) => {
-			this.worms.push(new Worm(scene, worm, data.slot, modelData));
+			this.worms.push(new Worm(scene, worm, data.slot, modelData, maxWormHealth, canvas));
 		});
 		this.clickableAction = new ExecuteCodeAction(ActionManager.OnPickUpTrigger, () => {});
 	}
@@ -60,7 +66,6 @@ export class Player {
 	wormsClickable(yes: boolean, pickWorm: undefined | ((worm: Worm) => void)) {
 		if (yes && pickWorm != undefined) {
 			this.worms.forEach((worm) => {
-				console.log("Making clickable: ", worm.name);
 				worm.makeClickable(pickWorm)
 			});
 		}

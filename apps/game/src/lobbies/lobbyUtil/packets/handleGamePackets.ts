@@ -8,15 +8,17 @@ import {
   SC_DEV_ButtonPress,
   SC_Type,
   SC_WormChosen,
-  SC_ExplosionOccurs,
   SC_WeaponChosen,
   SC_AimAngle,
   SC_AimMoveTarget,
   SC_SwitchAimState,
   SC_AimTargetAngle,
   SC_CancelAiming,
+  SC_WormPosition,
+  SC_WinningPlayer,
 } from '@/shared/packets/ServerClientPackets';
 import { GameState } from '@/shared/state/GameState';
+import { explosionData } from '@/shared/packets/util';
 
 function requestChangeState(
   lobby: Lobby,
@@ -138,14 +140,56 @@ export function handleGamePackets(lobby: Lobby, data: CS_GenericPacket) {
       target.position = data.position;
       target.targetAngle = data.targetAngle;
       target.force = data.force;
+      target.explosions = data.explosions;
       requestChangeState(lobby, data.userId, GameState.TURN_END);
-      // Placeholder logic for projectile handling: Worm fucking explodes
-      lobby.msgToClient<SC_ExplosionOccurs>(SC_Type.SC_ExplosionOccurs, {
-        point: target.position,
-        radius: 3,
+      break;
+    }
+
+    // Comunicate worm movement to non-active players
+    case CS_Type.CS_WormPosition: {
+      lobby.msgToClient<SC_WormPosition>(SC_Type.SC_WormPosition, {
+        wormId: data.wormId,
+        pos: data.pos,
+      });
+      lobby.game.players.forEach((player) => {
+        const worm = player.worms.find((worm) => worm.id == data.wormId);
+        if (!worm) return;
+        worm.mesh.position.x = data.pos.x;
+        worm.mesh.position.y = data.pos.y;
       });
       break;
     }
+
+    // Comunicate worm movement to non-active players
+    case CS_Type.CS_ClientFinishedTurn: {
+      const client = lobby.clientManager.get(data.userId);
+      if (client) client.finishedEndOfTurn = true;
+      break;
+    }
+
+    // Comunicate worm movement to non-active players
+    case CS_Type.CS_IWIN: {
+      lobby.msgToClient<SC_WinningPlayer>(SC_Type.SC_WinningPlayer, {
+        winnerId: data.userId,
+      });
+      lobby.setState(LobbyStateEnum.EndScreen);
+      break;
+    }
+
+    // Comunicate worm movement to non-active players
+    /*
+    case CS_Type.CS_DEV_KillRandomWorm: {
+      const playerIndex = Math.round(Math.random() * lobby.game.players.length);
+      const player = lobby.game.players[playerIndex];
+      const wormIndex = Math.round(Math.random() * player.worms.length);
+      lobby.msgToClient<SC_DEV_KillRandomWorm>(SC_Type.SC_DEV_KillRandomWorm, {
+        playerId: player.id,
+        wormId: player.worms[wormIndex].id,
+      });
+      const client = lobby.clientManager.get(data.userId);
+      if (client) client.finishedEndOfTurn = true;
+      break;
+    }*/
 
     default: {
       console.log(
