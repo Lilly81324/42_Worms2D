@@ -46,7 +46,11 @@ class WormSpawner {
   }
 }
 
-export function spawnPlayers(data: gameData, clients: Array<Client>) {
+export function spawnPlayers(data: gameData, clients: Array<Client>, wormsPerPlayer: number) {
+  if (wormsPerPlayer < 1)
+    wormsPerPlayer = 1;
+  if (wormsPerPlayer > 5)
+    wormsPerPlayer = 5;
   console.log(`Generating Players for ${clients.length} clients`);
   const spawner = new WormSpawner(generateSpawnAreas(), data.max_health);
   for (let i = 0; i < clients.length; i++) {
@@ -56,7 +60,7 @@ export function spawnPlayers(data: gameData, clients: Array<Client>) {
       name: clients[i].name,
       worms: [],
     };
-    for (let i = 0; i < WORMS_PER_PLAYER; i++) {
+    for (let i = 0; i < wormsPerPlayer; i++) {
       const data = spawner.generate();
       if (!data) break;
       new_player.worms.push(data);

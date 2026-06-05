@@ -10,6 +10,7 @@ import {
   SC_LobbyData,
   SC_ReadyChange,
   SC_ConnectSuccess,
+  SC_LobbySettingsUpdate,
 } from '@/shared/packets/ServerClientPackets';
 import { Client, COLORS, generateClient } from '@/shared/packets/Client';
 import { Lobby } from 'src/lobbies/Lobby';
@@ -50,6 +51,17 @@ export function handleLobbyPackets(lobby: Lobby, data: CS_GenericPacket) {
     // DEV mode, should be removed late, Client commands state to be set to Loading
     case CS_Type.CS_DEV_StartLoading: {
       lobby.setState(LobbyStateEnum.Loading);
+      break;
+    }
+
+    case CS_Type.CS_UpdateSettings: {
+      const client = lobby.clientManager.get(data.userId);
+      if (!client) return;
+      lobby.handleUpdateSettingsPacket(data.maxWorms, data.map);
+      lobby.msgToClient<SC_LobbySettingsUpdate>(SC_Type.SC_LobbySettingsUpdate, {
+        maxWormsPerPlayer: data.maxWorms,
+        selectedMap: data.map,
+      });
       break;
     }
 
