@@ -8,7 +8,13 @@ COMPOSE_PROD = docker/compose.prod.yml
 DC_BASE = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE)
 DC_DEV  = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE)  -f $(COMPOSE_DEV) --profile dev
 DC_PROD = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE) -f $(COMPOSE_PROD) --profile prod 
-DC_OBS  = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE) --profile dev --profile obs
+DC_OBS  = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_BASE) -f $(COMPOSE_PROD) --profile prod --profile obs
+
+OBS_SERVICES = prometheus grafana \
+	redis_exporter \
+	postgres_exporter_auth postgres_exporter_game postgres_exporter_social postgres_exporter_stats \
+	cadvisor node_exporter
+OBS_IMPORTER = grafana_dashboard_importer
 
 # Optional service selector:
 SVC ?=
@@ -23,7 +29,7 @@ help:
 	@echo "  make prod        - Start prod-like stack"
 	@echo "  make production  - Alias for prod-like stack"
 	@echo "  make debug       - Start dev stack with debug config"
-	@echo "  make obs         - Start infra + observability"
+	@echo "  make obs         - Start observability only: Prometheus, Grafana, dashboard importer, exporters"
 	@echo "  make down        - Stop dev stack"
 	@echo "  make down-base   - Stop base infra only"
 	@echo "  make down-dev    - Stop dev stack"
@@ -58,7 +64,8 @@ debug: check-env
 	$(DC_DEV) up -d --build
 
 obs: check-env
-	$(DC_OBS) up -d
+	$(DC_OBS) up -d --no-deps $(OBS_SERVICES)
+	$(DC_OBS) up -d --no-deps --force-recreate $(OBS_IMPORTER)
 
 # ---------- Down targets ----------
 down: down-dev

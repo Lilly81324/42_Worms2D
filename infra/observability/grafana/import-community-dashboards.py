@@ -16,6 +16,9 @@ CONFIG_PATH = os.environ.get(
     "/opt/grafana/community-dashboards.json",
 )
 WAIT_SECONDS = int(os.environ.get("GRAFANA_IMPORT_WAIT_SECONDS", "120"))
+RETIRED_DASHBOARD_UIDS = [
+    "community-docker-system-monitoring",
+]
 
 
 def auth_headers():
@@ -137,11 +140,27 @@ def import_dashboard(item):
     print(f"Imported Grafana dashboard {item['gnetId']}: {item['name']}")
 
 
+def delete_retired_dashboard(uid):
+    req = urllib.request.Request(
+        f"{GRAFANA_URL}/api/dashboards/uid/{uid}",
+        headers=auth_headers(),
+        method="DELETE",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30):
+            print(f"Removed retired Grafana dashboard uid={uid}")
+    except urllib.error.HTTPError as error:
+        if error.code != 404:
+            raise
+
+
 def main():
     with open(CONFIG_PATH, "r", encoding="utf-8") as config_file:
         dashboards = json.load(config_file)
 
     wait_for_grafana()
+    for uid in RETIRED_DASHBOARD_UIDS:
+        delete_retired_dashboard(uid)
     for item in dashboards:
         import_dashboard(item)
 

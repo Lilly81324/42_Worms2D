@@ -10,14 +10,14 @@
     "reason": "Host-level CPU, memory, disk, filesystem, and network visibility from node_exporter."
   },
   {
-    "name": "Docker and system monitoring",
-    "gnetId": 893,
+    "name": "cAdvisor Exporter",
+    "gnetId": 14282,
     "revision": "latest",
-    "uid": "community-docker-system-monitoring",
+    "uid": "community-cadvisor-exporter",
     "datasource": "Prometheus",
     "datasourceUid": "prometheus",
-    "sourceUrl": "https://grafana.com/grafana/dashboards/893",
-    "reason": "Container and Docker host visibility from cAdvisor and Prometheus, useful for the multi-service compose stack."
+    "sourceUrl": "https://grafana.com/grafana/dashboards/14282-cadvisor-exporter/",
+    "reason": "Container-level CPU, memory, filesystem, and network visibility from cAdvisor. This is a better fit than the older Docker and system monitoring dashboard for the current cAdvisor exporter."
   },
   {
     "name": "PostgreSQL Exporter Quickstart and Dashboard",
