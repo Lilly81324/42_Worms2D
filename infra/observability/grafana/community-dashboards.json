@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Node Exporter Full",
+    "gnetId": 1860,
+    "revision": "latest",
+    "uid": "community-node-exporter-full",
+    "datasource": "Prometheus",
+    "datasourceUid": "prometheus",
+    "sourceUrl": "https://grafana.com/grafana/dashboards/1860-node-exporter-full/",
+    "reason": "Host-level CPU, memory, disk, filesystem, and network visibility from node_exporter."
+  },
+  {
+    "name": "Docker and system monitoring",
+    "gnetId": 893,
+    "revision": "latest",
+    "uid": "community-docker-system-monitoring",
+    "datasource": "Prometheus",
+    "datasourceUid": "prometheus",
+    "sourceUrl": "https://grafana.com/grafana/dashboards/893",
+    "reason": "Container and Docker host visibility from cAdvisor and Prometheus, useful for the multi-service compose stack."
+  },
+  {
+    "name": "PostgreSQL Exporter Quickstart and Dashboard",
+    "gnetId": 14114,
+    "revision": "latest",
+    "uid": "community-postgres-exporter-overview",
+    "datasource": "Prometheus",
+    "datasourceUid": "prometheus",
+    "sourceUrl": "https://grafana.com/grafana/dashboards/14114-postgres-overview/",
+    "reason": "Database health, cache hit ratio, connections, deadlocks, conflicts, and row activity for the auth/game/social/stats Postgres exporters."
+  }
+]
