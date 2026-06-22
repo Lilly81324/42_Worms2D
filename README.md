@@ -1,5 +1,7 @@
 _This project has been created as part of the 42 curriculum by sikunne, tbui-quo, pschmunk, mkhavari and schiper_
 
+> ! This repository is a mirror of https://github.com/onlyHydra/Worm2D !
+
 # Description
 
 The project `Ft_transcendence` sets up a website on the local machine, which serves as a tool for socializing with others, as well as playing a game and tracking the statistics for said game.
@@ -155,7 +157,7 @@ We use Redis to create a cache and create Sessions.<br/>
 
 # Database Schema
 
-This project uses PostgreSQL databases together with Prisma ORM. The data is split by service, so each part of the application owns the tables it needs. 
+This project uses PostgreSQL databases together with Prisma ORM. The data is split by service, so each part of the application owns the tables it needs.
 This keeps authentication, social features, and game statistics separated and easier to maintain.
 
 ## Schema overview
@@ -218,16 +220,16 @@ The `User` table is the central table of the authentication system. It stores th
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key of the user. |
-| `email` | String | Unique email address used for login. |
-| `username` | String | Optional unique username. |
-| `passwordHash` | Text | Hashed password for local login. |
-| `status` | Enum | Account state: active, disabled, or pending verification. |
-| `createdAt` | DateTime | When the user was created. |
-| `updatedAt` | DateTime | Last update time. |
-| `disabledAt` | DateTime | When the account was disabled, if applicable. |
+| Field          |     Type | Description                                               |
+| -------------- | -------: | --------------------------------------------------------- |
+| `id`           |     UUID | Primary key of the user.                                  |
+| `email`        |   String | Unique email address used for login.                      |
+| `username`     |   String | Optional unique username.                                 |
+| `passwordHash` |     Text | Hashed password for local login.                          |
+| `status`       |     Enum | Account state: active, disabled, or pending verification. |
+| `createdAt`    | DateTime | When the user was created.                                |
+| `updatedAt`    | DateTime | Last update time.                                         |
+| `disabledAt`   | DateTime | When the account was disabled, if applicable.             |
 
 Relationships:
 
@@ -259,16 +261,16 @@ The `Session` table stores active or past login sessions.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key of the session. |
-| `userId` | UUID | User that owns the session. |
-| `refreshTokenHash` | Text | Hashed refresh token. |
-| `userAgent` | Text | Browser or client information. |
-| `ipAddress` | String | IP address used for the session. |
-| `expiresAt` | DateTime | Session expiry time. |
-| `revokedAt` | DateTime | Set when the session is manually revoked. |
-| `createdAt` | DateTime | Session creation time. |
+| Field              |     Type | Description                               |
+| ------------------ | -------: | ----------------------------------------- |
+| `id`               |     UUID | Primary key of the session.               |
+| `userId`           |     UUID | User that owns the session.               |
+| `refreshTokenHash` |     Text | Hashed refresh token.                     |
+| `userAgent`        |     Text | Browser or client information.            |
+| `ipAddress`        |   String | IP address used for the session.          |
+| `expiresAt`        | DateTime | Session expiry time.                      |
+| `revokedAt`        | DateTime | Set when the session is manually revoked. |
+| `createdAt`        | DateTime | Session creation time.                    |
 
 Relationship:
 
@@ -282,13 +284,13 @@ The `AuthProvider` table stores external authentication providers, such as Googl
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `userId` | UUID | User linked to this provider. |
-| `provider` | Enum | Provider type: local, Google, GitHub, or 42. |
-| `providerUserId` | String | Unique user ID from the external provider. |
-| `createdAt` | DateTime | When the provider link was created. |
+| Field            |     Type | Description                                  |
+| ---------------- | -------: | -------------------------------------------- |
+| `id`             |     UUID | Primary key.                                 |
+| `userId`         |     UUID | User linked to this provider.                |
+| `provider`       |     Enum | Provider type: local, Google, GitHub, or 42. |
+| `providerUserId` |   String | Unique user ID from the external provider.   |
+| `createdAt`      | DateTime | When the provider link was created.          |
 
 Relationship:
 
@@ -302,14 +304,14 @@ This table stores password reset tokens in a secure way.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `userId` | UUID | User requesting the reset. |
-| `tokenHash` | Text | Hashed password reset token. |
-| `expiresAt` | DateTime | Expiration time. |
-| `usedAt` | DateTime | Time when the token was used. |
-| `createdAt` | DateTime | Creation time. |
+| Field       |     Type | Description                   |
+| ----------- | -------: | ----------------------------- |
+| `id`        |     UUID | Primary key.                  |
+| `userId`    |     UUID | User requesting the reset.    |
+| `tokenHash` |     Text | Hashed password reset token.  |
+| `expiresAt` | DateTime | Expiration time.              |
+| `usedAt`    | DateTime | Time when the token was used. |
+| `createdAt` | DateTime | Creation time.                |
 
 Relationship:
 
@@ -333,16 +335,16 @@ Examples of actions:
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `userId` | UUID | Target user affected by the action. |
-| `actorUserId` | UUID | User who performed the action. |
-| `action` | Enum | Type of audit action. |
-| `ip` | String | IP address. |
-| `userAgent` | Text | Browser or client information. |
-| `metadataJson` | Json | Extra event data. |
-| `createdAt` | DateTime | When the event happened. |
+| Field          |     Type | Description                         |
+| -------------- | -------: | ----------------------------------- |
+| `id`           |     UUID | Primary key.                        |
+| `userId`       |     UUID | Target user affected by the action. |
+| `actorUserId`  |     UUID | User who performed the action.      |
+| `action`       |     Enum | Type of audit action.               |
+| `ip`           |   String | IP address.                         |
+| `userAgent`    |     Text | Browser or client information.      |
+| `metadataJson` |     Json | Extra event data.                   |
+| `createdAt`    | DateTime | When the event happened.            |
 
 ---
 
@@ -356,19 +358,19 @@ The `StoredFile` table stores metadata for uploaded files, such as avatars or cl
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `ownerUserId` | UUID | User who owns the file. |
-| `kind` | Enum | File type: avatar, clan avatar, or attachment. |
-| `originalName` | String | Original uploaded filename. |
-| `mimeType` | String | File MIME type. |
-| `sizeBytes` | Int | File size. |
-| `storagePath` | Text | Internal storage location. |
-| `publicPath` | Text | Public access path. |
-| `sha256` | String | Optional file hash. |
-| `createdAt` | DateTime | Upload time. |
-| `deletedAt` | DateTime | Soft deletion time. |
+| Field          |     Type | Description                                    |
+| -------------- | -------: | ---------------------------------------------- |
+| `id`           |     UUID | Primary key.                                   |
+| `ownerUserId`  |     UUID | User who owns the file.                        |
+| `kind`         |     Enum | File type: avatar, clan avatar, or attachment. |
+| `originalName` |   String | Original uploaded filename.                    |
+| `mimeType`     |   String | File MIME type.                                |
+| `sizeBytes`    |      Int | File size.                                     |
+| `storagePath`  |     Text | Internal storage location.                     |
+| `publicPath`   |     Text | Public access path.                            |
+| `sha256`       |   String | Optional file hash.                            |
+| `createdAt`    | DateTime | Upload time.                                   |
+| `deletedAt`    | DateTime | Soft deletion time.                            |
 
 Used by:
 
@@ -381,15 +383,15 @@ The `UserProfile` table stores public-facing user information.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `userId` | UUID | Primary key and user reference. |
-| `displayName` | String | Display name shown in the UI. |
-| `avatarFileId` | UUID | Optional avatar file. |
-| `bio` | String | Short user biography. |
-| `country` | String | Country code. |
-| `createdAt` | DateTime | Profile creation time. |
-| `updatedAt` | DateTime | Last update time. |
+| Field          |     Type | Description                     |
+| -------------- | -------: | ------------------------------- |
+| `userId`       |     UUID | Primary key and user reference. |
+| `displayName`  |   String | Display name shown in the UI.   |
+| `avatarFileId` |     UUID | Optional avatar file.           |
+| `bio`          |   String | Short user biography.           |
+| `country`      |   String | Country code.                   |
+| `createdAt`    | DateTime | Profile creation time.          |
+| `updatedAt`    | DateTime | Last update time.               |
 
 Relationships:
 
@@ -405,14 +407,14 @@ This table stores visibility preferences for the user.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `userId` | UUID | Profile owner. |
-| `profileVisibility` | Enum | Who can see the profile. |
-| `friendsVisibility` | Enum | Who can see the friend list. |
-| `lastSeenVisibility` | Enum | Who can see last online time. |
-| `dmPolicy` | Enum | Who can send direct messages. |
-| `updatedAt` | DateTime | Last update time. |
+| Field                |     Type | Description                   |
+| -------------------- | -------: | ----------------------------- |
+| `userId`             |     UUID | Profile owner.                |
+| `profileVisibility`  |     Enum | Who can see the profile.      |
+| `friendsVisibility`  |     Enum | Who can see the friend list.  |
+| `lastSeenVisibility` |     Enum | Who can see last online time. |
+| `dmPolicy`           |     Enum | Who can send direct messages. |
+| `updatedAt`          | DateTime | Last update time.             |
 
 ### UserPresence
 
@@ -420,12 +422,12 @@ The `UserPresence` table stores online status.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `userId` | UUID | Profile owner. |
-| `status` | Enum | Online, away, busy, or offline. |
-| `lastSeenAt` | DateTime | Last activity time. |
-| `updatedAt` | DateTime | Last update time. |
+| Field        |     Type | Description                     |
+| ------------ | -------: | ------------------------------- |
+| `userId`     |     UUID | Profile owner.                  |
+| `status`     |     Enum | Online, away, busy, or offline. |
+| `lastSeenAt` | DateTime | Last activity time.             |
+| `updatedAt`  | DateTime | Last update time.               |
 
 ### FriendRequest, Friendship, and Block
 
@@ -435,15 +437,15 @@ These tables handle friend and block relationships.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `fromUserId` | UUID | User sending the request. |
-| `toUserId` | UUID | User receiving the request. |
-| `status` | Enum | Pending, accepted, declined, canceled, expired, approved, or rejected. |
-| `message` | String | Optional request message. |
-| `createdAt` | DateTime | Request creation time. |
-| `respondedAt` | DateTime | Response time. |
+| Field         |     Type | Description                                                            |
+| ------------- | -------: | ---------------------------------------------------------------------- |
+| `id`          |     UUID | Primary key.                                                           |
+| `fromUserId`  |     UUID | User sending the request.                                              |
+| `toUserId`    |     UUID | User receiving the request.                                            |
+| `status`      |     Enum | Pending, accepted, declined, canceled, expired, approved, or rejected. |
+| `message`     |   String | Optional request message.                                              |
+| `createdAt`   | DateTime | Request creation time.                                                 |
+| `respondedAt` | DateTime | Response time.                                                         |
 
 `Friendship` stores accepted friendships. It uses two user IDs, `userLowId` and `userHighId`, to avoid duplicate friendship rows.
 
@@ -463,18 +465,18 @@ The `Clan` table stores clan or group information.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `name` | String | Unique clan name. |
-| `tag` | String | Optional unique clan tag. |
-| `ownerUserId` | UUID | Clan owner. |
-| `visibility` | Enum | Public or private. |
-| `joinPolicy` | Enum | Open, invite-only, or request-only. |
-| `description` | String | Clan description. |
-| `avatarFileId` | UUID | Optional clan avatar. |
-| `createdAt` | DateTime | Creation time. |
-| `updatedAt` | DateTime | Last update time. |
+| Field          |     Type | Description                         |
+| -------------- | -------: | ----------------------------------- |
+| `id`           |     UUID | Primary key.                        |
+| `name`         |   String | Unique clan name.                   |
+| `tag`          |   String | Optional unique clan tag.           |
+| `ownerUserId`  |     UUID | Clan owner.                         |
+| `visibility`   |     Enum | Public or private.                  |
+| `joinPolicy`   |     Enum | Open, invite-only, or request-only. |
+| `description`  |   String | Clan description.                   |
+| `avatarFileId` |     UUID | Optional clan avatar.               |
+| `createdAt`    | DateTime | Creation time.                      |
+| `updatedAt`    | DateTime | Last update time.                   |
 
 Relationships:
 
@@ -534,20 +536,20 @@ The `PlayerStats` table is the central table for game progression.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `userId` | String | Unique user reference. |
-| `xp` | Int | Experience points. |
-| `level` | Int | Player level. |
-| `wins` | Int | Number of wins. |
-| `losses` | Int | Number of losses. |
-| `kills` | Int | Total kills. |
-| `deaths` | Int | Total deaths. |
-| `damageDealt` | Int | Total damage dealt. |
-| `damageTaken` | Int | Total damage taken. |
-| `createdAt` | DateTime | Creation time. |
-| `updatedAt` | DateTime | Last update time. |
+| Field         |     Type | Description            |
+| ------------- | -------: | ---------------------- |
+| `id`          |     UUID | Primary key.           |
+| `userId`      |   String | Unique user reference. |
+| `xp`          |      Int | Experience points.     |
+| `level`       |      Int | Player level.          |
+| `wins`        |      Int | Number of wins.        |
+| `losses`      |      Int | Number of losses.      |
+| `kills`       |      Int | Total kills.           |
+| `deaths`      |      Int | Total deaths.          |
+| `damageDealt` |      Int | Total damage dealt.    |
+| `damageTaken` |      Int | Total damage taken.    |
+| `createdAt`   | DateTime | Creation time.         |
+| `updatedAt`   | DateTime | Last update time.      |
 
 Relationships:
 
@@ -563,21 +565,21 @@ The `Achievement` table stores achievements unlocked or tracked for each player.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `userId` | String | Player reference. |
-| `type` | String | Machine-readable achievement key. |
-| `name` | String | Human-readable achievement name. |
-| `description` | String | Achievement description. |
-| `icon` | String | Icon or asset key. |
-| `xpReward` | Int | XP gained when completed. |
-| `points` | Int | Achievement points. |
-| `progress` | Int | Current progress value. |
-| `progressTarget` | Int | Target value for completion. |
-| `achieved` | Boolean | Whether the achievement is completed. |
-| `achievedAt` | DateTime | Completion time. |
-| `meta` | Json | Extra achievement data. |
+| Field            |     Type | Description                           |
+| ---------------- | -------: | ------------------------------------- |
+| `id`             |     UUID | Primary key.                          |
+| `userId`         |   String | Player reference.                     |
+| `type`           |   String | Machine-readable achievement key.     |
+| `name`           |   String | Human-readable achievement name.      |
+| `description`    |   String | Achievement description.              |
+| `icon`           |   String | Icon or asset key.                    |
+| `xpReward`       |      Int | XP gained when completed.             |
+| `points`         |      Int | Achievement points.                   |
+| `progress`       |      Int | Current progress value.               |
+| `progressTarget` |      Int | Target value for completion.          |
+| `achieved`       |  Boolean | Whether the achievement is completed. |
+| `achievedAt`     | DateTime | Completion time.                      |
+| `meta`           |     Json | Extra achievement data.               |
 
 A player can only have one row per achievement type.
 
@@ -587,17 +589,17 @@ The `WeaponUsage` table tracks how a player uses each weapon.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `userId` | String | Player reference. |
-| `weapon` | String | Weapon name. |
-| `shotsFired` | Int | Number of shots fired. |
-| `hits` | Int | Number of successful hits. |
-| `kills` | Int | Kills made with this weapon. |
-| `damage` | Int | Total damage done with this weapon. |
-| `createdAt` | DateTime | Creation time. |
-| `updatedAt` | DateTime | Last update time. |
+| Field        |     Type | Description                         |
+| ------------ | -------: | ----------------------------------- |
+| `id`         |     UUID | Primary key.                        |
+| `userId`     |   String | Player reference.                   |
+| `weapon`     |   String | Weapon name.                        |
+| `shotsFired` |      Int | Number of shots fired.              |
+| `hits`       |      Int | Number of successful hits.          |
+| `kills`      |      Int | Kills made with this weapon.        |
+| `damage`     |      Int | Total damage done with this weapon. |
+| `createdAt`  | DateTime | Creation time.                      |
+| `updatedAt`  | DateTime | Last update time.                   |
 
 ### Match
 
@@ -605,17 +607,17 @@ The `Match` table stores information about played games.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `status` | Enum | Pending, in progress, or finished. |
-| `duration` | Int | Match duration. |
-| `mode` | String | Game mode. |
-| `mapName` | String | Map used for the match. |
-| `score` | String | Final score. |
-| `summary` | String | Match summary. |
-| `endedAt` | DateTime | End time. |
-| `createdAt` | DateTime | Creation time. |
+| Field       |     Type | Description                        |
+| ----------- | -------: | ---------------------------------- |
+| `id`        |     UUID | Primary key.                       |
+| `status`    |     Enum | Pending, in progress, or finished. |
+| `duration`  |      Int | Match duration.                    |
+| `mode`      |   String | Game mode.                         |
+| `mapName`   |   String | Map used for the match.            |
+| `score`     |   String | Final score.                       |
+| `summary`   |   String | Match summary.                     |
+| `endedAt`   | DateTime | End time.                          |
+| `createdAt` | DateTime | Creation time.                     |
 
 Relationship:
 
@@ -629,16 +631,16 @@ The `MatchParticipant` table connects players to matches and stores their result
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `matchId` | String | Match reference. |
-| `userId` | String | Player reference. |
-| `displayName` | String | Player display name at match time. |
-| `avatarUrl` | String | Player avatar at match time. |
-| `isWinner` | Boolean | Whether the player won. |
-| `kills` | Int | Kills in this match. |
-| `deaths` | Int | Deaths in this match. |
+| Field         |    Type | Description                        |
+| ------------- | ------: | ---------------------------------- |
+| `id`          |    UUID | Primary key.                       |
+| `matchId`     |  String | Match reference.                   |
+| `userId`      |  String | Player reference.                  |
+| `displayName` |  String | Player display name at match time. |
+| `avatarUrl`   |  String | Player avatar at match time.       |
+| `isWinner`    | Boolean | Whether the player won.            |
+| `kills`       |     Int | Kills in this match.               |
+| `deaths`      |     Int | Deaths in this match.              |
 
 Relationship:
 
@@ -655,18 +657,18 @@ The stats audit log records updates to important stats entities.
 
 Key fields:
 
-| Field | Type | Description |
-|---|---:|---|
-| `id` | UUID | Primary key. |
-| `timestamp` | DateTime | Time of the event. |
-| `requestId` | String | Request that caused the change. |
-| `actorId` | String | User or service that performed the action. |
-| `action` | String | Action name. |
-| `entityType` | String | Entity type, such as player or match. |
-| `entityId` | String | Affected entity ID. |
-| `before` | Json | Entity state before the change. |
-| `after` | Json | Entity state after the change. |
-| `source` | String | Source service, usually `stats_service`. |
+| Field        |     Type | Description                                |
+| ------------ | -------: | ------------------------------------------ |
+| `id`         |     UUID | Primary key.                               |
+| `timestamp`  | DateTime | Time of the event.                         |
+| `requestId`  |   String | Request that caused the change.            |
+| `actorId`    |   String | User or service that performed the action. |
+| `action`     |   String | Action name.                               |
+| `entityType` |   String | Entity type, such as player or match.      |
+| `entityId`   |   String | Affected entity ID.                        |
+| `before`     |     Json | Entity state before the change.            |
+| `after`      |     Json | Entity state after the change.             |
+| `source`     |   String | Source service, usually `stats_service`.   |
 
 ---
 
@@ -674,20 +676,20 @@ Key fields:
 
 The most important relationships are:
 
-| Relationship | Meaning |
-|---|---|
-| `User` → `Session` | A user can have multiple login sessions. |
-| `User` → `Role` | A user can have multiple roles through `UserRole`. |
-| `User` → `AuthProvider` | A user can log in through multiple providers. |
-| `UserProfile` → `UserPrivacySetting` | Each profile can have privacy settings. |
-| `UserProfile` → `UserPresence` | Each profile can have an online status. |
-| `UserProfile` → `StoredFile` | A profile can use a stored file as an avatar. |
-| `Clan` → `ClanMember` | A clan can have many members. |
-| `Clan` → `ChatThread` | A clan can have one chat thread. |
-| `ChatThread` → `Message` | A chat thread contains many messages. |
-| `PlayerStats` → `Achievement` | A player can unlock or progress through many achievements. |
-| `PlayerStats` → `WeaponUsage` | A player can have weapon-specific statistics. |
-| `Match` → `MatchParticipant` | A match has multiple participating players. |
+| Relationship                         | Meaning                                                    |
+| ------------------------------------ | ---------------------------------------------------------- |
+| `User` → `Session`                   | A user can have multiple login sessions.                   |
+| `User` → `Role`                      | A user can have multiple roles through `UserRole`.         |
+| `User` → `AuthProvider`              | A user can log in through multiple providers.              |
+| `UserProfile` → `UserPrivacySetting` | Each profile can have privacy settings.                    |
+| `UserProfile` → `UserPresence`       | Each profile can have an online status.                    |
+| `UserProfile` → `StoredFile`         | A profile can use a stored file as an avatar.              |
+| `Clan` → `ClanMember`                | A clan can have many members.                              |
+| `Clan` → `ChatThread`                | A clan can have one chat thread.                           |
+| `ChatThread` → `Message`             | A chat thread contains many messages.                      |
+| `PlayerStats` → `Achievement`        | A player can unlock or progress through many achievements. |
+| `PlayerStats` → `WeaponUsage`        | A player can have weapon-specific statistics.              |
+| `Match` → `MatchParticipant`         | A match has multiple participating players.                |
 
 ---
 
@@ -695,16 +697,16 @@ The most important relationships are:
 
 The schema mainly uses the following data types:
 
-| Type | Usage |
-|---|---|
-| `UUID` | Used for most primary keys and foreign keys. |
-| `String` | Used for names, identifiers, short text, and references. |
-| `Text` | Used for longer values such as hashes, user agents, and storage paths. |
-| `Int` | Used for counters, scores, damage, kills, deaths, and file sizes. |
-| `Boolean` | Used for true/false states such as `achieved` and `isWinner`. |
-| `DateTime` | Used for creation, update, expiration, deletion, and event timestamps. |
-| `Json` | Used for flexible metadata and audit snapshots. |
-| `Enum` | Used for controlled values such as status, visibility, role, and provider type. |
+| Type       | Usage                                                                           |
+| ---------- | ------------------------------------------------------------------------------- |
+| `UUID`     | Used for most primary keys and foreign keys.                                    |
+| `String`   | Used for names, identifiers, short text, and references.                        |
+| `Text`     | Used for longer values such as hashes, user agents, and storage paths.          |
+| `Int`      | Used for counters, scores, damage, kills, deaths, and file sizes.               |
+| `Boolean`  | Used for true/false states such as `achieved` and `isWinner`.                   |
+| `DateTime` | Used for creation, update, expiration, deletion, and event timestamps.          |
+| `Json`     | Used for flexible metadata and audit snapshots.                                 |
+| `Enum`     | Used for controlled values such as status, visibility, role, and provider type. |
 
 ---
 
